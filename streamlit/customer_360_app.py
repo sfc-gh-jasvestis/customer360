@@ -102,6 +102,40 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Helper functions for safe formatting
+def safe_format_currency(value, default="$0.00"):
+    """Safely format a value as currency"""
+    try:
+        if value is None or pd.isna(value):
+            return default
+        return f"${float(value):,.2f}"
+    except (ValueError, TypeError):
+        return default
+
+def safe_format_percentage(value, default="0.0%"):
+    """Safely format a value as percentage"""
+    try:
+        if value is None or pd.isna(value):
+            return default
+        return f"{float(value):.1%}"
+    except (ValueError, TypeError):
+        return default
+
+def safe_format_decimal(value, decimals=1, default="0.0"):
+    """Safely format a decimal value"""
+    try:
+        if value is None or pd.isna(value):
+            return default
+        return f"{float(value):.{decimals}f}"
+    except (ValueError, TypeError):
+        return default
+
+def safe_get_str(value, default="N/A"):
+    """Safely get string value"""
+    if value is None or pd.isna(value):
+        return default
+    return str(value)
+
 # Initialize session state
 if 'cortex_client' not in st.session_state:
     st.session_state.cortex_client = CortexClient()
@@ -144,8 +178,13 @@ def main():
         customers_df = st.session_state.data_helpers.get_customers()
         
         if not customers_df.empty:
-            customer_options = [f"{row['FIRST_NAME']} {row['LAST_NAME']} ({row['CUSTOMER_TIER'].title()})" 
-                              for _, row in customers_df.iterrows()]
+            customer_options = []
+            for _, row in customers_df.iterrows():
+                first_name = safe_get_str(row.get('FIRST_NAME', ''), 'Unknown')
+                last_name = safe_get_str(row.get('LAST_NAME', ''), 'Customer')
+                tier = safe_get_str(row.get('CUSTOMER_TIER', 'bronze'), 'bronze').title()
+                customer_options.append(f"{first_name} {last_name} ({tier})")
+            
             selected_customer_idx = st.selectbox(
                 "Choose Customer",
                 range(len(customer_options)),
@@ -158,12 +197,18 @@ def main():
                 
                 # Display selected customer info
                 customer = st.session_state.selected_customer
+                first_name = safe_get_str(customer.get('FIRST_NAME', ''), 'Unknown')
+                last_name = safe_get_str(customer.get('LAST_NAME', ''), 'Customer')
+                tier = safe_get_str(customer.get('CUSTOMER_TIER', 'bronze'), 'bronze').title()
+                status = safe_get_str(customer.get('ACCOUNT_STATUS', 'unknown'), 'unknown').title()
+                total_spent = safe_format_currency(customer.get('TOTAL_SPENT', 0))
+                
                 st.markdown(f"""
                 **Selected Customer:**  
-                {customer['FIRST_NAME']} {customer['LAST_NAME']}  
-                **Tier:** {customer['CUSTOMER_TIER'].title()}  
-                **Status:** {customer['ACCOUNT_STATUS'].title()}  
-                **Total Spent:** ${customer['TOTAL_SPENT']:,.2f}
+                {first_name} {last_name}  
+                **Tier:** {tier}  
+                **Status:** {status}  
+                **Total Spent:** {total_spent}
                 """)
         
         st.divider()
@@ -212,16 +257,22 @@ def render_dashboard_overview():
         st.metric("Total Customers", total_customers, delta="5 new this month")
     
     with col2:
-        total_revenue = customers_df['TOTAL_SPENT'].sum()
-        st.metric("Total Revenue", f"${total_revenue:,.0f}", delta="12% vs last month")
+        total_revenue = customers_df['TOTAL_SPENT'].sum() if not customers_df.empty else 0
+        st.metric("Total Revenue", safe_format_currency(total_revenue), delta="12% vs last month")
     
     with col3:
-        avg_satisfaction = customers_df['SATISFACTION_SCORE'].mean()
-        st.metric("Avg Satisfaction", f"{avg_satisfaction:.1f}/5.0", delta="0.2 improvement")
+        if not customers_df.empty and 'SATISFACTION_SCORE' in customers_df.columns:
+            avg_satisfaction = customers_df['SATISFACTION_SCORE'].mean()
+            st.metric("Avg Satisfaction", f"{safe_format_decimal(avg_satisfaction)}/5.0", delta="0.2 improvement")
+        else:
+            st.metric("Avg Satisfaction", "N/A", delta="No data")
     
     with col4:
-        high_risk_customers = len(customers_df[customers_df['CHURN_RISK_SCORE'] > 0.5])
-        st.metric("High Risk Customers", high_risk_customers, delta="-2 from last month")
+        if not customers_df.empty and 'CHURN_RISK_SCORE' in customers_df.columns:
+            high_risk_customers = len(customers_df[customers_df['CHURN_RISK_SCORE'] > 0.5])
+            st.metric("High Risk Customers", high_risk_customers, delta="-2 from last month")
+        else:
+            st.metric("High Risk Customers", "0", delta="No data")
     
     st.divider()
     
@@ -231,75 +282,102 @@ def render_dashboard_overview():
     with col1:
         # Customer distribution by tier
         st.subheader("🏆 Customer Distribution by Tier")
-        tier_counts = customers_df['CUSTOMER_TIER'].value_counts()
-        
-        fig_tier = px.pie(
-            values=tier_counts.values,
-            names=tier_counts.index,
-            title="Customer Tiers",
-            color_discrete_map={
-                'platinum': '#ffd700',
-                'gold': '#fbbf24', 
-                'silver': '#9ca3af',
-                'bronze': '#92400e'
-            }
-        )
-        fig_tier.update_traces(textposition='inside', textinfo='percent+label')
-        st.plotly_chart(fig_tier, use_container_width=True)
+        if not customers_df.empty and 'CUSTOMER_TIER' in customers_df.columns:
+            tier_counts = customers_df['CUSTOMER_TIER'].value_counts()
+            
+            fig_tier = px.pie(
+                values=tier_counts.values,
+                names=tier_counts.index,
+                title="Customer Tiers",
+                color_discrete_map={
+                    'platinum': '#ffd700',
+                    'gold': '#fbbf24', 
+                    'silver': '#9ca3af',
+                    'bronze': '#92400e'
+                }
+            )
+            fig_tier.update_traces(textposition='inside', textinfo='percent+label')
+            st.plotly_chart(fig_tier, use_container_width=True)
+        else:
+            st.info("No customer tier data available")
         
         # Churn risk analysis
         st.subheader("⚠️ Churn Risk Analysis")
-        customers_df['risk_category'] = customers_df['CHURN_RISK_SCORE'].apply(
-            lambda x: 'High Risk' if x > 0.5 else 'Medium Risk' if x > 0.3 else 'Low Risk'
-        )
-        
-        fig_risk = px.scatter(
-            customers_df,
-            x='TOTAL_SPENT',
-            y='CHURN_RISK_SCORE',
-            color='CUSTOMER_TIER',
-            size='LIFETIME_VALUE',
-            hover_data=['FIRST_NAME', 'LAST_NAME', 'SATISFACTION_SCORE'],
-            title="Customer Value vs Churn Risk",
-            labels={
-                'TOTAL_SPENT': 'Total Spent ($)',
-                'CHURN_RISK_SCORE': 'Churn Risk Score'
-            }
-        )
-        st.plotly_chart(fig_risk, use_container_width=True)
+        if not customers_df.empty and 'CHURN_RISK_SCORE' in customers_df.columns:
+            customers_df['risk_category'] = customers_df['CHURN_RISK_SCORE'].apply(
+                lambda x: 'High Risk' if pd.notna(x) and x > 0.5 else 'Medium Risk' if pd.notna(x) and x > 0.3 else 'Low Risk'
+            )
+            
+            # Only create scatter plot if we have the required columns
+            required_cols = ['TOTAL_SPENT', 'CHURN_RISK_SCORE', 'CUSTOMER_TIER', 'LIFETIME_VALUE', 'FIRST_NAME', 'LAST_NAME', 'SATISFACTION_SCORE']
+            if all(col in customers_df.columns for col in required_cols):
+                fig_risk = px.scatter(
+                    customers_df,
+                    x='TOTAL_SPENT',
+                    y='CHURN_RISK_SCORE',
+                    color='CUSTOMER_TIER',
+                    size='LIFETIME_VALUE',
+                    hover_data=['FIRST_NAME', 'LAST_NAME', 'SATISFACTION_SCORE'],
+                    title="Customer Value vs Churn Risk",
+                    labels={
+                        'TOTAL_SPENT': 'Total Spent ($)',
+                        'CHURN_RISK_SCORE': 'Churn Risk Score'
+                    }
+                )
+                st.plotly_chart(fig_risk, use_container_width=True)
+            else:
+                st.info("Insufficient data for churn risk analysis")
+        else:
+            st.info("No churn risk data available")
     
     with col2:
         # Top customers
         st.subheader("🌟 Top Customers")
-        top_customers = customers_df.nlargest(5, 'TOTAL_SPENT')[
-            ['FIRST_NAME', 'LAST_NAME', 'CUSTOMER_TIER', 'TOTAL_SPENT']
-        ]
-        for _, customer in top_customers.iterrows():
-            tier_class = f"customer-tier-{customer['CUSTOMER_TIER']}"
-            st.markdown(f"""
-            <div class="metric-card">
-                <div class="{tier_class}" style="padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem;">
-                    {customer['FIRST_NAME']} {customer['LAST_NAME']}
-                </div>
-                <strong>${customer['TOTAL_SPENT']:,.2f}</strong>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
+        if not customers_df.empty:
+            display_cols = ['FIRST_NAME', 'LAST_NAME', 'CUSTOMER_TIER', 'TOTAL_SPENT']
+            available_cols = [col for col in display_cols if col in customers_df.columns]
+            
+            if available_cols:
+                top_customers = customers_df.nlargest(5, 'TOTAL_SPENT')[available_cols]
+                for _, customer in top_customers.iterrows():
+                    first_name = safe_get_str(customer.get('FIRST_NAME', ''), 'Unknown')
+                    last_name = safe_get_str(customer.get('LAST_NAME', ''), 'Customer')
+                    tier = safe_get_str(customer.get('CUSTOMER_TIER', 'bronze'), 'bronze')
+                    total_spent = safe_format_currency(customer.get('TOTAL_SPENT', 0))
+                    
+                    tier_class = f"customer-tier-{tier}"
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="{tier_class}" style="padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem;">
+                            {first_name} {last_name}
+                        </div>
+                        <strong>{total_spent}</strong>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.markdown("<br>", unsafe_allow_html=True)
+            else:
+                st.info("No customer data available")
         
         # Recent activities summary
         st.subheader("📱 Recent Activities")
-        if not activities_df.empty:
+        if not activities_df.empty and 'ACTIVITY_TYPE' in activities_df.columns:
             activity_counts = activities_df.groupby('ACTIVITY_TYPE').size().sort_values(ascending=False)
             for activity_type, count in activity_counts.head(5).items():
-                st.markdown(f"**{activity_type.replace('_', ' ').title()}:** {count}")
+                st.markdown(f"**{str(activity_type).replace('_', ' ').title()}:** {count}")
+        else:
+            st.info("No recent activities available")
         
         # Alert box for high-risk customers
-        high_risk_df = customers_df[customers_df['CHURN_RISK_SCORE'] > 0.5]
-        if not high_risk_df.empty:
-            st.error("🚨 **Attention Required**")
-            st.markdown("**High-risk customers:**")
-            for _, customer in high_risk_df.iterrows():
-                st.markdown(f"• {customer['FIRST_NAME']} {customer['LAST_NAME']} (Risk: {customer['CHURN_RISK_SCORE']:.2f})")
+        if not customers_df.empty and 'CHURN_RISK_SCORE' in customers_df.columns:
+            high_risk_df = customers_df[customers_df['CHURN_RISK_SCORE'] > 0.5]
+            if not high_risk_df.empty:
+                st.error("🚨 **Attention Required**")
+                st.markdown("**High-risk customers:**")
+                for _, customer in high_risk_df.iterrows():
+                    first_name = safe_get_str(customer.get('FIRST_NAME', ''), 'Unknown')
+                    last_name = safe_get_str(customer.get('LAST_NAME', ''), 'Customer')
+                    risk_score = safe_format_percentage(customer.get('CHURN_RISK_SCORE', 0))
+                    st.markdown(f"• {first_name} {last_name} (Risk: {risk_score})")
 
 if __name__ == "__main__":
     main() 

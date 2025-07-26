@@ -1,380 +1,324 @@
-# Customer 360 & AI Assistant Demo - Deployment Guide
+# 🚀 Customer 360 & AI Assistant - Deployment Guide
 
-This guide walks you through deploying the Customer 360 & AI Assistant demo built with Snowflake Cortex and Streamlit.
+> **🏔️ Primary Deployment: Streamlit in Snowflake (SiS)**  
+> This guide focuses on the **recommended** native Snowflake deployment approach.
 
-## 🏗️ Architecture Overview
+## 📋 **Overview**
 
-The demo consists of:
-- **Database Layer**: Snowflake tables with customer data
-- **AI Layer**: Cortex Agents, Cortex Search, Cortex Analyst
-- **Frontend**: Streamlit in Snowflake application
-- **Real-time Features**: WebSocket-style updates and interactive dashboards
+This comprehensive guide covers deploying your Customer 360 & AI Assistant to **Streamlit in Snowflake**, providing a native, scalable, and maintenance-free solution.
 
-## 📋 Prerequisites
+## 🎯 **Deployment Options**
 
-### Snowflake Requirements
-- Snowflake account with **CORTEX_USER** role access
-- Access to Snowflake Cortex features (Agents, Search, Analyst)
-- Warehouse compute resources (SMALL or larger recommended)
-- Streamlit in Snowflake enabled
+### ✅ **Option 1: Streamlit in Snowflake (Recommended)**
+- **✅ No local dependencies** - Everything runs in Snowflake
+- **✅ Native data access** - Direct Snowpark integration
+- **✅ Auto-scaling** - Snowflake handles infrastructure
+- **✅ Enterprise security** - Built-in Snowflake security
+- **✅ Easy sharing** - Native collaboration features
 
-### Required Privileges
+### ❌ **Option 2: Local Streamlit (Deprecated)**
+- **❌ Complex setup** - Python environment management
+- **❌ Dependency conflicts** - Package version issues
+- **❌ Connection management** - Manual credential handling
+- **❌ Limited scalability** - Single machine constraints
+
+---
+
+## 🏔️ **Primary Deployment: Streamlit in Snowflake**
+
+### **📋 Prerequisites**
+
+1. ✅ **Snowflake Account** (any edition)
+2. ✅ **Streamlit Access** - Available in most Snowflake plans
+3. ✅ **Database Setup** - Customer 360 database already created
+4. ✅ **Required Permissions**:
+   - `CREATE STREAMLIT` on database
+   - `USAGE` on database and schema
+   - `SELECT` on all tables and functions
+   - `USAGE` on warehouse
+
+### **🗄️ Step 1: Database Setup**
+
+Run the complete database setup:
+
 ```sql
--- Grant necessary roles (run as ACCOUNTADMIN)
-GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE your_role;
-GRANT USAGE ON WAREHOUSE compute_wh TO ROLE your_role;
-GRANT CREATE DATABASE ON ACCOUNT TO ROLE your_role;
+-- Execute the master setup script
+@sql/99_complete_setup.sql
+
+-- Verify installation
+@sql/07_test_services.sql
 ```
 
-## 🚀 Step-by-Step Deployment
-
-### Step 1: Database Setup
-
-1. **Connect to Snowflake** using SnowSQL, Snowsight, or your preferred client
-
-2. **Run database setup scripts** in the following order:
-   ```sql
-   -- Execute each script in sequence
-   @sql/01_setup_database.sql
-   @sql/02_create_tables.sql  
-   @sql/03_sample_data.sql
-   ```
-
-3. **Verify database setup**:
-   ```sql
-   USE DATABASE customer_360_db;
-   USE SCHEMA public;
-   
-   -- Check tables were created
-   SHOW TABLES;
-   
-   -- Verify sample data
-   SELECT COUNT(*) FROM customers;
-   SELECT COUNT(*) FROM customer_activities;
-   ```
-
-### Step 2: Configure Cortex Search
-
-1. **Create search services**:
-   ```sql
-   @sql/04_cortex_search.sql
-   ```
-
-2. **Wait for indexing** (may take 5-10 minutes):
-   ```sql
-   -- Check search service status
-   DESCRIBE CORTEX SEARCH SERVICE customer_documents_search;
-   ```
-
-3. **Test search functionality**:
-   ```sql
-   -- Test document search
-   SELECT * FROM TABLE(
-       CORTEX_SEARCH(
-           'customer_documents_search',
-           'billing issues customer complaints'
-       )
-   ) LIMIT 5;
-   ```
-
-### Step 3: Set Up Semantic Model
-
-1. **Upload semantic model file**:
-   - Navigate to Snowsight → Data → Databases → customer_360_db → public
-   - Click on the `customer_360_semantic_model_stage`
-   - Upload `sql/05_semantic_model.yaml`
-
-2. **Alternative using SnowSQL**:
-   ```bash
-   snowsql -c your_connection -q "USE DATABASE customer_360_db;"
-   snowsql -c your_connection -q "PUT file://sql/05_semantic_model.yaml @customer_360_semantic_model_stage;"
-   ```
-
-### Step 4: Create Cortex Agent
-
-1. **Deploy the Cortex Agent**:
-   ```sql
-   @sql/06_cortex_agent.sql
-   ```
-
-2. **Test agent functionality**:
-   ```sql
-   -- Test basic AI queries
-   SELECT ask_customer_360_ai('How many customers do we have?');
-   SELECT analyze_customer('CUST_001', 'overview');
-   ```
-
-### Step 5: Deploy Streamlit Application
-
-1. **Navigate to Streamlit in Snowflake**:
-   - Go to Snowsight → AI & ML → Studio
-   - Click **+ Create** → **Streamlit App**
-
-2. **Configure the app**:
-   - **App Name**: `Customer 360 AI Assistant`
-   - **Warehouse**: `customer_360_wh`
-   - **Database**: `customer_360_db`
-   - **Schema**: `public`
-
-3. **Upload application files**:
-   - Main app: Copy content from `streamlit/customer_360_app.py`
-   - Create folder structure for components and utils
-   - Upload all files from the `streamlit/` directory
-
-4. **Install dependencies** (if needed):
-   ```python
-   # Add to requirements.txt in Streamlit
-   plotly
-   pandas
-   streamlit
-   ```
-
-### Step 6: Configure Connections
-
-1. **Set up Snowflake connection** in Streamlit:
-   ```python
-   # This should work automatically in Streamlit in Snowflake
-   conn = st.connection("snowflake")
-   ```
-
-2. **Test data connectivity**:
-   - Run the Streamlit app
-   - Check that customer data loads in the sidebar
-   - Verify dashboard metrics display correctly
-
-## 🔧 Configuration Options
-
-### Environment Variables
-
-If using external Streamlit deployment, create `.env`:
-```env
-SNOWFLAKE_ACCOUNT=your_account
-SNOWFLAKE_USER=your_username  
-SNOWFLAKE_PASSWORD=your_password
-SNOWFLAKE_ROLE=your_role
-SNOWFLAKE_WAREHOUSE=customer_360_wh
-SNOWFLAKE_DATABASE=customer_360_db
-SNOWFLAKE_SCHEMA=public
+**Expected Output:**
+```
+✅ Database: CUSTOMER_360_DB created
+✅ Warehouse: CUSTOMER_360_WH created  
+✅ Tables: 4 tables created
+✅ Functions: 6+ AI functions created
+✅ Sample Data: 100+ records loaded
 ```
 
-### Cortex Agent Customization
+### **🏔️ Step 2: Deploy to Streamlit in Snowflake**
 
-Modify the agent instructions in `sql/06_cortex_agent.sql`:
+#### **Method A: Web Interface (Easiest)**
+
+1. **Access Streamlit**:
+   - Log into Snowflake
+   - Navigate: **Projects** → **Streamlit**
+   - Click **"✚ Streamlit App"**
+
+2. **Configure App**:
+   ```
+   App Name: Customer_360_AI_Assistant
+   Database: CUSTOMER_360_DB
+   Schema: PUBLIC
+   Warehouse: CUSTOMER_360_WH
+   ```
+
+3. **Deploy Code**:
+   - Copy entire contents of `streamlit/customer_360_sis_app.py`
+   - Paste into Snowflake editor
+   - Click **"Run"** to test
+   - Click **"Deploy"** when ready
+
+4. **Access Your App**:
+   ```
+   URL: https://[account].snowflakecomputing.com/streamlit/Customer_360_AI_Assistant
+   ```
+
+#### **Method B: SQL Commands (Advanced)**
+
 ```sql
-CREATE OR REPLACE CORTEX AGENT customer_360_ai_assistant (
-    INSTRUCTIONS = 'Your custom instructions here...'
-) AS (
-    -- Tool configurations
-);
+-- Set context
+USE DATABASE CUSTOMER_360_DB;
+USE SCHEMA PUBLIC;
+
+-- Upload app file to stage
+PUT file://customer_360_sis_app.py @CUSTOMER_360_STAGE overwrite=true;
+
+-- Create Streamlit app
+CREATE OR REPLACE STREAMLIT customer_360_ai_assistant
+ROOT_LOCATION = '@CUSTOMER_360_STAGE'
+MAIN_FILE = 'customer_360_sis_app.py'
+QUERY_WAREHOUSE = 'CUSTOMER_360_WH'
+COMMENT = 'Customer 360 & AI Assistant - Native Snowflake Solution';
+
+-- Grant permissions
+GRANT USAGE ON STREAMLIT customer_360_ai_assistant TO ROLE [YOUR_ROLE];
 ```
 
-### Search Service Tuning
+### **🔧 Step 3: Verify Deployment**
 
-Adjust search parameters in `sql/04_cortex_search.sql`:
+Run the deployment verification script:
+
 ```sql
-CREATE OR REPLACE CORTEX SEARCH SERVICE customer_documents_search
-ON document_content
-ATTRIBUTES document_title, document_type, customer_id
-WAREHOUSE = customer_360_wh
-TARGET_LAG = '1 minute'  -- Adjust for faster updates
+@sql/10_deploy_streamlit.sql
 ```
 
-## 🧪 Testing the Deployment
+Expected checks:
+- ✅ Database and tables accessible
+- ✅ AI functions working
+- ✅ Sample data loaded
+- ✅ Warehouse active
+- ✅ Streamlit app created
 
-### 1. Database Tests
+### **👥 Step 4: Share with Team**
+
 ```sql
--- Test data integrity
+-- Grant app access to team members
+GRANT USAGE ON STREAMLIT customer_360_ai_assistant TO ROLE [TEAM_ROLE];
+
+-- Share database access
+GRANT USAGE ON DATABASE CUSTOMER_360_DB TO ROLE [TEAM_ROLE];
+GRANT SELECT ON ALL TABLES IN SCHEMA CUSTOMER_360_DB.PUBLIC TO ROLE [TEAM_ROLE];
+```
+
+---
+
+## 🎯 **App Features**
+
+Your deployed Streamlit in Snowflake app includes:
+
+### **📊 Dashboard Overview**
+- Real-time customer metrics and KPIs
+- Customer tier distribution with interactive charts
+- Top customer rankings by value
+- Revenue and engagement analytics
+
+### **👤 Customer Profiles**
+- Comprehensive individual customer views
+- Activity timelines and interaction history
+- Risk assessment and churn predictions
+- Engagement scoring and satisfaction metrics
+
+### **🤖 AI Assistant**
+- Natural language query interface
+- Customer-specific AI insights and analysis
+- Automated recommendation generation
+- Interactive chat with context awareness
+
+### **📈 Analytics Dashboard**
+- Revenue analysis by customer tier
+- Churn risk distribution visualization
+- Customer value segmentation
+- Trend analysis and forecasting
+
+### **📱 Activity Feed**
+- Real-time customer activity monitoring
+- Priority-based filtering and alerts
+- Customer interaction patterns
+- Support ticket and engagement tracking
+
+---
+
+## 🛠️ **Troubleshooting**
+
+### **Common Issues & Solutions**
+
+#### **🔴 "Permission Denied" Errors**
+```sql
+-- Verify role permissions
+SHOW GRANTS TO ROLE [YOUR_ROLE];
+
+-- Grant necessary permissions
+GRANT USAGE ON DATABASE CUSTOMER_360_DB TO ROLE [YOUR_ROLE];
+GRANT USAGE ON SCHEMA CUSTOMER_360_DB.PUBLIC TO ROLE [YOUR_ROLE];
+GRANT SELECT ON ALL TABLES IN SCHEMA CUSTOMER_360_DB.PUBLIC TO ROLE [YOUR_ROLE];
+GRANT USAGE ON ALL FUNCTIONS IN SCHEMA CUSTOMER_360_DB.PUBLIC TO ROLE [YOUR_ROLE];
+```
+
+#### **🔴 "Function Not Found" Errors**
+```sql
+-- Check if AI functions exist
+SHOW FUNCTIONS LIKE '%customer%' IN CUSTOMER_360_DB.PUBLIC;
+
+-- Recreate functions if missing
+@sql/06_cortex_agent.sql
+```
+
+#### **🔴 "Warehouse Suspended" Errors**
+```sql
+-- Check warehouse status
+SHOW WAREHOUSES LIKE 'CUSTOMER_360_WH';
+
+-- Resume warehouse
+ALTER WAREHOUSE CUSTOMER_360_WH RESUME;
+
+-- Set auto-resume
+ALTER WAREHOUSE CUSTOMER_360_WH SET AUTO_RESUME = TRUE;
+```
+
+#### **🔴 "No Data Available" Issues**
+```sql
+-- Verify sample data
+SELECT COUNT(*) as customers FROM customers;
+SELECT COUNT(*) as activities FROM customer_activities;
+
+-- Reload data if empty
+@sql/03_sample_data.sql
+```
+
+#### **🔴 Streamlit App Not Loading**
+1. **Check app status** in Snowflake UI → Projects → Streamlit
+2. **Verify warehouse** is running and accessible
+3. **Check permissions** on database and schema
+4. **Review error logs** in Streamlit interface
+
+### **🔍 Diagnostic Queries**
+
+```sql
+-- Check overall system health
 SELECT 
-    COUNT(*) as customer_count,
-    AVG(churn_risk_score) as avg_churn_risk,
-    COUNT(DISTINCT customer_tier) as tier_count
-FROM customers;
+    'Database' as component,
+    COUNT(*) as status 
+FROM INFORMATION_SCHEMA.TABLES 
+WHERE TABLE_SCHEMA = 'PUBLIC';
 
--- Test relationships
-SELECT c.first_name, c.last_name, COUNT(a.activity_id) as activities
-FROM customers c
-LEFT JOIN customer_activities a ON c.customer_id = a.customer_id
-GROUP BY c.customer_id, c.first_name, c.last_name
-ORDER BY activities DESC;
+-- Verify AI functions
+SELECT 
+    'AI Functions' as component,
+    COUNT(*) as status
+FROM INFORMATION_SCHEMA.FUNCTIONS 
+WHERE FUNCTION_SCHEMA = 'PUBLIC' 
+AND FUNCTION_NAME LIKE '%CUSTOMER%';
+
+-- Test core functionality
+SELECT analyze_customer_ai('CUST_001') as ai_test;
 ```
 
-### 2. Cortex Services Tests
+---
+
+## 📊 **Performance & Monitoring**
+
+### **📈 Monitor App Usage**
 ```sql
--- Test Cortex Search
-SELECT * FROM TABLE(
-    CORTEX_SEARCH('customer_documents_search', 'shipping delay')
-) LIMIT 3;
-
--- Test Cortex Agent
-SELECT ask_customer_360_ai('Show me high-risk customers');
-
--- Test Cortex Analyst
-SELECT analyze_customer('CUST_001', 'churn_risk');
+-- View app usage statistics
+SELECT 
+    DATE(START_TIME) as usage_date,
+    COUNT(*) as sessions,
+    COUNT(DISTINCT USER_NAME) as unique_users
+FROM SNOWFLAKE.ACCOUNT_USAGE.STREAMLIT_EVENTS
+WHERE STREAMLIT_NAME = 'CUSTOMER_360_AI_ASSISTANT'
+GROUP BY DATE(START_TIME)
+ORDER BY usage_date DESC;
 ```
 
-### 3. Streamlit Application Tests
-
-1. **Navigation Test**: Verify all tabs and pages load
-2. **Data Display Test**: Check customer profiles, charts, and metrics
-3. **AI Assistant Test**: Try various queries in the chat interface
-4. **Real-time Features**: Verify activity feed updates
-5. **Search and Filters**: Test customer search and filtering
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-#### 1. Cortex Services Not Available
+### **⚡ Performance Optimization**
 ```sql
--- Check if Cortex is enabled
-SHOW GRANTS TO ROLE your_role;
+-- Optimize warehouse size based on usage
+ALTER WAREHOUSE CUSTOMER_360_WH SET WAREHOUSE_SIZE = 'SMALL'; -- Adjust as needed
 
--- Enable Cortex user role
-GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE your_role;
+-- Enable result caching
+ALTER WAREHOUSE CUSTOMER_360_WH SET USE_CACHED_RESULT = TRUE;
 ```
 
-#### 2. Search Service Not Ready
-```sql
--- Check service status
-DESCRIBE CORTEX SEARCH SERVICE customer_documents_search;
+---
 
--- Wait for status to show 'READY'
--- May take 5-10 minutes after creation
-```
+## ⚠️ **Deprecated: Local Deployment**
 
-#### 3. Semantic Model File Issues
-```sql
--- Check if file was uploaded
-LIST @customer_360_semantic_model_stage;
+> **🚨 The local Streamlit deployment is DEPRECATED.**  
+> **Use Streamlit in Snowflake instead for better performance and maintenance.**
 
--- Re-upload if missing
-PUT file://sql/05_semantic_model.yaml @customer_360_semantic_model_stage;
-```
+If you still need local deployment for development purposes, see:
+- `streamlit/DEPRECATED_LOCAL_VERSION.md`
+- `streamlit/customer_360_app.py` (deprecated)
 
-#### 4. Streamlit Connection Issues
-- Verify warehouse is running and accessible
-- Check database and schema permissions
-- Ensure connection configuration is correct
+---
 
-### Performance Optimization
+## 🚀 **Next Steps**
 
-#### 1. Warehouse Sizing
-```sql
--- Scale up for better performance
-ALTER WAREHOUSE customer_360_wh SET WAREHOUSE_SIZE = 'MEDIUM';
+### **1. Customize Your App**
+- Modify UI components in `customer_360_sis_app.py`
+- Add custom metrics and visualizations
+- Integrate with your existing data sources
 
--- Auto-suspend to save costs
-ALTER WAREHOUSE customer_360_wh SET AUTO_SUSPEND = 300;
-```
+### **2. Extend Functionality**
+- Create additional AI analysis functions
+- Add more dashboard views
+- Implement custom search capabilities
 
-#### 2. Query Optimization
-```sql
--- Add clustering keys for large tables
-ALTER TABLE customer_activities CLUSTER BY (customer_id, activity_timestamp);
-```
+### **3. Production Readiness**
+- Set up monitoring and alerts
+- Configure backup and recovery
+- Implement role-based access control
 
-#### 3. Search Performance
-```sql
--- Monitor search service performance
-SELECT * FROM TABLE(INFORMATION_SCHEMA.CORTEX_SEARCH_SERVICE_USAGE_HISTORY());
-```
+### **4. Scale and Share**
+- Grant access to additional team members
+- Create departmental views
+- Integrate with BI tools
 
-## 🎯 Demo Scenarios
+---
 
-### Scenario 1: High-Value Customer Analysis
-1. Navigate to Customer Profile → Select Sarah Johnson (Platinum)
-2. Go to AI Insights tab → Generate insights
-3. Ask AI: "What opportunities exist with this customer?"
+## 🎉 **Success!**
 
-### Scenario 2: Churn Risk Assessment  
-1. Go to Analytics Dashboard → Risk Assessment tab
-2. Identify high-risk customers (Emma Davis)
-3. Use AI Assistant: "How can we reduce Emma's churn risk?"
+Your **Customer 360 & AI Assistant** is now running natively in Snowflake with:
 
-### Scenario 3: Support Issue Analysis
-1. Check Activity Feed for support activities
-2. Use AI search: "Find customers with billing complaints"
-3. Generate resolution recommendations
+- ✅ **Zero maintenance** - Snowflake handles infrastructure
+- ✅ **Enterprise security** - Built-in data protection
+- ✅ **Auto-scaling** - Handles any workload size
+- ✅ **Native integration** - Direct access to all Snowflake features
+- ✅ **Team collaboration** - Easy sharing and permissions
 
-### Scenario 4: Revenue Optimization
-1. Analytics Dashboard → Revenue Analytics
-2. AI query: "Which customer segment has the highest growth potential?"
-3. Explore cross-sell opportunities
+**🔗 Access your app**: `https://[your-account].snowflakecomputing.com/streamlit/Customer_360_AI_Assistant`
 
-## 📊 Monitoring and Maintenance
-
-### Performance Monitoring
-```sql
--- Monitor warehouse usage
-SELECT * FROM TABLE(INFORMATION_SCHEMA.WAREHOUSE_METERING_HISTORY());
-
--- Check query performance
-SELECT * FROM TABLE(INFORMATION_SCHEMA.QUERY_HISTORY()) 
-WHERE QUERY_TEXT LIKE '%customer_360%'
-ORDER BY START_TIME DESC;
-```
-
-### Data Refresh
-```sql
--- Add new sample data periodically
-INSERT INTO customer_activities (
-    activity_id, customer_id, activity_type, activity_title, 
-    activity_description, activity_timestamp, channel, priority
-) VALUES (
-    'ACT_' || CURRENT_TIMESTAMP()::STRING, 
-    'CUST_001', 
-    'login', 
-    'Account Login',
-    'Logged into customer portal',
-    CURRENT_TIMESTAMP(),
-    'web',
-    'low'
-);
-```
-
-### Security Best Practices
-1. Use least-privilege access principles
-2. Regularly rotate credentials
-3. Monitor access logs
-4. Enable network policies if needed
-
-## 🎉 Success Criteria
-
-Your deployment is successful when:
-
-- ✅ All database tables are created and populated
-- ✅ Cortex Search returns relevant results
-- ✅ Cortex Agent responds to queries
-- ✅ Streamlit app loads without errors
-- ✅ Customer profiles display correctly
-- ✅ AI Assistant provides meaningful responses
-- ✅ Analytics dashboards show visualizations
-- ✅ Activity feed displays real-time data
-
-## 📞 Support
-
-For issues and questions:
-1. Check Snowflake documentation for Cortex features
-2. Review Streamlit in Snowflake guides
-3. Consult the troubleshooting section above
-4. Contact your Snowflake account team for Cortex-specific issues
-
-## 🔄 Updates and Extensions
-
-### Adding New Data Sources
-1. Create new tables following the existing schema patterns
-2. Update the semantic model YAML file
-3. Refresh the Cortex Agent configuration
-4. Add new visualizations to Streamlit components
-
-### Customizing AI Responses
-1. Modify agent instructions in `sql/06_cortex_agent.sql`
-2. Add new tools or update existing tool configurations
-3. Create custom functions for specific business logic
-
-### Scaling for Production
-1. Implement proper data governance
-2. Add user authentication and authorization
-3. Set up monitoring and alerting
-4. Optimize for larger data volumes
-5. Implement CI/CD for updates 
+**Ready to explore your customer data with AI-powered insights!** 🚀 

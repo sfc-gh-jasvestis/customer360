@@ -1,300 +1,259 @@
-# Customer 360 & AI Assistant Demo
+# 🎯 Customer 360 & AI Assistant
 
-**A comprehensive Snowflake-native customer data platform with AI-powered insights and real-time analytics.**
+> **🏔️ Native Snowflake Solution** - Deploy directly to **Streamlit in Snowflake** for maximum performance and ease!
 
-> 🚀 **Compatible with all Snowflake editions** - No premium features required!
+A comprehensive **Customer 360** solution built entirely on the **Snowflake Data Cloud**, featuring AI-powered insights, real-time analytics, and an intuitive dashboard interface.
 
-## 🎯 Overview
+## ✨ **Key Features**
 
-This demo showcases a complete Customer 360 solution built entirely on Snowflake, featuring:
+### 🎯 **Customer 360 View**
+- **Unified Customer Profiles** - Complete customer journey visualization
+- **Real-time Activity Tracking** - Live customer interactions and behaviors
+- **Risk Assessment** - AI-powered churn prediction and intervention alerts
+- **Customer Segmentation** - Dynamic tier-based customer grouping
 
-- **🏪 Customer 360 Dashboard** - Comprehensive customer profiles with risk scoring
-- **🤖 AI-Powered Analysis** - Intelligent customer insights and recommendations  
-- **🔍 Advanced Search** - Text-based document and activity search
-- **📊 Real-time Analytics** - Customer behavior and engagement metrics
-- **⚠️ Risk Assessment** - Churn prediction and retention strategies
-- **🎨 Beautiful UI** - Modern Streamlit interface with interactive charts
+### 🤖 **AI-Powered Insights**
+- **Natural Language Queries** - Ask questions about your customers in plain English
+- **Intelligent Recommendations** - AI-driven customer engagement suggestions
+- **Advanced Search** - Text-based search across customer documents and activities
+- **Automated Analysis** - Generate comprehensive customer reports instantly
 
-## ✨ Key Features
+### 📊 **Interactive Analytics**
+- **Real-time Dashboards** - Live customer metrics and KPIs
+- **Revenue Analytics** - Customer lifetime value and spending patterns
+- **Engagement Metrics** - Satisfaction scores and interaction tracking
+- **Trend Analysis** - Historical patterns and predictive insights
 
-### 📈 Customer Analytics
-- **360° Customer Profiles** with financial and behavioral metrics
-- **Churn Risk Scoring** with automated recommendations
-- **Customer Segmentation** by tier, value, and engagement
-- **Activity Timeline** tracking all customer interactions
+## 🏗️ **Architecture**
 
-### 🔍 Intelligent Search
-- **Document Search** across support tickets, contracts, and feedback
-- **Activity Search** through customer behavior history
-- **Relevance Scoring** for precise result ranking
-- **Quick Filters** by customer tier, document type, and date ranges
+Built entirely on **Snowflake** for enterprise-grade performance:
 
-### 🤖 AI-Powered Insights
-- **Customer Analysis** with risk assessment and opportunities
-- **Business Intelligence** with automated insights discovery
-- **Recommendation Engine** for next-best actions
-- **Performance Analytics** across customer segments
+```
+┌─────────────────────┐    ┌──────────────────────┐    ┌─────────────────────┐
+│   Streamlit in      │    │    Snowflake        │    │    AI & Search      │
+│    Snowflake        │◄──►│   Data Cloud         │◄──►│    Functions        │
+│  (Frontend/UI)      │    │  (Data Platform)     │    │  (Intelligence)     │
+└─────────────────────┘    └──────────────────────┘    └─────────────────────┘
+         │                            │                            │
+         ▼                            ▼                            ▼
+   Interactive                   Customer Data                AI Analysis
+   Dashboards                   • customers                  • analyze_customer_ai
+   • Customer 360               • customer_activities        • get_insights_summary  
+   • Analytics                  • purchases                  • search_documents
+   • AI Assistant               • support_tickets            • generate_reports
+```
 
-### 📊 Rich Visualizations
-- **Interactive Dashboards** built with Plotly
-- **Real-time Metrics** and KPI tracking
-- **Customer Journey Mapping** with activity flows
-- **Risk Heatmaps** and trend analysis
+### **🔧 Technology Stack**
+- **Frontend**: Streamlit in Snowflake (SiS) - No local dependencies!
+- **Backend**: Snowflake Data Cloud with native SQL UDFs
+- **AI Engine**: Snowflake Cortex functions with intelligent fallbacks
+- **Data Storage**: Snowflake tables with optimized schemas
+- **Analytics**: Native Snowflake SQL with Plotly visualizations
 
-## 🚀 Quick Start
+## 🚀 **Quick Start**
 
-### Prerequisites
-- Snowflake account (any edition)
-- Basic SQL execution permissions
-- Python 3.8+ (for Streamlit app)
-
-### 1. Setup Database & Data
-
+### **Step 1: Set Up Database**
 ```sql
--- Run the complete setup (creates everything)
+-- Run the complete setup (includes all tables, functions, and sample data)
 @sql/99_complete_setup.sql
 ```
 
-### 2. Test Your Installation
+### **Step 2: Deploy to Streamlit in Snowflake**
+1. **Go to Snowflake Web UI** → **Projects** → **Streamlit**
+2. **Click "✚ Streamlit App"**
+3. **Configure**:
+   - Name: `Customer_360_AI_Assistant`
+   - Database: `CUSTOMER_360_DB`
+   - Schema: `PUBLIC`
+   - Warehouse: `CUSTOMER_360_WH`
+4. **Copy & Paste** the contents of `streamlit/customer_360_sis_app.py`
+5. **Click "Deploy"** 🚀
 
-```sql
--- Verify everything is working
-@sql/07_test_services.sql
+### **Step 3: Start Exploring!**
+Your Customer 360 app will be available at:
+`https://[your-account].snowflakecomputing.com/streamlit/Customer_360_AI_Assistant`
+
+## 📁 **Project Structure**
+
+```
+customer360/
+├── 📁 sql/                              # Database setup & configuration
+│   ├── 01_setup_database.sql           # Database and warehouse creation
+│   ├── 02_create_tables.sql            # Customer data schema
+│   ├── 03_sample_data.sql              # Sample customer data
+│   ├── 04_cortex_search.sql            # Search capabilities
+│   ├── 06_cortex_agent.sql             # AI analysis functions
+│   ├── 07_test_services.sql            # Service verification
+│   ├── 10_deploy_streamlit.sql         # SiS deployment verification
+│   └── 99_complete_setup.sql           # Complete automated setup
+├── 📁 streamlit/                       # Streamlit in Snowflake app
+│   ├── customer_360_sis_app.py         # 🏔️ Main SiS application
+│   ├── DEPLOY_TO_SNOWFLAKE.md          # Deployment guide
+│   ├── customer_360_app.py             # [Deprecated] Local version
+│   └── 📁 components/                  # [Deprecated] Local components
+├── 📁 scripts/                         # Automation & utilities
+│   ├── reset_demo.sh                   # Complete reset automation
+│   ├── quick_setup.py                  # Interactive Python setup
+│   └── check_demo_status.sql           # Health verification
+└── 📁 docs/                            # Documentation
+    └── deployment_guide.md             # Detailed deployment guide
 ```
 
-### 3. Try Key Features
+## 🎯 **Core Capabilities**
 
+### **👤 Customer Profiles**
 ```sql
--- Search for documents
-SELECT * FROM TABLE(search_documents_simple('billing')) LIMIT 5;
+-- Get complete customer view
+SELECT * FROM customers WHERE customer_id = 'CUST_001';
 
--- Analyze a customer
+-- Analyze customer with AI
 SELECT analyze_customer_ai('CUST_001');
+```
 
--- View high-risk customers
+### **🔍 Intelligent Search**
+```sql
+-- Search customer documents
+SELECT search_customer_documents_text('billing issue');
+
+-- Search activities
+SELECT * FROM searchable_activities WHERE content LIKE '%support%';
+```
+
+### **📊 Advanced Analytics**
+```sql
+-- Customer insights dashboard
+SELECT * FROM customer_360_dashboard;
+
+-- High-risk customers
 SELECT * FROM high_risk_customers;
 
--- Dashboard overview
-SELECT * FROM customer_360_dashboard;
-```
-
-## 📁 Project Structure
-
-```
-customer-360-demo/
-├── sql/                          # Database setup and functions
-│   ├── 00_cleanup_demo.sql       # Reset/cleanup script
-│   ├── 01_setup_database.sql     # Database and warehouse setup
-│   ├── 02_create_tables.sql      # Schema creation
-│   ├── 03_sample_data.sql        # Sample data loading
-│   ├── 04_cortex_search.sql      # Search functions (no Cortex required)
-│   ├── 06_cortex_agent.sql       # AI analysis functions
-│   ├── 07_test_services.sql      # Verification and testing
-│   └── 99_complete_setup.sql     # One-click full setup ⭐
-├── streamlit/                    # Web application
-│   ├── customer_360_app.py       # Main application
-│   ├── components/               # UI components
-│   └── utils/                    # Helper functions
-├── scripts/                      # Automation scripts
-│   ├── reset_demo.sh            # Demo reset automation
-│   ├── quick_setup.py           # Interactive setup
-│   └── check_demo_status.sql    # Status verification
-├── docs/                        # Documentation
-│   └── deployment_guide.md     # Detailed deployment guide
-└── README.md                    # This file
-```
-
-## 🎮 Demo Scenarios
-
-### Scenario 1: High-Risk Customer Analysis
-```sql
--- Find customers at risk of churning
-SELECT customer_name, churn_risk_score, risk_level, 
-       recent_activity_count, open_tickets
-FROM customer_360_dashboard 
-WHERE risk_level = 'HIGH'
-ORDER BY churn_risk_score DESC;
-
--- Get detailed analysis with recommendations
-SELECT analyze_customer_ai('CUST_003');
-```
-
-### Scenario 2: Customer Support Intelligence
-```sql
--- Search support conversations for billing issues
-SELECT * FROM TABLE(search_documents_simple('billing problems')) LIMIT 10;
-
--- Find customers with recent support activity
-SELECT customer_name, customer_tier, total_tickets, open_tickets
-FROM customer_360_dashboard 
-WHERE open_tickets > 0;
-```
-
-### Scenario 3: Customer Segmentation Analysis
-```sql
--- Analyze performance by customer tier
+-- Customer value segments
 SELECT * FROM customer_value_segments;
-
--- Find high-value customers for upselling
-SELECT customer_name, customer_tier, total_spent, engagement_level
-FROM customer_360_dashboard 
-WHERE engagement_level = 'HIGH' AND customer_tier IN ('gold', 'silver');
 ```
 
-## 🔧 Advanced Configuration
+## 🛠 **Development Setup**
 
-### Adding More Sample Data
-Extend the sample dataset in `sql/03_sample_data.sql`:
+### **Prerequisites**
+- ✅ **Snowflake Account** (any edition)
+- ✅ **Database Admin** privileges
+- ✅ **Streamlit in Snowflake** access
 
-```sql
--- Add more customers
-INSERT INTO customers (...) VALUES (...);
-UPDATE customers SET customer_tags = PARSE_JSON('[...]') WHERE customer_id = '...';
-```
+### **Local Development** (Optional)
+If you want to modify the code locally before deploying:
 
-### Custom Search Functions
-Create domain-specific search functions:
-
-```sql
-CREATE OR REPLACE FUNCTION search_by_sentiment(sentiment STRING)
-RETURNS TABLE(...) AS $$
-    SELECT * FROM searchable_documents 
-    WHERE searchable_text LIKE CONCAT('%', UPPER(sentiment), '%')
-    ORDER BY created_at DESC
-$$;
-```
-
-### Enhanced Analytics
-Add custom metrics and KPIs:
-
-```sql
-CREATE OR REPLACE VIEW customer_lifetime_metrics AS
-SELECT 
-    customer_id,
-    DATEDIFF('day', join_date, CURRENT_DATE()) as days_as_customer,
-    total_spent / NULLIF(DATEDIFF('day', join_date, CURRENT_DATE()), 0) as daily_value,
-    -- Add more custom metrics
-FROM customers;
-```
-
-## 🎨 Streamlit Application
-
-### Setup
 ```bash
-# Install dependencies
-pip install streamlit snowflake-connector-python plotly pandas
+# Clone repository
+git clone https://github.com/sfc-gh-jasvestis/customer360.git
+cd customer360
 
-# Run the application
-streamlit run streamlit/customer_360_app.py
+# Set up Python environment (optional)
+pip install streamlit pandas plotly snowflake-snowpark-python
+
+# Edit the SiS app file
+code streamlit/customer_360_sis_app.py
 ```
 
-### Features
-- **Interactive Dashboard** with real-time metrics
-- **Customer Search** with advanced filtering
-- **AI Chat Interface** for natural language queries
-- **Visual Analytics** with Plotly charts
-- **Export Capabilities** for reports and data
+## 🏔️ **Deployment Methods**
 
-## 🔍 Available Functions & Views
+### **Method 1: Web Interface** (Recommended)
+1. Copy `streamlit/customer_360_sis_app.py` content
+2. Paste into Snowflake Streamlit editor
+3. Configure app settings
+4. Deploy! 
 
-### 🔧 Search Functions
-- `search_documents_simple(search_terms)` - Basic document search
-- `search_documents_advanced(terms, type, tier, days)` - Advanced search with filters
-- `search_activities_advanced(terms, type, days)` - Activity search
+**See**: `streamlit/DEPLOY_TO_SNOWFLAKE.md` for detailed steps
 
-### 🤖 AI Functions  
-- `analyze_customer_ai(customer_id)` - Comprehensive customer analysis
-- `generate_customer_report(customer_id)` - Detailed customer report
-- `get_customer_insights_summary()` - Business intelligence insights
-
-### 📊 Dashboard Views
-- `customer_360_dashboard` - Main customer dashboard
-- `high_risk_customers` - Customers with high churn risk
-- `customer_value_segments` - Customer tier analysis
-- `searchable_documents` - All documents with search metadata
-- `support_related_content` - Support tickets and conversations
-- `billing_related_content` - Billing-related documents and activities
-
-## 🛠️ Troubleshooting
-
-### Common Issues
-
-**1. "Unknown function" errors**
+### **Method 2: SQL Commands**
 ```sql
--- Verify functions are created
-SHOW USER FUNCTIONS;
+-- Upload file to stage
+PUT file://customer_360_sis_app.py @CUSTOMER_360_STAGE;
 
--- Recreate if needed
-@sql/06_cortex_agent.sql
+-- Create Streamlit app
+CREATE STREAMLIT customer_360_ai_assistant
+ROOT_LOCATION = '@CUSTOMER_360_STAGE'
+MAIN_FILE = 'customer_360_sis_app.py'
+QUERY_WAREHOUSE = 'CUSTOMER_360_WH';
 ```
 
-**2. "Table not found" errors**
-```sql
--- Check table creation
-SHOW TABLES;
+## 🎨 **Demo Scenarios**
 
--- Recreate schema if needed
-@sql/02_create_tables.sql
+### **Scenario 1: Customer Risk Analysis**
+- View high-risk customers dashboard
+- Drill down into specific customer profiles
+- Use AI to analyze churn probability
+- Generate retention recommendations
+
+### **Scenario 2: Revenue Optimization**
+- Analyze customer value segments
+- Identify upsell opportunities
+- Track customer lifetime value trends
+- Generate growth strategy reports
+
+### **Scenario 3: Customer Support**
+- Search support ticket history
+- Analyze customer satisfaction trends
+- Identify common issues
+- Generate support insights
+
+## 🔧 **Troubleshooting**
+
+### **Common Issues & Solutions**
+
+#### **❌ "Function Not Found" Errors**
+```sql
+-- Verify functions exist
+SHOW FUNCTIONS LIKE '%customer%' IN CUSTOMER_360_DB.PUBLIC;
+
+-- Re-run setup if needed
+@sql/99_complete_setup.sql
 ```
 
-**3. Empty search results**
+#### **❌ "Permission Denied" Errors**
 ```sql
--- Verify sample data
-SELECT COUNT(*) FROM customer_documents;
+-- Grant necessary permissions
+GRANT USAGE ON DATABASE CUSTOMER_360_DB TO ROLE [YOUR_ROLE];
+GRANT SELECT ON ALL TABLES IN SCHEMA CUSTOMER_360_DB.PUBLIC TO ROLE [YOUR_ROLE];
+```
 
--- Reload data if needed
+#### **❌ "No Data" Issues**
+```sql
+-- Check if sample data loaded
+SELECT COUNT(*) FROM customers;
+
+-- Reload if needed
 @sql/03_sample_data.sql
 ```
 
-### Reset Demo
-```sql
--- Complete reset and fresh setup
-@sql/00_cleanup_demo.sql
-@sql/99_complete_setup.sql
-```
+### **Getting Help**
+- 📖 **Deployment Guide**: `streamlit/DEPLOY_TO_SNOWFLAKE.md`
+- 🔍 **Status Check**: Run `scripts/check_demo_status.sql`
+- 🔄 **Reset Demo**: Run `scripts/reset_demo.sh`
 
-## 📚 Sample Data
+## 🤝 **Contributing**
 
-The demo includes realistic sample data:
+We welcome contributions! See `CONTRIBUTING.md` for guidelines.
 
-- **5 Customers** across different tiers (Bronze to Platinum)
-- **11+ Activities** including purchases, logins, support tickets
-- **4 Documents** with support conversations and contracts  
-- **3 Support Tickets** with various priorities and statuses
-- **Multiple Communications** with engagement tracking
-
-### Customer Profiles
-- **Sarah Johnson** (Platinum) - High-value tech enthusiast
-- **Michael Chen** (Gold) - Frequent buyer with shipping issues  
-- **Emma Davis** (Silver) - At-risk customer with billing problems
-- **James Wilson** (Bronze) - New customer with high potential
-- **Lisa Rodriguez** (Platinum) - Enterprise VIP customer
-
-## 🤝 Contributing
-
+### **Quick Contribution Guide**
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Test with Snowflake
+5. Submit a pull request
 
-## 📝 License
+## 📄 **License**
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the `LICENSE` file for details.
 
-## 🆘 Support
+## 🏷️ **Tags**
 
-- 📧 Create an issue for bug reports or feature requests
-- 💬 Start a discussion for questions and ideas
-- 📖 Check the [deployment guide](docs/deployment_guide.md) for detailed instructions
-
-## 🎉 Acknowledgments
-
-- Built for **Snowflake Data Cloud**
-- UI powered by **Streamlit**
-- Charts created with **Plotly**
-- Compatible with **all Snowflake editions**
+`snowflake` `streamlit` `customer-360` `ai-assistant` `analytics` `data-cloud` `customer-insights` `real-time` `dashboard`
 
 ---
 
-**🚀 Ready to explore your Customer 360 platform? Start with `@sql/99_complete_setup.sql`!** 
+## 🎉 **Ready to Get Started?**
+
+1. **🏔️ Deploy to Snowflake**: Use `streamlit/customer_360_sis_app.py`
+2. **📊 Explore Your Data**: Interactive dashboards and AI insights
+3. **🚀 Scale with Confidence**: Enterprise-grade Snowflake infrastructure
+
+**Your Customer 360 & AI Assistant is just one deployment away!** ✨ 
