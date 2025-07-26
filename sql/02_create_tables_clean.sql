@@ -1,1 +1,0 @@
-@sql/02_create_tables_clean.sql

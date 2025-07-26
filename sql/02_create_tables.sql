@@ -1,7 +1,7 @@
 -- =========================================
--- Customer 360 Demo - Clean Table Creation
+-- Customer 360 Demo - Table Creation
 -- =========================================
--- This version has NO index creation to avoid any hybrid table errors
+-- Clean version without index creation to avoid hybrid table errors
 
 USE DATABASE customer_360_db;
 USE SCHEMA public;
@@ -29,7 +29,7 @@ CREATE OR REPLACE TABLE customers (
     
     -- Account information
     account_status VARCHAR(20) DEFAULT 'active',
-    customer_tier VARCHAR(20) DEFAULT 'bronze',
+    customer_tier VARCHAR(20) DEFAULT 'bronze', -- bronze, silver, gold, platinum
     join_date DATE NOT NULL,
     last_login_date TIMESTAMP,
     
@@ -39,8 +39,8 @@ CREATE OR REPLACE TABLE customers (
     credit_limit DECIMAL(10,2),
     
     -- Behavioral metrics
-    churn_risk_score DECIMAL(3,2) DEFAULT 0.00,
-    satisfaction_score DECIMAL(2,1),
+    churn_risk_score DECIMAL(3,2) DEFAULT 0.00, -- 0.00 to 1.00
+    satisfaction_score DECIMAL(2,1), -- 1.0 to 5.0
     engagement_score DECIMAL(3,2) DEFAULT 0.00,
     
     -- Preferences
@@ -60,13 +60,13 @@ CREATE OR REPLACE TABLE customers (
 CREATE OR REPLACE TABLE customer_activities (
     activity_id VARCHAR(50) PRIMARY KEY,
     customer_id VARCHAR(50) NOT NULL,
-    activity_type VARCHAR(50) NOT NULL,
+    activity_type VARCHAR(50) NOT NULL, -- purchase, login, support_ticket, email_open, etc.
     activity_title VARCHAR(255),
     activity_description TEXT,
     
     -- Activity details
     activity_timestamp TIMESTAMP NOT NULL,
-    channel VARCHAR(50),
+    channel VARCHAR(50), -- web, mobile, phone, store, email
     device_type VARCHAR(50),
     ip_address VARCHAR(45),
     
@@ -76,7 +76,7 @@ CREATE OR REPLACE TABLE customer_activities (
     product_category VARCHAR(100),
     
     -- Priority and status
-    priority VARCHAR(20) DEFAULT 'low',
+    priority VARCHAR(20) DEFAULT 'low', -- low, medium, high, urgent
     status VARCHAR(20) DEFAULT 'completed',
     
     -- Additional context (JSON format)
@@ -96,9 +96,9 @@ CREATE OR REPLACE TABLE support_tickets (
     -- Ticket details
     subject VARCHAR(255) NOT NULL,
     description TEXT,
-    category VARCHAR(100),
+    category VARCHAR(100), -- billing, technical, product, shipping, etc.
     priority VARCHAR(20) DEFAULT 'medium',
-    status VARCHAR(20) DEFAULT 'open',
+    status VARCHAR(20) DEFAULT 'open', -- open, in_progress, resolved, closed
     
     -- Assignment
     assigned_agent_id VARCHAR(50),
@@ -113,7 +113,7 @@ CREATE OR REPLACE TABLE support_tickets (
     
     -- Metrics
     resolution_time_hours INTEGER,
-    customer_satisfaction_rating INTEGER,
+    customer_satisfaction_rating INTEGER, -- 1-5
     
     -- Additional data
     ticket_metadata VARIANT,
@@ -169,8 +169,8 @@ CREATE OR REPLACE TABLE customer_communications (
     customer_id VARCHAR(50) NOT NULL,
     
     -- Communication details
-    communication_type VARCHAR(50) NOT NULL,
-    direction VARCHAR(10) NOT NULL,
+    communication_type VARCHAR(50) NOT NULL, -- email, sms, phone, push_notification
+    direction VARCHAR(10) NOT NULL, -- inbound, outbound
     subject VARCHAR(255),
     message_content TEXT,
     
@@ -202,8 +202,8 @@ CREATE OR REPLACE TABLE customer_documents (
     
     -- Document details
     document_title VARCHAR(255) NOT NULL,
-    document_type VARCHAR(100),
-    document_content TEXT NOT NULL,
+    document_type VARCHAR(100), -- contract, transcript, note, report
+    document_content TEXT NOT NULL, -- This will be indexed by Cortex Search
     file_path VARCHAR(500),
     file_size_bytes INTEGER,
     
@@ -222,6 +222,21 @@ CREATE OR REPLACE TABLE customer_documents (
     
     FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
 );
+
+-- ===============================
+-- Performance Optimization Notes
+-- ===============================
+-- Snowflake uses automatic clustering and micro-partitions for performance
+-- No explicit indexes needed - Snowflake optimizes queries automatically
+-- For better performance on large datasets, consider:
+-- 1. Clustering keys on frequently filtered columns
+-- 2. Search optimization service for text search
+-- 3. Materialized views for complex aggregations
+
+-- Example clustering (uncomment if needed for large datasets):
+-- ALTER TABLE customer_activities CLUSTER BY (customer_id, activity_timestamp);
+-- ALTER TABLE support_tickets CLUSTER BY (customer_id, created_at);
+-- ALTER TABLE purchases CLUSTER BY (customer_id, purchase_date);
 
 -- ===============================
 -- Views for Analytics
@@ -281,8 +296,8 @@ SELECT
 FROM customer_activities
 WHERE activity_timestamp >= DATEADD('day', -30, CURRENT_TIMESTAMP());
 
--- Completion message
-SELECT 'All tables and views created successfully - NO INDEXES' AS status,
+-- Completion verification
+SELECT 'Tables and views created successfully' AS status,
        COUNT(*) AS table_count
 FROM information_schema.tables 
 WHERE table_schema = 'PUBLIC' 

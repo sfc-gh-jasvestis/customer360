@@ -1,93 +1,125 @@
 -- =========================================
--- Customer 360 Demo - Complete Cleanup Script
+-- Customer 360 Demo - Cleanup Script
 -- =========================================
 -- This script removes all demo objects to start fresh
--- Run this before redeploying the demo
+-- Run this before deploying the demo if you need to reset
 
--- Set context
-USE ROLE SYSADMIN; -- Or your appropriate role
-USE WAREHOUSE compute_wh; -- Or your warehouse
-
--- ===============================
--- 1. DROP CORTEX AGENT
--- ===============================
 USE DATABASE customer_360_db;
 USE SCHEMA public;
 
--- Drop Cortex Agent and related functions
-DROP CORTEX AGENT IF EXISTS customer_360_ai_assistant;
-DROP FUNCTION IF EXISTS ask_customer_360_ai(STRING);
-DROP FUNCTION IF EXISTS analyze_customer(STRING, STRING);
-DROP FUNCTION IF EXISTS get_customer_insights(STRING);
-DROP FUNCTION IF EXISTS analyze_support_trends();
-DROP FUNCTION IF EXISTS analyze_revenue_opportunities();
-DROP FUNCTION IF EXISTS search_customer_context(STRING, STRING);
-DROP FUNCTION IF EXISTS search_customer_documents(STRING, STRING);
+SELECT '🧹 Starting cleanup of Customer 360 Demo...' AS status;
 
 -- ===============================
--- 2. DROP CORTEX SEARCH SERVICES
+-- Drop Tables (in dependency order)
 -- ===============================
 
--- Drop search services (may take a few minutes)
-DROP CORTEX SEARCH SERVICE IF EXISTS customer_documents_search;
-DROP CORTEX SEARCH SERVICE IF EXISTS customer_activities_search;
+SELECT '📊 Dropping tables...' AS step_status;
 
--- Wait for services to be fully dropped
--- You can check status with: SHOW CORTEX SEARCH SERVICES;
-
--- ===============================
--- 3. DROP VIEWS
--- ===============================
-
-DROP VIEW IF EXISTS customer_360_summary;
-DROP VIEW IF EXISTS recent_customer_activities;
-
--- ===============================
--- 4. DROP TABLES
--- ===============================
-
--- Drop tables in reverse dependency order
+-- Drop child tables first (those with foreign keys)
 DROP TABLE IF EXISTS customer_documents;
 DROP TABLE IF EXISTS customer_communications;
 DROP TABLE IF EXISTS purchases;
 DROP TABLE IF EXISTS support_tickets;
 DROP TABLE IF EXISTS customer_activities;
+
+-- Drop parent table last
 DROP TABLE IF EXISTS customers;
 
+SELECT '✅ Tables dropped successfully' AS step_status;
+
 -- ===============================
--- 5. DROP STAGES
+-- Drop Views
 -- ===============================
+
+SELECT '🔍 Dropping views...' AS step_status;
+
+DROP VIEW IF EXISTS high_risk_customers;
+DROP VIEW IF EXISTS customer_value_segments;
+DROP VIEW IF EXISTS customer_360_dashboard;
+DROP VIEW IF EXISTS billing_related_content;
+DROP VIEW IF EXISTS support_related_content;
+DROP VIEW IF EXISTS searchable_activities;
+DROP VIEW IF EXISTS searchable_documents;
+
+SELECT '✅ Views dropped successfully' AS step_status;
+
+-- ===============================
+-- Drop Functions
+-- ===============================
+
+SELECT '🔧 Dropping functions...' AS step_status;
+
+DROP FUNCTION IF EXISTS analyze_customer_ai(STRING);
+DROP FUNCTION IF EXISTS generate_customer_report(STRING);
+DROP FUNCTION IF EXISTS get_customer_insights_summary();
+DROP FUNCTION IF EXISTS search_customer_documents_text(STRING);
+DROP FUNCTION IF EXISTS search_documents_simple(STRING);
+DROP FUNCTION IF EXISTS search_documents_advanced(STRING, STRING, STRING, NUMBER);
+DROP FUNCTION IF EXISTS search_activities_advanced(STRING, STRING, NUMBER);
+
+SELECT '✅ Functions dropped successfully' AS step_status;
+
+-- ===============================
+-- Drop Stages
+-- ===============================
+
+SELECT '📦 Dropping stages...' AS step_status;
 
 DROP STAGE IF EXISTS customer_360_stage;
-DROP STAGE IF EXISTS customer_360_semantic_model_stage;
+
+SELECT '✅ Stages dropped successfully' AS step_status;
 
 -- ===============================
--- 6. DROP WAREHOUSE (OPTIONAL)
+-- Optional: Drop Warehouse
 -- ===============================
 
--- Uncomment the following line if you want to drop the warehouse
--- DROP WAREHOUSE IF EXISTS customer_360_wh;
+-- Uncomment the following lines if you want to completely remove the warehouse
+-- Note: This will stop any running queries and remove compute resources
+
+/*
+SELECT '⚙️ Dropping warehouse...' AS step_status;
+DROP WAREHOUSE IF EXISTS customer_360_wh;
+SELECT '✅ Warehouse dropped successfully' AS step_status;
+*/
 
 -- ===============================
--- 7. DROP DATABASE (OPTIONAL)
+-- Optional: Drop Database
 -- ===============================
 
 -- Uncomment the following lines if you want to completely remove the database
--- USE DATABASE snowflake; -- Switch to a different database first
--- DROP DATABASE IF EXISTS customer_360_db;
+-- WARNING: This will delete ALL data and objects in the database
+
+/*
+SELECT '🗄️ Dropping database...' AS step_status;
+DROP DATABASE IF EXISTS customer_360_db;
+SELECT '✅ Database dropped successfully' AS step_status;
+*/
 
 -- ===============================
--- 8. VERIFICATION
+-- Verification
 -- ===============================
 
--- Check remaining objects
-SHOW TABLES IN DATABASE customer_360_db;
-SHOW VIEWS IN DATABASE customer_360_db;
-SHOW FUNCTIONS IN DATABASE customer_360_db;
-SHOW CORTEX SEARCH SERVICES IN DATABASE customer_360_db;
+SELECT '🧪 Verifying cleanup...' AS step_status;
 
--- Display cleanup summary
+-- Show remaining objects (should be minimal)
+SHOW TABLES;
+SHOW VIEWS;
+SHOW USER FUNCTIONS;
+SHOW STAGES;
+
+-- Final cleanup status
 SELECT 
-    'Demo cleanup completed!' AS status,
-    CURRENT_TIMESTAMP() AS cleanup_time,
-    'Ready for fresh deployment' AS next_step; 
+    '🎉 Cleanup completed successfully!' AS status,
+    'All demo objects have been removed' AS details,
+    'Ready for fresh deployment' AS next_steps,
+    CURRENT_TIMESTAMP() AS cleanup_completed_at;
+
+SELECT '📋 Cleanup Summary:' AS summary_header;
+SELECT '   ✅ Tables removed' AS cleanup_1;
+SELECT '   ✅ Views removed' AS cleanup_2;
+SELECT '   ✅ Functions removed' AS cleanup_3;
+SELECT '   ✅ Stages removed' AS cleanup_4;
+SELECT '   ℹ️ Warehouse preserved (commented out)' AS cleanup_5;
+SELECT '   ℹ️ Database preserved (commented out)' AS cleanup_6;
+SELECT '' AS separator;
+SELECT '💡 To run a fresh setup: @sql/99_complete_setup.sql' AS next_step; 
