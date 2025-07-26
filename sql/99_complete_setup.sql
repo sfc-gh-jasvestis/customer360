@@ -279,18 +279,18 @@ PRINT '✅ Tables created successfully';
 PRINT '🔍 Creating indexes and views...';
 
 -- Customer activities indexes
-CREATE INDEX IF NOT EXISTS idx_activities_customer_timestamp ON customer_activities(customer_id, activity_timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_activities_customer_timestamp ON customer_activities(customer_id, activity_timestamp);
 CREATE INDEX IF NOT EXISTS idx_activities_type ON customer_activities(activity_type);
-CREATE INDEX IF NOT EXISTS idx_activities_timestamp ON customer_activities(activity_timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_activities_timestamp ON customer_activities(activity_timestamp);
 
 -- Support tickets indexes
 CREATE INDEX IF NOT EXISTS idx_tickets_customer ON support_tickets(customer_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_status ON support_tickets(status);
-CREATE INDEX IF NOT EXISTS idx_tickets_created ON support_tickets(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tickets_created ON support_tickets(created_at);
 
 -- Purchases indexes
 CREATE INDEX IF NOT EXISTS idx_purchases_customer ON purchases(customer_id);
-CREATE INDEX IF NOT EXISTS idx_purchases_date ON purchases(purchase_date DESC);
+CREATE INDEX IF NOT EXISTS idx_purchases_date ON purchases(purchase_date);
 CREATE INDEX IF NOT EXISTS idx_purchases_category ON purchases(product_category);
 
 -- Communications indexes
