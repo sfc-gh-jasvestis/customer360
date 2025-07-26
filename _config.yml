@@ -1,0 +1,56 @@
+title: "Customer 360 & AI Assistant"
+description: "A comprehensive Customer 360 solution built entirely on Snowflake Data Cloud with AI-powered insights and real-time analytics"
+url: "https://sfc-gh-jasvestis.github.io"
+baseurl: "/customer360"
+
+# Repository info
+repository: "sfc-gh-jasvestis/customer360"
+github_username: "sfc-gh-jasvestis"
+
+# Build settings
+theme: minima
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# SEO and social
+author: "Snowflake Solutions"
+twitter:
+  username: snowflake
+  card: summary_large_image
+
+social:
+  name: "Customer 360 & AI Assistant"
+  links:
+    - "https://github.com/sfc-gh-jasvestis/customer360"
+
+# Jekyll settings
+markdown: kramdown
+highlighter: rouge
+permalink: /:title/
+
+# Navigation
+header_pages:
+  - README.md
+  - docs/deployment_guide.md
+  - streamlit/DEPLOY_TO_SNOWFLAKE.md
+
+# Exclude from build
+exclude:
+  - .git/
+  - .gitignore
+  - sql/
+  - scripts/
+  - streamlit/components/
+  - streamlit/utils/
+  - LICENSE
+  - CONTRIBUTING.md
+  - CHANGELOG.md
+
+# Include in build
+include:
+  - README.md
+  - docs/
+  - streamlit/DEPLOY_TO_SNOWFLAKE.md
+  - streamlit/DEPRECATED_LOCAL_VERSION.md 
