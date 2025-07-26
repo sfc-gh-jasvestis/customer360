@@ -1,0 +1,369 @@
+semantic_model:
+  name: "customer_360_model"
+  description: "Customer 360 semantic model for natural language analytics"
+  
+  tables:
+    - name: "customers"
+      description: "Main customer profile information including demographics, status, and behavioral metrics"
+      base_table:
+        database: "customer_360_db"
+        schema: "public"
+        table: "customers"
+      
+      dimensions:
+        - name: "customer_id"
+          synonyms: ["customer ID", "customer identifier", "cust ID"]
+          description: "Unique customer identifier"
+          expr: "customer_id"
+          data_type: "TEXT"
+          unique: true
+          
+        - name: "customer_name"
+          synonyms: ["customer name", "full name", "name"]
+          description: "Customer's full name"
+          expr: "CONCAT(first_name, ' ', last_name)"
+          data_type: "TEXT"
+          
+        - name: "email"
+          synonyms: ["email address", "customer email"]
+          description: "Customer's email address"
+          expr: "email"
+          data_type: "TEXT"
+          
+        - name: "customer_tier"
+          synonyms: ["tier", "membership level", "status level", "customer level"]
+          description: "Customer tier: bronze, silver, gold, or platinum"
+          expr: "customer_tier"
+          data_type: "TEXT"
+          
+        - name: "account_status"
+          synonyms: ["status", "account state"]
+          description: "Current account status"
+          expr: "account_status"
+          data_type: "TEXT"
+          
+        - name: "join_date"
+          synonyms: ["registration date", "signup date", "member since"]
+          description: "Date when customer joined"
+          expr: "join_date"
+          data_type: "DATE"
+          
+        - name: "city"
+          synonyms: ["location", "customer city"]
+          description: "Customer's city"
+          expr: "city"
+          data_type: "TEXT"
+          
+        - name: "state_province"
+          synonyms: ["state", "province", "region"]
+          description: "Customer's state or province"
+          expr: "state_province"
+          data_type: "TEXT"
+          
+        - name: "country"
+          synonyms: ["customer country", "nation"]
+          description: "Customer's country"
+          expr: "country"
+          data_type: "TEXT"
+          
+        - name: "preferred_communication_channel"
+          synonyms: ["communication preference", "contact method", "preferred channel"]
+          description: "Customer's preferred way to be contacted"
+          expr: "preferred_communication_channel"
+          data_type: "TEXT"
+      
+      measures:
+        - name: "total_spent"
+          synonyms: ["total spend", "lifetime spend", "total purchases", "spend amount"]
+          description: "Total amount customer has spent"
+          expr: "total_spent"
+          data_type: "NUMBER"
+          default_aggregation: "SUM"
+          
+        - name: "lifetime_value"
+          synonyms: ["CLV", "customer lifetime value", "LTV"]
+          description: "Predicted customer lifetime value"
+          expr: "lifetime_value"
+          data_type: "NUMBER"
+          default_aggregation: "SUM"
+          
+        - name: "churn_risk_score"
+          synonyms: ["churn risk", "risk score", "churn probability"]
+          description: "Probability of customer churning (0-1 scale)"
+          expr: "churn_risk_score"
+          data_type: "NUMBER"
+          default_aggregation: "AVG"
+          
+        - name: "satisfaction_score"
+          synonyms: ["satisfaction", "customer satisfaction", "CSAT"]
+          description: "Customer satisfaction score (1-5 scale)"
+          expr: "satisfaction_score"
+          data_type: "NUMBER"
+          default_aggregation: "AVG"
+          
+        - name: "engagement_score"
+          synonyms: ["engagement", "activity score"]
+          description: "Customer engagement score (0-1 scale)"
+          expr: "engagement_score"
+          data_type: "NUMBER"
+          default_aggregation: "AVG"
+          
+        - name: "customer_count"
+          synonyms: ["number of customers", "customer total", "count"]
+          description: "Count of customers"
+          expr: "customer_id"
+          data_type: "NUMBER"
+          default_aggregation: "COUNT"
+
+    - name: "customer_activities"
+      description: "Customer interaction and activity history"
+      base_table:
+        database: "customer_360_db"
+        schema: "public"
+        table: "customer_activities"
+      
+      dimensions:
+        - name: "activity_id"
+          description: "Unique activity identifier"
+          expr: "activity_id"
+          data_type: "TEXT"
+          unique: true
+          
+        - name: "customer_id"
+          description: "Customer who performed the activity"
+          expr: "customer_id"
+          data_type: "TEXT"
+          
+        - name: "activity_type"
+          synonyms: ["type", "activity category", "interaction type"]
+          description: "Type of customer activity"
+          expr: "activity_type"
+          data_type: "TEXT"
+          
+        - name: "activity_timestamp"
+          synonyms: ["activity date", "when", "timestamp"]
+          description: "When the activity occurred"
+          expr: "activity_timestamp"
+          data_type: "TIMESTAMP"
+          
+        - name: "channel"
+          synonyms: ["interaction channel", "touchpoint"]
+          description: "Channel where activity occurred"
+          expr: "channel"
+          data_type: "TEXT"
+          
+        - name: "priority"
+          synonyms: ["importance", "urgency"]
+          description: "Activity priority level"
+          expr: "priority"
+          data_type: "TEXT"
+          
+        - name: "product_category"
+          synonyms: ["category", "product type"]
+          description: "Product category involved in activity"
+          expr: "product_category"
+          data_type: "TEXT"
+      
+      measures:
+        - name: "activity_count"
+          synonyms: ["number of activities", "interaction count", "activity total"]
+          description: "Count of customer activities"
+          expr: "activity_id"
+          data_type: "NUMBER"
+          default_aggregation: "COUNT"
+          
+        - name: "transaction_amount"
+          synonyms: ["transaction value", "activity amount", "spend"]
+          description: "Transaction amount for purchase activities"
+          expr: "transaction_amount"
+          data_type: "NUMBER"
+          default_aggregation: "SUM"
+
+    - name: "purchases"
+      description: "Customer purchase transactions and order history"
+      base_table:
+        database: "customer_360_db"
+        schema: "public"
+        table: "purchases"
+      
+      dimensions:
+        - name: "purchase_id"
+          description: "Unique purchase identifier"
+          expr: "purchase_id"
+          data_type: "TEXT"
+          unique: true
+          
+        - name: "customer_id"
+          description: "Customer who made the purchase"
+          expr: "customer_id"
+          data_type: "TEXT"
+          
+        - name: "purchase_date"
+          synonyms: ["order date", "transaction date", "purchase time"]
+          description: "When the purchase was made"
+          expr: "purchase_date"
+          data_type: "TIMESTAMP"
+          
+        - name: "product_name"
+          synonyms: ["product", "item", "product title"]
+          description: "Name of purchased product"
+          expr: "product_name"
+          data_type: "TEXT"
+          
+        - name: "product_category"
+          synonyms: ["category", "product type", "product class"]
+          description: "Product category"
+          expr: "product_category"
+          data_type: "TEXT"
+          
+        - name: "order_status"
+          synonyms: ["status", "order state"]
+          description: "Current order status"
+          expr: "order_status"
+          data_type: "TEXT"
+          
+        - name: "shipping_method"
+          synonyms: ["delivery method", "shipping option"]
+          description: "Method used for shipping"
+          expr: "shipping_method"
+          data_type: "TEXT"
+      
+      measures:
+        - name: "total_amount"
+          synonyms: ["purchase amount", "order value", "transaction total", "revenue"]
+          description: "Total purchase amount"
+          expr: "total_amount"
+          data_type: "NUMBER"
+          default_aggregation: "SUM"
+          
+        - name: "quantity"
+          synonyms: ["items purchased", "quantity sold", "units"]
+          description: "Quantity of items purchased"
+          expr: "quantity"
+          data_type: "NUMBER"
+          default_aggregation: "SUM"
+          
+        - name: "discount_amount"
+          synonyms: ["discount", "savings", "reduction"]
+          description: "Discount applied to purchase"
+          expr: "discount_amount"
+          data_type: "NUMBER"
+          default_aggregation: "SUM"
+          
+        - name: "purchase_count"
+          synonyms: ["number of purchases", "order count", "transaction count"]
+          description: "Count of purchases"
+          expr: "purchase_id"
+          data_type: "NUMBER"
+          default_aggregation: "COUNT"
+
+    - name: "support_tickets"
+      description: "Customer support cases and resolution tracking"
+      base_table:
+        database: "customer_360_db"
+        schema: "public"
+        table: "support_tickets"
+      
+      dimensions:
+        - name: "ticket_id"
+          description: "Unique support ticket identifier"
+          expr: "ticket_id"
+          data_type: "TEXT"
+          unique: true
+          
+        - name: "customer_id"
+          description: "Customer who created the ticket"
+          expr: "customer_id"
+          data_type: "TEXT"
+          
+        - name: "category"
+          synonyms: ["ticket category", "issue type", "problem category"]
+          description: "Category of support issue"
+          expr: "category"
+          data_type: "TEXT"
+          
+        - name: "priority"
+          synonyms: ["urgency", "importance", "severity"]
+          description: "Ticket priority level"
+          expr: "priority"
+          data_type: "TEXT"
+          
+        - name: "status"
+          synonyms: ["ticket status", "resolution status"]
+          description: "Current ticket status"
+          expr: "status"
+          data_type: "TEXT"
+          
+        - name: "assigned_team"
+          synonyms: ["team", "support team", "assigned group"]
+          description: "Team assigned to handle the ticket"
+          expr: "assigned_team"
+          data_type: "TEXT"
+          
+        - name: "created_at"
+          synonyms: ["creation date", "ticket date", "when created"]
+          description: "When the ticket was created"
+          expr: "created_at"
+          data_type: "TIMESTAMP"
+      
+      measures:
+        - name: "resolution_time_hours"
+          synonyms: ["resolution time", "time to resolve", "handling time"]
+          description: "Time taken to resolve ticket in hours"
+          expr: "resolution_time_hours"
+          data_type: "NUMBER"
+          default_aggregation: "AVG"
+          
+        - name: "customer_satisfaction_rating"
+          synonyms: ["satisfaction rating", "CSAT rating", "ticket rating"]
+          description: "Customer satisfaction rating for resolved tickets"
+          expr: "customer_satisfaction_rating"
+          data_type: "NUMBER"
+          default_aggregation: "AVG"
+          
+        - name: "ticket_count"
+          synonyms: ["number of tickets", "support cases", "ticket total"]
+          description: "Count of support tickets"
+          expr: "ticket_id"
+          data_type: "NUMBER"
+          default_aggregation: "COUNT"
+
+  # Define relationships between tables
+  relationships:
+    - name: "customer_to_activities"
+      type: "one_to_many"
+      from_table: "customers"
+      from_column: "customer_id"
+      to_table: "customer_activities"
+      to_column: "customer_id"
+      
+    - name: "customer_to_purchases"
+      type: "one_to_many"
+      from_table: "customers"
+      from_column: "customer_id"
+      to_table: "purchases"
+      to_column: "customer_id"
+      
+    - name: "customer_to_tickets"
+      type: "one_to_many"
+      from_table: "customers"
+      from_column: "customer_id"
+      to_table: "support_tickets"
+      to_column: "customer_id"
+
+  # Define common filters and time periods
+  verified_queries:
+    - name: "high_value_customers"
+      question: "Who are our high-value customers?"
+      sql: "SELECT customer_name, customer_tier, total_spent, lifetime_value FROM customers WHERE customer_tier IN ('gold', 'platinum') ORDER BY total_spent DESC"
+      verified_at: "2024-01-15"
+      
+    - name: "churn_risk_analysis"
+      question: "Which customers are at risk of churning?"
+      sql: "SELECT customer_name, churn_risk_score, satisfaction_score, customer_tier FROM customers WHERE churn_risk_score > 0.5 ORDER BY churn_risk_score DESC"
+      verified_at: "2024-01-15"
+      
+    - name: "recent_activity_summary"
+      question: "What activities happened in the last 7 days?"
+      sql: "SELECT activity_type, COUNT(*) as activity_count FROM customer_activities WHERE activity_timestamp >= DATEADD('day', -7, CURRENT_TIMESTAMP()) GROUP BY activity_type ORDER BY activity_count DESC"
+      verified_at: "2024-01-15" 
