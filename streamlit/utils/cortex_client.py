@@ -23,7 +23,7 @@ class CortexClient:
         
     def ask_ai(self, question: str, customer_id: Optional[str] = None) -> Dict[str, Any]:
         """
-        Ask the Cortex Agent a question and return structured response
+        Ask the AI a question and return structured response
         
         Args:
             question: Natural language question
@@ -33,18 +33,16 @@ class CortexClient:
             Dict containing message, data, and optional chart
         """
         try:
-            # Use the Cortex Agent function we created
             if customer_id:
-                # For customer-specific queries, use the analyze_customer function
+                # For customer-specific queries, use the analyze_customer_ai function
                 result = self.conn.query(
-                    "SELECT analyze_customer(?, 'overview') as response",
+                    "SELECT analyze_customer_ai(?) as response",
                     params=[customer_id]
                 )
             else:
-                # For general queries, use the main AI assistant
+                # For general queries, use the customer insights function
                 result = self.conn.query(
-                    "SELECT ask_customer_360_ai(?) as response",
-                    params=[question]
+                    "SELECT get_customer_insights_summary() as response"
                 )
             
             if not result.empty:
@@ -63,40 +61,28 @@ class CortexClient:
     
     def search_documents(self, query: str, filters: Optional[Dict] = None) -> List[Dict]:
         """
-        Search customer documents using Cortex Search
+        Search customer documents using text search
         
         Args:
             query: Search query
-            filters: Optional filters (customer_tier, document_type, etc.)
+            filters: Optional filters (not used in current implementation)
             
         Returns:
             List of search results
         """
         try:
-            # Build the search query
-            if filters:
-                filter_clause = ", ".join([f"'{k}': '{v}'" for k, v in filters.items()])
-                sql = f"""
-                SELECT * FROM TABLE(
-                    CORTEX_SEARCH(
-                        'customer_documents_search',
-                        ?,
-                        {{{filter_clause}}}
-                    )
-                ) LIMIT 10
-                """
-            else:
-                sql = """
-                SELECT * FROM TABLE(
-                    CORTEX_SEARCH(
-                        'customer_documents_search',
-                        ?
-                    )
-                ) LIMIT 10
-                """
+            # Use our text-based search function
+            result = self.conn.query(
+                "SELECT search_customer_documents_text(?) as response",
+                params=[query]
+            )
             
-            result = self.conn.query(sql, params=[query])
-            return result.to_dict('records') if not result.empty else []
+            if not result.empty:
+                response_data = result.iloc[0]['RESPONSE']
+                # Convert response to list format expected by the interface
+                return [{"content": response_data, "relevance": 1.0}]
+            else:
+                return []
             
         except Exception as e:
             st.error(f"Error searching documents: {str(e)}")
@@ -108,15 +94,16 @@ class CortexClient:
         
         Args:
             customer_id: Customer identifier
-            analysis_type: Type of analysis (overview, churn_risk, opportunities, etc.)
+            analysis_type: Type of analysis (not used in current implementation)
             
         Returns:
             AI analysis response
         """
         try:
+            # Use our customer analysis function
             result = self.conn.query(
-                "SELECT analyze_customer(?, ?) as response",
-                params=[customer_id, analysis_type]
+                "SELECT analyze_customer_ai(?) as response",
+                params=[customer_id]
             )
             
             if not result.empty:
@@ -134,15 +121,14 @@ class CortexClient:
         Get insights about customers
         
         Args:
-            customer_tier: Optional tier filter
+            customer_tier: Optional tier filter (not used in current implementation)
             
         Returns:
             Customer insights
         """
         try:
             result = self.conn.query(
-                "SELECT get_customer_insights(?) as response",
-                params=[customer_tier]
+                "SELECT get_customer_insights_summary() as response"
             )
             
             if not result.empty:
@@ -154,40 +140,45 @@ class CortexClient:
         except Exception as e:
             return {"message": f"Error getting insights: {str(e)}"}
     
-    def analyze_support_trends(self) -> Dict[str, Any]:
-        """Get support trend analysis"""
+    def generate_customer_report(self, customer_id: str) -> Dict[str, Any]:
+        """
+        Generate a comprehensive customer report
+        
+        Args:
+            customer_id: Customer identifier
+            
+        Returns:
+            Customer report
+        """
         try:
-            result = self.conn.query("SELECT analyze_support_trends() as response")
+            result = self.conn.query(
+                "SELECT generate_customer_report(?) as response",
+                params=[customer_id]
+            )
             
             if not result.empty:
                 response_data = result.iloc[0]['RESPONSE']
-                return self._parse_ai_response(response_data, "Support trends")
+                return self._parse_ai_response(response_data, f"Customer {customer_id} report")
             else:
-                return {"message": "Could not analyze support trends"}
+                return {"message": f"Could not generate report for customer {customer_id}"}
                 
         except Exception as e:
-            return {"message": f"Error analyzing support trends: {str(e)}"}
+            return {"message": f"Error generating customer report: {str(e)}"}
+    
+    def analyze_support_trends(self) -> Dict[str, Any]:
+        """Get support trend analysis using fallback"""
+        return self._get_fallback_response("support trends")
     
     def analyze_revenue_opportunities(self) -> Dict[str, Any]:
-        """Get revenue opportunity analysis"""
-        try:
-            result = self.conn.query("SELECT analyze_revenue_opportunities() as response")
-            
-            if not result.empty:
-                response_data = result.iloc[0]['RESPONSE']
-                return self._parse_ai_response(response_data, "Revenue opportunities")
-            else:
-                return {"message": "Could not analyze revenue opportunities"}
-                
-        except Exception as e:
-            return {"message": f"Error analyzing revenue opportunities: {str(e)}"}
+        """Get revenue opportunity analysis using fallback"""
+        return self._get_fallback_response("revenue opportunities")
     
     def _parse_ai_response(self, response_data: Any, context: str) -> Dict[str, Any]:
         """
         Parse AI response and extract structured data
         
         Args:
-            response_data: Raw response from Cortex Agent
+            response_data: Raw response from SQL function
             context: Context of the query
             
         Returns:
@@ -313,7 +304,7 @@ class CortexClient:
     
     def _get_fallback_response(self, question: str, customer_id: Optional[str] = None) -> Dict[str, Any]:
         """
-        Provide fallback responses when Cortex services are unavailable
+        Provide fallback responses when SQL functions are unavailable
         
         Args:
             question: The original question
