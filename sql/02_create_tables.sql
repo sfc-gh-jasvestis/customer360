@@ -223,31 +223,19 @@ CREATE OR REPLACE TABLE customer_documents (
 );
 
 -- ===============================
--- Indexes for Performance
+-- Performance Optimization Notes
 -- ===============================
+-- Snowflake uses automatic clustering and micro-partitions for performance
+-- No explicit indexes needed - Snowflake optimizes queries automatically
+-- For better performance on large datasets, consider:
+-- 1. Clustering keys on frequently filtered columns
+-- 2. Search optimization service for text search
+-- 3. Materialized views for complex aggregations
 
--- Customer activities indexes
-CREATE INDEX idx_activities_customer_timestamp ON customer_activities(customer_id, activity_timestamp);
-CREATE INDEX idx_activities_type ON customer_activities(activity_type);
-CREATE INDEX idx_activities_timestamp ON customer_activities(activity_timestamp);
-
--- Support tickets indexes
-CREATE INDEX idx_tickets_customer ON support_tickets(customer_id);
-CREATE INDEX idx_tickets_status ON support_tickets(status);
-CREATE INDEX idx_tickets_created ON support_tickets(created_at);
-
--- Purchases indexes
-CREATE INDEX idx_purchases_customer ON purchases(customer_id);
-CREATE INDEX idx_purchases_date ON purchases(purchase_date);
-CREATE INDEX idx_purchases_category ON purchases(product_category);
-
--- Communications indexes
-CREATE INDEX idx_communications_customer ON customer_communications(customer_id);
-CREATE INDEX idx_communications_type ON customer_communications(communication_type);
-
--- Documents indexes (for Cortex Search)
-CREATE INDEX idx_documents_customer ON customer_documents(customer_id);
-CREATE INDEX idx_documents_type ON customer_documents(document_type);
+-- Example clustering (uncomment if needed for large datasets):
+-- ALTER TABLE customer_activities CLUSTER BY (customer_id, activity_timestamp);
+-- ALTER TABLE support_tickets CLUSTER BY (customer_id, created_at);
+-- ALTER TABLE purchases CLUSTER BY (customer_id, purchase_date);
 
 -- ===============================
 -- Views for Analytics

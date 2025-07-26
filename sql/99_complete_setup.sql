@@ -273,33 +273,13 @@ CREATE OR REPLACE TABLE customer_documents (
 PRINT '✅ Tables created successfully';
 
 -- ===============================
--- STEP 3: CREATE INDEXES AND VIEWS
+-- STEP 3: CREATE VIEWS
 -- ===============================
 
-PRINT '🔍 Creating indexes and views...';
+PRINT '🔍 Creating views...';
 
--- Customer activities indexes
-CREATE INDEX IF NOT EXISTS idx_activities_customer_timestamp ON customer_activities(customer_id, activity_timestamp);
-CREATE INDEX IF NOT EXISTS idx_activities_type ON customer_activities(activity_type);
-CREATE INDEX IF NOT EXISTS idx_activities_timestamp ON customer_activities(activity_timestamp);
-
--- Support tickets indexes
-CREATE INDEX IF NOT EXISTS idx_tickets_customer ON support_tickets(customer_id);
-CREATE INDEX IF NOT EXISTS idx_tickets_status ON support_tickets(status);
-CREATE INDEX IF NOT EXISTS idx_tickets_created ON support_tickets(created_at);
-
--- Purchases indexes
-CREATE INDEX IF NOT EXISTS idx_purchases_customer ON purchases(customer_id);
-CREATE INDEX IF NOT EXISTS idx_purchases_date ON purchases(purchase_date);
-CREATE INDEX IF NOT EXISTS idx_purchases_category ON purchases(product_category);
-
--- Communications indexes
-CREATE INDEX IF NOT EXISTS idx_communications_customer ON customer_communications(customer_id);
-CREATE INDEX IF NOT EXISTS idx_communications_type ON customer_communications(communication_type);
-
--- Documents indexes (for Cortex Search)
-CREATE INDEX IF NOT EXISTS idx_documents_customer ON customer_documents(customer_id);
-CREATE INDEX IF NOT EXISTS idx_documents_type ON customer_documents(document_type);
+-- Note: Snowflake uses automatic clustering and micro-partitions for performance
+-- No explicit indexes needed on regular tables
 
 -- Customer 360 summary view
 CREATE OR REPLACE VIEW customer_360_summary AS
@@ -355,7 +335,7 @@ SELECT
 FROM customer_activities
 WHERE activity_timestamp >= DATEADD('day', -30, CURRENT_TIMESTAMP());
 
-PRINT '✅ Indexes and views created';
+PRINT '✅ Views created';
 
 -- ===============================
 -- STEP 4: INSERT SAMPLE DATA
