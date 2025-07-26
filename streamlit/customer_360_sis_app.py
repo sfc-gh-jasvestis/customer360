@@ -15,6 +15,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import json
+import numpy as np
 from snowflake.snowpark.context import get_active_session
 
 # Page configuration
@@ -71,6 +72,32 @@ def safe_get_str(value, default="N/A"):
         return default
     return str(value)
 
+def safe_filter_dataframe(df, column, condition_func):
+    """Safely filter dataframe with NaN handling"""
+    try:
+        if df.empty or column not in df.columns:
+            return df.iloc[0:0]  # Return empty dataframe with same structure
+        
+        # Handle NaN values explicitly
+        mask = df[column].notna() & condition_func(df[column])
+        return df[mask]
+    except Exception:
+        return df.iloc[0:0]  # Return empty dataframe on error
+
+def safe_boolean_filter(series, condition_func):
+    """Safely apply boolean conditions to a Series"""
+    try:
+        if series.empty:
+            return pd.Series([], dtype=bool)
+        
+        # Handle NaN values explicitly  
+        valid_mask = series.notna()
+        result_mask = pd.Series(False, index=series.index)
+        result_mask[valid_mask] = condition_func(series[valid_mask])
+        return result_mask
+    except Exception:
+        return pd.Series(False, index=series.index)
+
 # Data access functions using Snowpark
 @st.cache_data(ttl=300)
 def get_customers():
@@ -97,7 +124,16 @@ def get_customers():
         FROM customers
         ORDER BY total_spent DESC
         """
-        return session.sql(query).to_pandas()
+        df = session.sql(query).to_pandas()
+        
+        # Ensure numeric columns are properly typed
+        numeric_columns = ['total_spent', 'lifetime_value', 'churn_risk_score', 
+                          'satisfaction_score', 'engagement_score']
+        for col in numeric_columns:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+                
+        return df
     except Exception as e:
         st.error(f"Error fetching customers: {str(e)}")
         return pd.DataFrame()
@@ -122,7 +158,13 @@ def get_recent_activities(days=30):
         ORDER BY activity_timestamp DESC
         LIMIT 100
         """
-        return session.sql(query, params=[-days]).to_pandas()
+        df = session.sql(query, params=[-days]).to_pandas()
+        
+        # Ensure numeric columns are properly typed
+        if 'transaction_amount' in df.columns:
+            df['transaction_amount'] = pd.to_numeric(df['transaction_amount'], errors='coerce')
+            
+        return df
     except Exception as e:
         st.error(f"Error fetching activities: {str(e)}")
         return pd.DataFrame()
@@ -146,7 +188,13 @@ def get_customer_activities(customer_id, limit=20):
         ORDER BY activity_timestamp DESC
         LIMIT ?
         """
-        return session.sql(query, params=[customer_id, limit]).to_pandas()
+        df = session.sql(query, params=[customer_id, limit]).to_pandas()
+        
+        # Ensure numeric columns are properly typed
+        if 'transaction_amount' in df.columns:
+            df['transaction_amount'] = pd.to_numeric(df['transaction_amount'], errors='coerce')
+            
+        return df
     except Exception as e:
         st.error(f"Error fetching customer activities: {str(e)}")
         return pd.DataFrame()
@@ -365,7 +413,9 @@ def render_dashboard_overview():
     
     with col4:
         if not customers_df.empty and 'CHURN_RISK_SCORE' in customers_df.columns:
-            high_risk_customers = len(customers_df[customers_df['CHURN_RISK_SCORE'] > 0.5])
+            # Use safe boolean filtering to avoid Series ambiguity
+            high_risk_mask = safe_boolean_filter(customers_df['CHURN_RISK_SCORE'], lambda x: x > 0.5)
+            high_risk_customers = high_risk_mask.sum()
             st.metric("High Risk Customers", high_risk_customers, delta="-2 from last month")
         else:
             st.metric("High Risk Customers", "0", delta="No data")
@@ -379,21 +429,24 @@ def render_dashboard_overview():
         # Customer distribution by tier
         st.subheader("🏆 Customer Distribution by Tier")
         if not customers_df.empty and 'CUSTOMER_TIER' in customers_df.columns:
-            tier_counts = customers_df['CUSTOMER_TIER'].value_counts()
-            
-            fig_tier = px.pie(
-                values=tier_counts.values,
-                names=tier_counts.index,
-                title="Customer Tiers",
-                color_discrete_map={
-                    'platinum': '#ffd700',
-                    'gold': '#fbbf24', 
-                    'silver': '#9ca3af',
-                    'bronze': '#92400e'
-                }
-            )
-            fig_tier.update_traces(textposition='inside', textinfo='percent+label')
-            st.plotly_chart(fig_tier, use_container_width=True)
+            try:
+                tier_counts = customers_df['CUSTOMER_TIER'].value_counts()
+                
+                fig_tier = px.pie(
+                    values=tier_counts.values,
+                    names=tier_counts.index,
+                    title="Customer Tiers",
+                    color_discrete_map={
+                        'platinum': '#ffd700',
+                        'gold': '#fbbf24', 
+                        'silver': '#9ca3af',
+                        'bronze': '#92400e'
+                    }
+                )
+                fig_tier.update_traces(textposition='inside', textinfo='percent+label')
+                st.plotly_chart(fig_tier, use_container_width=True)
+            except Exception as e:
+                st.error(f"Error creating tier chart: {str(e)}")
         else:
             st.info("No customer tier data available")
     
@@ -401,29 +454,39 @@ def render_dashboard_overview():
         # Top customers
         st.subheader("🌟 Top Customers")
         if not customers_df.empty:
-            display_cols = ['FIRST_NAME', 'LAST_NAME', 'CUSTOMER_TIER', 'TOTAL_SPENT']
-            available_cols = [col for col in display_cols if col in customers_df.columns]
-            
-            if available_cols:
-                top_customers = customers_df.nlargest(5, 'TOTAL_SPENT')[available_cols]
-                for _, customer in top_customers.iterrows():
-                    first_name = safe_get_str(customer.get('FIRST_NAME', ''), 'Unknown')
-                    last_name = safe_get_str(customer.get('LAST_NAME', ''), 'Customer')
-                    tier = safe_get_str(customer.get('CUSTOMER_TIER', 'bronze'), 'bronze')
-                    total_spent = safe_format_currency(customer.get('TOTAL_SPENT', 0))
+            try:
+                display_cols = ['FIRST_NAME', 'LAST_NAME', 'CUSTOMER_TIER', 'TOTAL_SPENT']
+                available_cols = [col for col in display_cols if col in customers_df.columns]
+                
+                if available_cols and 'TOTAL_SPENT' in customers_df.columns:
+                    # Safely get top customers
+                    valid_spent_mask = customers_df['TOTAL_SPENT'].notna()
+                    valid_customers = customers_df[valid_spent_mask]
                     
-                    tier_class = f"customer-tier-{tier}"
-                    st.markdown(f"""
-                    <div class="metric-card">
-                        <div class="{tier_class}" style="padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem;">
-                            {first_name} {last_name}
-                        </div>
-                        <strong>{total_spent}</strong>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    st.markdown("<br>", unsafe_allow_html=True)
-            else:
-                st.info("No customer data available")
+                    if not valid_customers.empty:
+                        top_customers = valid_customers.nlargest(5, 'TOTAL_SPENT')[available_cols]
+                        for _, customer in top_customers.iterrows():
+                            first_name = safe_get_str(customer.get('FIRST_NAME', ''), 'Unknown')
+                            last_name = safe_get_str(customer.get('LAST_NAME', ''), 'Customer')
+                            tier = safe_get_str(customer.get('CUSTOMER_TIER', 'bronze'), 'bronze')
+                            total_spent = safe_format_currency(customer.get('TOTAL_SPENT', 0))
+                            
+                            tier_class = f"customer-tier-{tier}"
+                            st.markdown(f"""
+                            <div class="metric-card">
+                                <div class="{tier_class}" style="padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem;">
+                                    {first_name} {last_name}
+                                </div>
+                                <strong>{total_spent}</strong>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            st.markdown("<br>", unsafe_allow_html=True)
+                    else:
+                        st.info("No valid customer spending data available")
+                else:
+                    st.info("No customer data available")
+            except Exception as e:
+                st.error(f"Error displaying top customers: {str(e)}")
 
 def render_customer_profile():
     """Render customer profile view"""
@@ -466,22 +529,25 @@ def render_customer_profile():
     
     # Customer activities
     st.subheader("🔄 Recent Activities")
-    activities_df = get_customer_activities(customer_id, limit=10)
-    
-    if not activities_df.empty:
-        for _, activity in activities_df.iterrows():
-            title = safe_get_str(activity.get('ACTIVITY_TITLE', ''), 'Unknown Activity')
-            timestamp = safe_get_str(activity.get('ACTIVITY_TIMESTAMP', ''), 'Unknown time')
-            description = safe_get_str(activity.get('ACTIVITY_DESCRIPTION', ''), 'No description')
-            
-            st.markdown(f"""
-            **{title}**  
-            *{timestamp}*  
-            {description}
-            """)
-            st.markdown("---")
-    else:
-        st.info("No recent activities found.")
+    try:
+        activities_df = get_customer_activities(customer_id, limit=10)
+        
+        if not activities_df.empty:
+            for _, activity in activities_df.iterrows():
+                title = safe_get_str(activity.get('ACTIVITY_TITLE', ''), 'Unknown Activity')
+                timestamp = safe_get_str(activity.get('ACTIVITY_TIMESTAMP', ''), 'Unknown time')
+                description = safe_get_str(activity.get('ACTIVITY_DESCRIPTION', ''), 'No description')
+                
+                st.markdown(f"""
+                **{title}**  
+                *{timestamp}*  
+                {description}
+                """)
+                st.markdown("---")
+        else:
+            st.info("No recent activities found.")
+    except Exception as e:
+        st.error(f"Error loading customer activities: {str(e)}")
 
 def render_ai_assistant():
     """Render AI assistant interface"""
@@ -502,17 +568,24 @@ def render_ai_assistant():
         
         # Get AI response
         with st.spinner("AI is thinking..."):
-            if st.session_state.selected_customer:
-                customer_id = st.session_state.selected_customer['CUSTOMER_ID']
-                response = analyze_customer_ai(customer_id)
-            else:
-                response = get_customer_insights()
-            
-            st.session_state.chat_history.append({
-                'role': 'assistant',
-                'content': response,
-                'timestamp': datetime.now()
-            })
+            try:
+                if st.session_state.selected_customer:
+                    customer_id = st.session_state.selected_customer['CUSTOMER_ID']
+                    response = analyze_customer_ai(customer_id)
+                else:
+                    response = get_customer_insights()
+                
+                st.session_state.chat_history.append({
+                    'role': 'assistant',
+                    'content': response,
+                    'timestamp': datetime.now()
+                })
+            except Exception as e:
+                st.session_state.chat_history.append({
+                    'role': 'assistant',
+                    'content': f"Sorry, I encountered an error: {str(e)}",
+                    'timestamp': datetime.now()
+                })
     
     # Display chat history
     for message in st.session_state.chat_history:
@@ -534,37 +607,64 @@ def render_analytics_dashboard():
     customers_df = get_customers()
     
     if not customers_df.empty:
-        # Customer value analysis
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            # Revenue by tier
-            if 'CUSTOMER_TIER' in customers_df.columns and 'TOTAL_SPENT' in customers_df.columns:
-                revenue_by_tier = customers_df.groupby('CUSTOMER_TIER')['TOTAL_SPENT'].sum().reset_index()
-                
-                fig = px.bar(
-                    revenue_by_tier, 
-                    x='CUSTOMER_TIER', 
-                    y='TOTAL_SPENT',
-                    title="Revenue by Customer Tier"
-                )
-                st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            # Risk distribution
-            if 'CHURN_RISK_SCORE' in customers_df.columns:
-                customers_df['risk_category'] = customers_df['CHURN_RISK_SCORE'].apply(
-                    lambda x: 'High Risk' if pd.notna(x) and x > 0.7 else 'Medium Risk' if pd.notna(x) and x > 0.3 else 'Low Risk'
-                )
-                
-                risk_counts = customers_df['risk_category'].value_counts()
-                
-                fig = px.pie(
-                    values=risk_counts.values,
-                    names=risk_counts.index,
-                    title="Customer Risk Distribution"
-                )
-                st.plotly_chart(fig, use_container_width=True)
+        try:
+            # Customer value analysis
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # Revenue by tier
+                if 'CUSTOMER_TIER' in customers_df.columns and 'TOTAL_SPENT' in customers_df.columns:
+                    try:
+                        # Remove rows with NaN values for grouping
+                        valid_data = customers_df.dropna(subset=['CUSTOMER_TIER', 'TOTAL_SPENT'])
+                        if not valid_data.empty:
+                            revenue_by_tier = valid_data.groupby('CUSTOMER_TIER')['TOTAL_SPENT'].sum().reset_index()
+                            
+                            fig = px.bar(
+                                revenue_by_tier, 
+                                x='CUSTOMER_TIER', 
+                                y='TOTAL_SPENT',
+                                title="Revenue by Customer Tier"
+                            )
+                            st.plotly_chart(fig, use_container_width=True)
+                        else:
+                            st.info("No valid revenue data available")
+                    except Exception as e:
+                        st.error(f"Error creating revenue chart: {str(e)}")
+            
+            with col2:
+                # Risk distribution
+                if 'CHURN_RISK_SCORE' in customers_df.columns:
+                    try:
+                        # Safely categorize risk with explicit NaN handling
+                        def categorize_risk(x):
+                            if pd.isna(x):
+                                return 'Unknown Risk'
+                            elif x > 0.7:
+                                return 'High Risk'
+                            elif x > 0.3:
+                                return 'Medium Risk'
+                            else:
+                                return 'Low Risk'
+                        
+                        customers_df_copy = customers_df.copy()
+                        customers_df_copy['risk_category'] = customers_df_copy['CHURN_RISK_SCORE'].apply(categorize_risk)
+                        
+                        risk_counts = customers_df_copy['risk_category'].value_counts()
+                        
+                        if not risk_counts.empty:
+                            fig = px.pie(
+                                values=risk_counts.values,
+                                names=risk_counts.index,
+                                title="Customer Risk Distribution"
+                            )
+                            st.plotly_chart(fig, use_container_width=True)
+                        else:
+                            st.info("No risk data available")
+                    except Exception as e:
+                        st.error(f"Error creating risk chart: {str(e)}")
+        except Exception as e:
+            st.error(f"Error in analytics dashboard: {str(e)}")
     else:
         st.info("No customer data available for analytics")
 
@@ -573,43 +673,57 @@ def render_activity_feed():
     
     st.header("📱 Activity Feed")
     
-    activities_df = get_recent_activities(days=7)
-    
-    if not activities_df.empty:
-        # Activity metrics
-        col1, col2, col3 = st.columns(3)
+    try:
+        activities_df = get_recent_activities(days=7)
         
-        with col1:
-            st.metric("Total Activities", len(activities_df))
-        
-        with col2:
-            if 'PRIORITY' in activities_df.columns:
-                high_priority = len(activities_df[activities_df['PRIORITY'].isin(['high', 'urgent'])])
-                st.metric("High Priority", high_priority)
-        
-        with col3:
-            if 'CUSTOMER_ID' in activities_df.columns:
-                unique_customers = activities_df['CUSTOMER_ID'].nunique()
-                st.metric("Active Customers", unique_customers)
-        
-        st.divider()
-        
-        # Recent activities
-        st.subheader("🔄 Recent Activities")
-        for _, activity in activities_df.head(20).iterrows():
-            title = safe_get_str(activity.get('ACTIVITY_TITLE', ''), 'Activity')
-            customer_id = safe_get_str(activity.get('CUSTOMER_ID', ''), 'Unknown')
-            timestamp = safe_get_str(activity.get('ACTIVITY_TIMESTAMP', ''), 'Unknown time')
-            description = safe_get_str(activity.get('ACTIVITY_DESCRIPTION', ''), 'No description')
+        if not activities_df.empty:
+            # Activity metrics
+            col1, col2, col3 = st.columns(3)
             
-            st.markdown(f"""
-            **{title}** - Customer: {customer_id}  
-            *{timestamp}*  
-            {description}
-            """)
-            st.markdown("---")
-    else:
-        st.info("No recent activities found")
+            with col1:
+                st.metric("Total Activities", len(activities_df))
+            
+            with col2:
+                if 'PRIORITY' in activities_df.columns:
+                    try:
+                        # Safe filtering for high priority activities
+                        high_priority_mask = activities_df['PRIORITY'].isin(['high', 'urgent'])
+                        high_priority = high_priority_mask.sum()
+                        st.metric("High Priority", high_priority)
+                    except Exception:
+                        st.metric("High Priority", "N/A")
+            
+            with col3:
+                if 'CUSTOMER_ID' in activities_df.columns:
+                    try:
+                        unique_customers = activities_df['CUSTOMER_ID'].nunique()
+                        st.metric("Active Customers", unique_customers)
+                    except Exception:
+                        st.metric("Active Customers", "N/A")
+            
+            st.divider()
+            
+            # Recent activities
+            st.subheader("🔄 Recent Activities")
+            try:
+                for _, activity in activities_df.head(20).iterrows():
+                    title = safe_get_str(activity.get('ACTIVITY_TITLE', ''), 'Activity')
+                    customer_id = safe_get_str(activity.get('CUSTOMER_ID', ''), 'Unknown')
+                    timestamp = safe_get_str(activity.get('ACTIVITY_TIMESTAMP', ''), 'Unknown time')
+                    description = safe_get_str(activity.get('ACTIVITY_DESCRIPTION', ''), 'No description')
+                    
+                    st.markdown(f"""
+                    **{title}** - Customer: {customer_id}  
+                    *{timestamp}*  
+                    {description}
+                    """)
+                    st.markdown("---")
+            except Exception as e:
+                st.error(f"Error displaying activities: {str(e)}")
+        else:
+            st.info("No recent activities found")
+    except Exception as e:
+        st.error(f"Error loading activity feed: {str(e)}")
 
 if __name__ == "__main__":
     main() 
