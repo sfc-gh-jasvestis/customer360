@@ -312,26 +312,26 @@ def display_customer_dashboard():
         
         col1, col2, col3, col4 = st.columns(4)
         
-        customer_overview = insights['customer_overview']
-        behavioral_insights = insights['behavioral_insights']
-        purchase_insights = insights['purchase_insights']
+        customer_overview = insights.get('customer_overview', {})
+        risk_assessment = insights.get('risk_assessment', {})
         
         with col1:
             st.markdown(f"""
             <div class="metric-card">
-                <h3>💎 {customer_overview['tier']}</h3>
-                <p><strong>{customer_overview['name']}</strong></p>
-                <p>{customer_overview['email']}</p>
+                <h3>�� {customer_overview.get('tier', 'N/A')}</h3>
+                <p><strong>{customer_overview.get('name', 'N/A')}</strong></p>
+                <p>{customer_overview.get('email', 'N/A')}</p>
             </div>
             """, unsafe_allow_html=True)
         
         with col2:
-            churn_risk = customer_overview['churn_risk']['level']
-            risk_class = f"{churn_risk.lower()}-risk"
+            churn_risk_level = risk_assessment.get('risk_level', 'UNKNOWN')
+            churn_risk_score = risk_assessment.get('churn_risk_score', 0)
+            risk_class = f"{churn_risk_level.lower()}-risk"
             st.markdown(f"""
             <div class="metric-card">
-                <h3 class="{risk_class}">⚠️ {churn_risk} RISK</h3>
-                <p>Score: {customer_overview['churn_risk']['score']:.3f}</p>
+                <h3 class="{risk_class}">⚠️ {churn_risk_level} RISK</h3>
+                <p>Score: {churn_risk_score:.3f}</p>
                 <p>Needs attention</p>
             </div>
             """, unsafe_allow_html=True)
@@ -339,20 +339,18 @@ def display_customer_dashboard():
         with col3:
             st.markdown(f"""
             <div class="metric-card">
-                <h3>💰 ${customer_overview['total_spent']:,.0f}</h3>
-                <p>Total Spent</p>
-                <p>LTV: ${customer_overview['lifetime_value']:,.0f}</p>
+                <h3>💰 ${customer_overview.get('lifetime_value', 0):,.0f}</h3>
+                <p>Lifetime Value</p>
+                <p>{customer_overview.get('total_orders', 0)} orders</p>
             </div>
             """, unsafe_allow_html=True)
         
         with col4:
-            engagement = behavioral_insights['engagement_score']
-            engagement_color = "#28a745" if engagement > 0.7 else "#fd7e14" if engagement > 0.4 else "#dc3545"
             st.markdown(f"""
             <div class="metric-card">
-                <h3 style="color: {engagement_color}">📊 {engagement:.1%}</h3>
-                <p>Engagement Score</p>
-                <p>Satisfaction: {behavioral_insights['satisfaction_score']:.1f}/10</p>
+                <h3>🛒 ${customer_overview.get('total_spent', 0):,.0f}</h3>
+                <p>Total Spent</p>
+                <p>Avg: ${customer_overview.get('avg_order_value', 0):,.0f}</p>
             </div>
             """, unsafe_allow_html=True)
         
@@ -795,8 +793,8 @@ def display_customer_analytics(customer_id, insights):
             st.plotly_chart(fig, use_container_width=True)
     
     # Detailed metrics
-    behavioral = insights['behavioral_insights']
-    purchase = insights['purchase_insights']
+    behavioral = insights.get('behavioral_insights', {})
+    purchase = insights.get('purchase_insights', {})
     
     st.subheader("Detailed Metrics")
     
