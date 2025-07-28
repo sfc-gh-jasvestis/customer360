@@ -780,7 +780,7 @@ def display_customer_analytics(customer_id, insights):
         """
         events_result = run_query(events_query)
         
-        if events_result:
+        if not events_result.empty:
             df_events = pd.DataFrame(events_result, columns=['Event Type', 'Count'])
             fig = px.bar(df_events, x='Event Type', y='Count', 
                         title="Recent Activity (Last 30 Days)")
@@ -798,7 +798,7 @@ def display_customer_analytics(customer_id, insights):
         """
         orders = run_query(orders_query)
         
-        if orders:
+        if not orders.empty:
             df_orders = pd.DataFrame(orders, columns=['Month', 'Revenue'])
             fig = px.line(df_orders, x='Month', y='Revenue', 
                          title="Monthly Purchase History")
