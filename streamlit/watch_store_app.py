@@ -462,26 +462,17 @@ def display_personal_recommendations(customer_id):
             with col1:
                 # Display product image from database
                 try:
-                    # Debug: Show what's in the rec object
-                    st.write(f"Debug - Available keys: {list(rec.keys())}")
-                    
                     # Check if images exist and are in the right format
                     images = rec.get('images', [])
-                    st.write(f"Debug - Images value: {images}")
-                    st.write(f"Debug - Images type: {type(images)}")
-                    
                     if images and isinstance(images, list) and len(images) > 0:
                         # Use the first image from the product images array
                         product_image_url = images[0]
-                        st.write(f"Debug - Using image URL: {product_image_url}")
                         st.image(product_image_url, width=200, caption=rec['product_name'])
                     else:
-                        st.write("Debug - No images found, using fallback")
                         # Fallback to a generic watch placeholder
                         st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop", 
                                 width=200, caption="Product Image")
                 except Exception as e:
-                    st.write(f"Debug - Image error: {str(e)}")
                     # If image fails to load, show fallback
                     st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop", 
                             width=200, caption="Product Image")
@@ -663,7 +654,8 @@ def display_price_optimization():
         )
         
         if not optimization_result.empty:
-            result = optimization_result.iloc[0]['RESULT']
+            result_raw = optimization_result.iloc[0]['RESULT']
+            result = json.loads(result_raw) if isinstance(result_raw, str) else result_raw
             col1, col2, col3 = st.columns(3)
             
             with col1:
@@ -740,7 +732,8 @@ def display_sentiment_analysis():
             )
             
             if not sentiment_result.empty:
-                result = sentiment_result.iloc[0]['RESULT']
+                result_raw = sentiment_result.iloc[0]['RESULT']
+                result = json.loads(result_raw) if isinstance(result_raw, str) else result_raw
                 
                 col1, col2, col3 = st.columns(3)
                 with col1:
