@@ -74,10 +74,10 @@ INSERT INTO product_variants (variant_id, product_id, variant_name, variant_type
 ('ROLEX_SUB_001_GREEN', 'ROLEX_SUB_001', 'Green Dial', 'dial', 'green', 0, 2, '["https://rolex.com/sub_green.jpg"]',
 
 -- Apple Watch variants
-('APPLE_WATCH_001_41MM', 'APPLE_WATCH_001', '41mm', 'size', '41mm', -30.00, 25, '["https://apple.com/watch_41.jpg"]',
-('APPLE_WATCH_001_45MM', 'APPLE_WATCH_001', '45mm', 'size', '45mm', 0, 30, '["https://apple.com/watch_45.jpg"]',
-('APPLE_WATCH_001_BLUE', 'APPLE_WATCH_001', 'Blue Band', 'band', 'blue', 0, 15, '["https://apple.com/watch_blue.jpg"]',
-('APPLE_WATCH_001_RED', 'APPLE_WATCH_001', 'Red Band', 'band', 'red', 0, 12, '["https://apple.com/watch_red.jpg"]';
+('APPLE_WATCH_001_41MM', 'APPLE_WATCH_001', '41mm', 'size', '41mm', -30.00, 25, '["https://apple.com/watch_41.jpg"]'),
+('APPLE_WATCH_001_45MM', 'APPLE_WATCH_001', '45mm', 'size', '45mm', 0, 30, '["https://apple.com/watch_45.jpg"]'),
+('APPLE_WATCH_001_BLUE', 'APPLE_WATCH_001', 'Blue Band', 'band', 'blue', 0, 15, '["https://apple.com/watch_blue.jpg"]'),
+('APPLE_WATCH_001_RED', 'APPLE_WATCH_001', 'Red Band', 'band', 'red', 0, 12, '["https://apple.com/watch_red.jpg"]');
 
 -- ============================================================================
 -- CUSTOMERS DATA
@@ -123,72 +123,76 @@ SELECT 'CUST_007', 'inactive.customer@email.com', 'David', 'Miller', '555-0107',
 -- ORDERS DATA
 -- ============================================================================
 
-INSERT INTO orders (order_id, customer_id, order_date, order_status, payment_status, shipping_method, tracking_number, subtotal, tax_amount, shipping_cost, discount_amount, total_amount, billing_address, shipping_address, order_source, sales_channel, coupon_code, estimated_delivery_date, actual_delivery_date) VALUES
-('ORDER_001', 'CUST_001', '2024-01-15 14:30:00'::timestamp, 'delivered', 'paid', 'Express', 'TRK123456789',
+INSERT INTO orders (order_id, customer_id, order_date, order_status, payment_status, shipping_method, tracking_number, subtotal, tax_amount, shipping_cost, discount_amount, total_amount, billing_address, shipping_address, order_source, sales_channel, coupon_code, estimated_delivery_date, actual_delivery_date)
+SELECT 'ORDER_001', 'CUST_001', '2024-01-15 14:30:00'::timestamp, 'delivered', 'paid', 'Express', 'TRK123456789',
  10395.00, 831.60, 29.99, 0, 11256.59, 
- '{"street": "123 Main St", "city": "New York", "state": "NY", "postal_code": "10001"}',
- '{"street": "123 Main St", "city": "New York", "state": "NY", "postal_code": "10001"}',
- 'website', 'online', NULL, '2024-01-18'::date, '2024-01-17'::date),
-
-('ORDER_002', 'CUST_002', '2024-01-10 16:45:00'::timestamp, 'delivered', 'paid', 'Standard', 'TRK987654321',
+ PARSE_JSON('{"street": "123 Main St", "city": "New York", "state": "NY", "postal_code": "10001"}'),
+ PARSE_JSON('{"street": "123 Main St", "city": "New York", "state": "NY", "postal_code": "10001"}'),
+ 'website', 'online', NULL, '2024-01-18'::date, '2024-01-17'::date
+UNION ALL
+SELECT 'ORDER_002', 'CUST_002', '2024-01-10 16:45:00'::timestamp, 'delivered', 'paid', 'Standard', 'TRK987654321',
  429.00, 34.32, 9.99, 50.00, 423.31,
- '{"street": "456 Oak Ave", "city": "Los Angeles", "state": "CA", "postal_code": "90210"}',
- '{"street": "456 Oak Ave", "city": "Los Angeles", "state": "CA", "postal_code": "90210"}',
- 'mobile_app', 'online', 'SAVE50', '2024-01-15'::date, '2024-01-13'::date),
-
-('ORDER_003', 'CUST_003', '2023-12-22 13:20:00'::timestamp, 'delivered', 'paid', 'Standard', 'TRK456789123',
+ PARSE_JSON('{"street": "456 Oak Ave", "city": "Los Angeles", "state": "CA", "postal_code": "90210"}'),
+ PARSE_JSON('{"street": "456 Oak Ave", "city": "Los Angeles", "state": "CA", "postal_code": "90210"}'),
+ 'mobile_app', 'online', 'SAVE50', '2024-01-15'::date, '2024-01-13'::date
+UNION ALL
+SELECT 'ORDER_003', 'CUST_003', '2023-12-22 13:20:00'::timestamp, 'delivered', 'paid', 'Standard', 'TRK456789123',
  99.00, 7.92, 9.99, 0, 116.91,
- '{"street": "789 Pine St", "city": "Chicago", "state": "IL", "postal_code": "60601"}',
- '{"street": "789 Pine St", "city": "Chicago", "state": "IL", "postal_code": "60601"}',
- 'website', 'online', NULL, '2023-12-27'::date, '2023-12-25'::date),
-
-('ORDER_004', 'CUST_005', '2024-01-12 10:30:00'::timestamp, 'shipped', 'paid', 'Express', 'TRK789123456',
+ PARSE_JSON('{"street": "789 Pine St", "city": "Chicago", "state": "IL", "postal_code": "60601"}'),
+ PARSE_JSON('{"street": "789 Pine St", "city": "Chicago", "state": "IL", "postal_code": "60601"}'),
+ 'website', 'online', NULL, '2023-12-27'::date, '2023-12-25'::date
+UNION ALL
+SELECT 'ORDER_004', 'CUST_005', '2024-01-12 10:30:00'::timestamp, 'shipped', 'paid', 'Express', 'TRK789123456',
  6350.00, 508.00, 29.99, 0, 6887.99,
- '{"street": "654 Maple Dr", "city": "Seattle", "state": "WA", "postal_code": "98101"}',
- '{"street": "654 Maple Dr", "city": "Seattle", "state": "WA", "postal_code": "98101"}',
- 'website', 'online', NULL, '2024-01-25'::date, NULL);
+ PARSE_JSON('{"street": "654 Maple Dr", "city": "Seattle", "state": "WA", "postal_code": "98101"}'),
+ PARSE_JSON('{"street": "654 Maple Dr", "city": "Seattle", "state": "WA", "postal_code": "98101"}'),
+ 'website', 'online', NULL, '2024-01-25'::date, NULL;
 
 -- ============================================================================
 -- ORDER ITEMS DATA
 -- ============================================================================
 
-INSERT INTO order_items (order_item_id, order_id, product_id, variant_id, quantity, unit_price, total_price, discount_amount, product_snapshot) VALUES
-('ITEM_001', 'ORDER_001', 'ROLEX_SUB_001', 'ROLEX_SUB_001_GREEN', 1, 10395.00, 10395.00, 0,
- '{"product_name": "Submariner Date", "brand": "Rolex", "model": "126610LV", "variant": "Green Dial"},
-
-('ITEM_002', 'ORDER_002', 'APPLE_WATCH_001', 'APPLE_WATCH_001_45MM', 1, 429.00, 429.00, 50.00,
- '{"product_name": "Apple Watch Series 9", "brand": "Apple", "model": "MR973LL/A", "variant": "45mm"},
-
-('ITEM_003', 'ORDER_003', 'CASIO_GSHOCK_001', NULL, 1, 99.00, 99.00, 0,
- '{"product_name": "G-Shock GA-2100", "brand": "Casio", "model": "GA-2100-1A1"},
-
-('ITEM_004', 'ORDER_004', 'OMEGA_SPEED_001', NULL, 1, 6350.00, 6350.00, 0,
- '{"product_name": "Speedmaster Professional", "brand": "Omega", "model": "310.30.42.50.01.001"};
+INSERT INTO order_items (order_item_id, order_id, product_id, variant_id, quantity, unit_price, total_price, discount_amount, product_snapshot)
+SELECT 'ITEM_001', 'ORDER_001', 'ROLEX_SUB_001', 'ROLEX_SUB_001_GREEN', 1, 10395.00, 10395.00, 0,
+ PARSE_JSON('{"product_name": "Submariner Date", "brand": "Rolex", "model": "126610LV", "variant": "Green Dial"}')
+UNION ALL
+SELECT 'ITEM_002', 'ORDER_002', 'APPLE_WATCH_001', 'APPLE_WATCH_001_45MM', 1, 429.00, 429.00, 50.00,
+ PARSE_JSON('{"product_name": "Apple Watch Series 9", "brand": "Apple", "model": "MR973LL/A", "variant": "45mm"}')
+UNION ALL
+SELECT 'ITEM_003', 'ORDER_003', 'CASIO_GSHOCK_001', NULL, 1, 99.00, 99.00, 0,
+ PARSE_JSON('{"product_name": "G-Shock GA-2100", "brand": "Casio", "model": "GA-2100-1A1"}')
+UNION ALL
+SELECT 'ITEM_004', 'ORDER_004', 'OMEGA_SPEED_001', NULL, 1, 6350.00, 6350.00, 0,
+ PARSE_JSON('{"product_name": "Speedmaster Professional", "brand": "Omega", "model": "310.30.42.50.01.001"}');
 
 -- ============================================================================
 -- CUSTOMER EVENTS DATA (Behavioral Tracking)
 -- ============================================================================
 
-INSERT INTO customer_events (event_id, customer_id, event_type, event_timestamp, product_id, category, page_url, session_id, device_type, event_properties, revenue) VALUES
--- John Smith (CUST_001) - Luxury watch buyer behavior
-('EVENT_001', 'CUST_001', 'page_view', '2024-01-22 09:15:00'::timestamp, NULL, 'luxury', '/watches/luxury', 'SESS_001', 'desktop', '{"duration_seconds": 120}', 0),
-('EVENT_002', 'CUST_001', 'product_view', '2024-01-22 09:17:00'::timestamp, 'ROLEX_GMT_001', 'luxury', '/product/rolex-gmt-master-ii', 'SESS_001', 'desktop', '{"view_duration": 180, "images_viewed": 3}', 0),
-('EVENT_003', 'CUST_001', 'product_view', '2024-01-22 09:22:00'::timestamp, 'OMEGA_SEAMASTER_001', 'luxury', '/product/omega-seamaster', 'SESS_001', 'desktop', '{"view_duration": 90}', 0),
-('EVENT_004', 'CUST_001', 'cart_add', '2024-01-22 09:25:00'::timestamp, 'ROLEX_GMT_001', 'luxury', '/cart', 'SESS_001', 'desktop', '{"quantity": 1}', 10700.00),
-
--- Sarah Johnson (CUST_002) - Multi-category shopper
-('EVENT_005', 'CUST_002', 'search', '2024-01-22 11:30:00'::timestamp, NULL, NULL, '/search?q=sport+watch', 'SESS_002', 'mobile', '{"search_term": "sport watch", "results_count": 15}', 0),
-('EVENT_006', 'CUST_002', 'product_view', '2024-01-22 11:32:00'::timestamp, 'TAG_CARRERA_001', 'luxury', '/product/tag-heuer-carrera', 'SESS_002', 'mobile', '{"view_duration": 60}', 0),
-('EVENT_007', 'CUST_002', 'product_view', '2024-01-22 11:35:00'::timestamp, 'APPLE_WATCH_001', 'smartwatch', '/product/apple-watch-series-9', 'SESS_002', 'mobile', '{"view_duration": 45}', 0),
-
--- Mike Brown (CUST_003) - Budget-conscious casual shopper
-('EVENT_008', 'CUST_003', 'category_browse', '2024-01-18 08:45:00'::timestamp, NULL, 'casual', '/watches/casual', 'SESS_003', 'desktop', '{"products_viewed": 8}', 0),
-('EVENT_009', 'CUST_003', 'product_view', '2024-01-18 08:48:00'::timestamp, 'SEIKO_PROSPEX_001', 'sport', '/product/seiko-prospex-solar', 'SESS_003', 'desktop', '{"view_duration": 120}', 0),
-('EVENT_010', 'CUST_003', 'product_view', '2024-01-18 08:52:00'::timestamp, 'CITIZEN_ECO_001', 'casual', '/product/citizen-eco-drive', 'SESS_003', 'desktop', '{"view_duration": 90}', 0),
-
--- David Miller (CUST_007) - High churn risk, minimal engagement
-('EVENT_011', 'CUST_007', 'page_view', '2023-08-10 09:15:00'::timestamp, NULL, 'casual', '/watches', 'SESS_007', 'mobile', '{"duration_seconds": 30}', 0),
-('EVENT_012', 'CUST_007', 'product_view', '2023-08-10 09:16:00'::timestamp, 'CASIO_GSHOCK_001', 'sport', '/product/casio-gshock', 'SESS_007', 'mobile', '{"view_duration": 15}', 0);
+INSERT INTO customer_events (event_id, customer_id, event_type, event_timestamp, product_id, category, page_url, session_id, device_type, event_properties, revenue)
+SELECT 'EVENT_001', 'CUST_001', 'page_view', '2024-01-22 09:15:00'::timestamp, NULL, 'luxury', '/watches/luxury', 'SESS_001', 'desktop', PARSE_JSON('{"duration_seconds": 120}'), 0
+UNION ALL
+SELECT 'EVENT_002', 'CUST_001', 'product_view', '2024-01-22 09:17:00'::timestamp, 'ROLEX_GMT_001', 'luxury', '/product/rolex-gmt-master-ii', 'SESS_001', 'desktop', PARSE_JSON('{"view_duration": 180, "images_viewed": 3}'), 0
+UNION ALL
+SELECT 'EVENT_003', 'CUST_001', 'product_view', '2024-01-22 09:22:00'::timestamp, 'OMEGA_SEAMASTER_001', 'luxury', '/product/omega-seamaster', 'SESS_001', 'desktop', PARSE_JSON('{"view_duration": 90}'), 0
+UNION ALL
+SELECT 'EVENT_004', 'CUST_001', 'cart_add', '2024-01-22 09:25:00'::timestamp, 'ROLEX_GMT_001', 'luxury', '/cart', 'SESS_001', 'desktop', PARSE_JSON('{"quantity": 1}'), 10700.00
+UNION ALL
+SELECT 'EVENT_005', 'CUST_002', 'search', '2024-01-22 11:30:00'::timestamp, NULL, NULL, '/search?q=sport+watch', 'SESS_002', 'mobile', PARSE_JSON('{"search_term": "sport watch", "results_count": 15}'), 0
+UNION ALL
+SELECT 'EVENT_006', 'CUST_002', 'product_view', '2024-01-22 11:32:00'::timestamp, 'TAG_CARRERA_001', 'luxury', '/product/tag-heuer-carrera', 'SESS_002', 'mobile', PARSE_JSON('{"view_duration": 60}'), 0
+UNION ALL
+SELECT 'EVENT_007', 'CUST_002', 'product_view', '2024-01-22 11:35:00'::timestamp, 'APPLE_WATCH_001', 'smartwatch', '/product/apple-watch-series-9', 'SESS_002', 'mobile', PARSE_JSON('{"view_duration": 45}'), 0
+UNION ALL
+SELECT 'EVENT_008', 'CUST_003', 'category_browse', '2024-01-18 08:45:00'::timestamp, NULL, 'casual', '/watches/casual', 'SESS_003', 'desktop', PARSE_JSON('{"products_viewed": 8}'), 0
+UNION ALL
+SELECT 'EVENT_009', 'CUST_003', 'product_view', '2024-01-18 08:48:00'::timestamp, 'SEIKO_PROSPEX_001', 'sport', '/product/seiko-prospex-solar', 'SESS_003', 'desktop', PARSE_JSON('{"view_duration": 120}'), 0
+UNION ALL
+SELECT 'EVENT_010', 'CUST_003', 'product_view', '2024-01-18 08:52:00'::timestamp, 'CITIZEN_ECO_001', 'casual', '/product/citizen-eco-drive', 'SESS_003', 'desktop', PARSE_JSON('{"view_duration": 90}'), 0
+UNION ALL
+SELECT 'EVENT_011', 'CUST_007', 'page_view', '2023-08-10 09:15:00'::timestamp, NULL, 'casual', '/watches', 'SESS_007', 'mobile', PARSE_JSON('{"duration_seconds": 30}'), 0
+UNION ALL
+SELECT 'EVENT_012', 'CUST_007', 'product_view', '2023-08-10 09:16:00'::timestamp, 'CASIO_GSHOCK_001', 'sport', '/product/casio-gshock', 'SESS_007', 'mobile', PARSE_JSON('{"view_duration": 15}'), 0;
 
 -- ============================================================================
 -- PRODUCT REVIEWS DATA (with AI Sentiment Analysis)
