@@ -359,7 +359,20 @@ def display_personal_recommendations(customer_id):
             col1, col2 = st.columns([1, 3])
             
             with col1:
-                st.image("https://via.placeholder.com/200x200?text=Watch", width=200)
+                # Display product image from database
+                try:
+                    if 'images' in rec and rec['images'] and len(rec['images']) > 0:
+                        # Use the first image from the product images array
+                        product_image_url = rec['images'][0]
+                        st.image(product_image_url, width=200, caption=rec['product_name'])
+                    else:
+                        # Fallback to a generic watch placeholder
+                        st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop", 
+                                width=200, caption="Product Image")
+                except Exception as e:
+                    # If image fails to load, show fallback
+                    st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop", 
+                            width=200, caption="Product Image")
             
             with col2:
                 match_reasons = [reason for reason in rec['match_reasons'] if reason]
@@ -453,7 +466,7 @@ def display_price_optimization():
     
     # Get product list for selection
     products = run_query("""
-        SELECT product_id, product_name, brand_name, current_price, stock_quantity
+        SELECT product_id, product_name, brand_name, current_price, stock_quantity, product_images
         FROM RETAIL_WATCH_DB.PUBLIC.products p
         JOIN RETAIL_WATCH_DB.PUBLIC.watch_brands b ON p.brand_id = b.brand_id
         WHERE p.product_status = 'active'
@@ -474,6 +487,29 @@ def display_price_optimization():
     if selected_product_display and product_options and selected_product_display != "No products available":
         selected_product_id = product_options[selected_product_display]
         st.session_state.shopping_context = 'price_optimization'
+        
+        # Get selected product details for display
+        selected_product = products[products['PRODUCT_ID'] == selected_product_id].iloc[0]
+        
+        # Display product image and info
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            try:
+                if selected_product['PRODUCT_IMAGES'] and len(selected_product['PRODUCT_IMAGES']) > 0:
+                    product_image_url = selected_product['PRODUCT_IMAGES'][0]
+                    st.image(product_image_url, width=200, caption=selected_product['PRODUCT_NAME'])
+                else:
+                    st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop", 
+                            width=200, caption="Product Image")
+            except Exception:
+                st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop", 
+                        width=200, caption="Product Image")
+        
+        with col2:
+            st.subheader(f"{selected_product['PRODUCT_NAME']}")
+            st.write(f"**Brand:** {selected_product['BRAND_NAME']}")
+            st.write(f"**Current Price:** ${selected_product['CURRENT_PRICE']:,.2f}")
+            st.write(f"**Stock:** {selected_product['STOCK_QUANTITY']} units")
         
         # Display price optimization
         st.subheader("📊 Price Analysis")
@@ -505,7 +541,7 @@ def display_sentiment_analysis():
     # Get recent reviews
     reviews = run_query("""
         SELECT pr.review_id, pr.product_id, p.product_name, b.brand_name, 
-               pr.rating, pr.review_text, pr.review_date
+               pr.rating, pr.review_text, pr.review_date, p.product_images
         FROM RETAIL_WATCH_DB.PUBLIC.product_reviews pr
         JOIN RETAIL_WATCH_DB.PUBLIC.products p ON pr.product_id = p.product_id
         JOIN RETAIL_WATCH_DB.PUBLIC.watch_brands b ON p.brand_id = b.brand_id
@@ -528,6 +564,26 @@ def display_sentiment_analysis():
         if selected_review_display:
             selected_review_id = review_options[selected_review_display]
             selected_review = reviews[reviews['REVIEW_ID'] == selected_review_id].iloc[0]
+            
+            # Display product image and review info
+            col1, col2 = st.columns([1, 3])
+            with col1:
+                try:
+                    if selected_review['PRODUCT_IMAGES'] and len(selected_review['PRODUCT_IMAGES']) > 0:
+                        product_image_url = selected_review['PRODUCT_IMAGES'][0]
+                        st.image(product_image_url, width=150, caption=selected_review['PRODUCT_NAME'])
+                    else:
+                        st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150&h=150&fit=crop", 
+                                width=150, caption="Product Image")
+                except Exception:
+                    st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150&h=150&fit=crop", 
+                            width=150, caption="Product Image")
+            
+            with col2:
+                st.subheader(f"{selected_review['PRODUCT_NAME']}")
+                st.write(f"**Brand:** {selected_review['BRAND_NAME']}")
+                st.write(f"**Rating:** {selected_review['RATING']}⭐")
+                st.write(f"**Review Date:** {selected_review['REVIEW_DATE'].strftime('%Y-%m-%d')}")
             
             # Display review
             st.subheader("📝 Review Text")
