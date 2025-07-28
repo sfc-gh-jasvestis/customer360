@@ -126,7 +126,7 @@ $$
             WHEN cortex_sentiment IS NOT NULL THEN 0.95
             ELSE 0.75
         END,
-        'key_themes', ARRAY_CONSTRUCT(
+        'key_themes', ARRAY_COMPACT(ARRAY_CONSTRUCT(
             CASE WHEN UPPER(review_text) LIKE '%QUALITY%' THEN 'quality' END,
             CASE WHEN UPPER(review_text) LIKE '%PRICE%' OR UPPER(review_text) LIKE '%COST%' THEN 'price' END,
             CASE WHEN UPPER(review_text) LIKE '%SERVICE%' OR UPPER(review_text) LIKE '%SUPPORT%' THEN 'service' END,
@@ -135,7 +135,7 @@ $$
             CASE WHEN UPPER(review_text) LIKE '%BATTERY%' OR UPPER(review_text) LIKE '%CHARGING%' THEN 'battery' END,
             CASE WHEN UPPER(review_text) LIKE '%ACCURACY%' OR UPPER(review_text) LIKE '%TIME%' THEN 'accuracy' END,
             CASE WHEN UPPER(review_text) LIKE '%DURABILITY%' OR UPPER(review_text) LIKE '%DURABLE%' THEN 'durability' END
-        )
+        ))
     )
     FROM sentiment_analysis
 $$;
@@ -418,7 +418,28 @@ AS
 $$
     WITH customer_summary AS (
         SELECT 
-            c.*,
+            c.customer_id,
+            c.first_name,
+            c.last_name,
+            c.email,
+            c.customer_tier,
+            c.lifetime_value,
+            c.total_spent,
+            c.total_orders,
+            c.avg_order_value,
+            c.price_range_min,
+            c.price_range_max,
+            c.last_purchase_date,
+            c.last_login_date,
+            c.churn_risk_score,
+            c.engagement_score,
+            c.satisfaction_score,
+            c.website_visits_30d,
+            c.email_opens_30d,
+            c.email_clicks_30d,
+            c.marketing_consent,
+            c.preferred_brands,
+            c.style_preferences,
             -- Recent activity
             (SELECT COUNT(*) FROM customer_events WHERE customer_id = c.customer_id 
              AND event_timestamp >= DATEADD('day', -30, CURRENT_TIMESTAMP())) as recent_activity_count,
@@ -487,7 +508,7 @@ $$
         ),
         
         'ai_recommendations', OBJECT_CONSTRUCT(
-            'next_best_actions', ARRAY_CONSTRUCT(
+            'next_best_actions', ARRAY_COMPACT(ARRAY_CONSTRUCT(
                 CASE WHEN churn_risk_score > 0.6 THEN 'Priority retention outreach' END,
                 CASE WHEN orders_90d = 0 AND DATEDIFF('day', last_purchase_date, CURRENT_TIMESTAMP()) > 60 
                      THEN 'Send personalized product recommendations' END,
@@ -495,7 +516,7 @@ $$
                 CASE WHEN engagement_score > 0.8 AND lifetime_value > 5000 
                      THEN 'VIP program invitation' END,
                 CASE WHEN recent_activity_count > 20 THEN 'High engagement - upsell opportunity' END
-            ),
+            )),
             'recommended_products_context', CASE
                 WHEN preferred_brands LIKE '%Rolex%' OR preferred_brands LIKE '%Omega%' THEN 'luxury'
                 WHEN style_preferences LIKE '%sport%' THEN 'sport'
