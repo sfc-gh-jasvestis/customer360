@@ -13,7 +13,7 @@ SELECT '🎯 Loading sample data for Retail Watch Store...' as data_loading_step
 -- WATCH BRANDS DATA
 -- ============================================================================
 
-INSERT INTO watch_brands VALUES
+INSERT INTO watch_brands (brand_id, brand_name, brand_tier, country_origin, founded_year, brand_description, brand_image_url, avg_price_range) VALUES
 ('ROLEX', 'Rolex', 'luxury', 'Switzerland', 1905, 'A crown for every achievement. World-renowned luxury Swiss watch manufacturer.', 'https://rolex.com/logo.png', 15000),
 ('OMEGA', 'Omega', 'luxury', 'Switzerland', 1848, 'Masters of precision and innovation since 1848.', 'https://omega.com/logo.png', 8000),
 ('TAG_HEUER', 'TAG Heuer', 'luxury', 'Switzerland', 1860, 'Swiss avant-garde since 1860. Don''t Crack Under Pressure.', 'https://tagheuer.com/logo.png', 3500),
@@ -29,7 +29,7 @@ INSERT INTO watch_brands VALUES
 -- WATCH CATEGORIES DATA
 -- ============================================================================
 
-INSERT INTO watch_categories VALUES
+INSERT INTO watch_categories (category_id, category_name, parent_category_id, category_description, display_order) VALUES
 ('LUXURY', 'Luxury Watches', NULL, 'High-end Swiss and premium timepieces', 1),
 ('SPORT', 'Sport Watches', NULL, 'Active lifestyle and athletic timepieces', 2),
 ('DRESS', 'Dress Watches', NULL, 'Elegant formal and business watches', 3),
@@ -43,7 +43,7 @@ INSERT INTO watch_categories VALUES
 -- PRODUCTS DATA
 -- ============================================================================
 
-INSERT INTO products VALUES
+INSERT INTO products (product_id, brand_id, category_id, product_name, model_number, description, case_material, case_diameter, case_thickness, water_resistance, movement_type, display_type, strap_material, retail_price, current_price, cost_price, discount_percentage, stock_quantity, reorder_level, supplier_id, featured, new_arrival, bestseller, avg_rating, review_count, product_images, product_tags, seo_keywords, product_status, created_at, updated_at) VALUES
 -- Luxury Rolex watches
 ('ROLEX_SUB_001', 'ROLEX', 'LUXURY', 'Submariner Date', '126610LV', 'The Rolex Submariner Date in Oystersteel with a green Cerachrom bezel insert and a black dial.', 'steel', 41.00, 12.50, 300, 'automatic', 'analog', 'steel', 10395.00, 10395.00, 5200.00, 0, 5, 2, 'SUP_001', TRUE, FALSE, TRUE, 4.8, 1247, '["https://rolex.com/sub1.jpg", "https://rolex.com/sub2.jpg"]', '["luxury", "diving", "steel", "green"]', '["rolex", "submariner", "diving", "luxury"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
@@ -75,7 +75,7 @@ INSERT INTO products VALUES
 -- PRODUCT VARIANTS DATA
 -- ============================================================================
 
-INSERT INTO product_variants VALUES
+INSERT INTO product_variants (variant_id, product_id, variant_name, variant_type, variant_value, price_adjustment, stock_quantity, variant_images) VALUES
 -- Rolex Submariner variants
 ('ROLEX_SUB_001_BLACK', 'ROLEX_SUB_001', 'Black Dial', 'dial', 'black', 0, 3, '["https://rolex.com/sub_black.jpg"]'),
 ('ROLEX_SUB_001_GREEN', 'ROLEX_SUB_001', 'Green Dial', 'dial', 'green', 0, 2, '["https://rolex.com/sub_green.jpg"]'),
@@ -90,7 +90,7 @@ INSERT INTO product_variants VALUES
 -- CUSTOMERS DATA
 -- ============================================================================
 
-INSERT INTO customers VALUES
+INSERT INTO customers (customer_id, email, first_name, last_name, phone, date_of_birth, gender, registration_date, street_address, city, state, postal_code, country, customer_tier, preferred_brands, price_range_min, price_range_max, style_preferences, total_spent, total_orders, avg_order_value, last_purchase_date, last_login_date, website_visits_30d, email_opens_30d, email_clicks_30d, churn_risk_score, satisfaction_score, engagement_score, lifetime_value, account_status, marketing_consent, created_at, updated_at) VALUES
 ('CUST_001', 'john.smith@email.com', 'John', 'Smith', '555-0101', '1985-03-15', 'Male', '2022-01-15 10:30:00'::timestamp,
  '123 Main St', 'New York', 'NY', '10001', 'USA', 'Gold', '["Rolex", "Omega"]', 5000, 15000, '["luxury", "formal"]',
  28450.00, 8, 3556.25, '2024-01-15 14:30:00'::timestamp, '2024-01-20 09:15:00'::timestamp, 45, 12, 8,
@@ -131,7 +131,7 @@ INSERT INTO customers VALUES
 -- ORDERS DATA
 -- ============================================================================
 
-INSERT INTO orders VALUES
+INSERT INTO orders (order_id, customer_id, order_date, order_status, payment_status, shipping_method, tracking_number, subtotal, tax_amount, shipping_cost, discount_amount, total_amount, billing_address, shipping_address, order_source, sales_channel, coupon_code, estimated_delivery_date, actual_delivery_date) VALUES
 ('ORDER_001', 'CUST_001', '2024-01-15 14:30:00'::timestamp, 'delivered', 'paid', 'Express', 'TRK123456789',
  10395.00, 831.60, 29.99, 0, 11256.59, 
  '{"street": "123 Main St", "city": "New York", "state": "NY", "postal_code": "10001"}',
@@ -160,7 +160,7 @@ INSERT INTO orders VALUES
 -- ORDER ITEMS DATA
 -- ============================================================================
 
-INSERT INTO order_items VALUES
+INSERT INTO order_items (order_item_id, order_id, product_id, variant_id, quantity, unit_price, total_price, discount_amount, product_snapshot) VALUES
 ('ITEM_001', 'ORDER_001', 'ROLEX_SUB_001', 'ROLEX_SUB_001_GREEN', 1, 10395.00, 10395.00, 0,
  '{"product_name": "Submariner Date", "brand": "Rolex", "model": "126610LV", "variant": "Green Dial"}'),
 
@@ -177,7 +177,7 @@ INSERT INTO order_items VALUES
 -- CUSTOMER EVENTS DATA (Behavioral Tracking)
 -- ============================================================================
 
-INSERT INTO customer_events VALUES
+INSERT INTO customer_events (event_id, customer_id, event_type, event_timestamp, product_id, category, page_url, session_id, device_type, event_properties, revenue) VALUES
 -- John Smith (CUST_001) - Luxury watch buyer behavior
 ('EVENT_001', 'CUST_001', 'page_view', '2024-01-22 09:15:00'::timestamp, NULL, 'luxury', '/watches/luxury', 'SESS_001', 'desktop', '{"duration_seconds": 120}', 0),
 ('EVENT_002', 'CUST_001', 'product_view', '2024-01-22 09:17:00'::timestamp, 'ROLEX_GMT_001', 'luxury', '/product/rolex-gmt-master-ii', 'SESS_001', 'desktop', '{"view_duration": 180, "images_viewed": 3}', 0),
@@ -202,7 +202,7 @@ INSERT INTO customer_events VALUES
 -- PRODUCT REVIEWS DATA (with AI Sentiment Analysis)
 -- ============================================================================
 
-INSERT INTO product_reviews VALUES
+INSERT INTO product_reviews (review_id, product_id, customer_id, order_id, rating, title, review_text, review_date, verified_purchase, helpful_votes, sentiment_score, sentiment_label, key_themes, review_status, moderation_notes) VALUES
 -- Positive reviews
 ('REV_001', 'ROLEX_SUB_001', 'CUST_001', 'ORDER_001', 5.0, 'Absolutely Perfect!', 
  'This is my third Rolex and the Submariner continues to exceed expectations. The build quality is exceptional, keeps perfect time, and the green bezel is stunning. Worth every penny for a luxury timepiece that will last generations.',
@@ -240,7 +240,7 @@ INSERT INTO product_reviews VALUES
 -- CUSTOMER INTERACTIONS DATA (Support/Service)
 -- ============================================================================
 
-INSERT INTO customer_interactions VALUES
+INSERT INTO customer_interactions (interaction_id, customer_id, interaction_type, interaction_date, subject, content, response, status, priority, assigned_agent, sentiment_score, intent_classification, urgency_score, resolution_prediction, resolution_time_minutes, customer_satisfaction_rating) VALUES
 ('INT_001', 'CUST_001', 'chat', '2024-01-22 10:30:00'::timestamp, 'Question about GMT function',
  'Hi, I''m interested in the Rolex GMT-Master II. Can you explain how the GMT function works and if it''s suitable for frequent international travel?',
  'The GMT function displays a second time zone using the additional hand and rotating bezel. Perfect for travelers who need to track home time while abroad. The Rolex GMT-Master II is specifically designed for pilots and frequent travelers.',
