@@ -271,10 +271,10 @@ $$
         SELECT 
             c.*,
             -- Get customer's purchase history
-            STRING_AGG(DISTINCT b.brand_name, ', ') as purchased_brands,
-            STRING_AGG(DISTINCT p.case_material, ', ') as preferred_materials,
+            LISTAGG(DISTINCT b.brand_name, ', ') as purchased_brands,
+            LISTAGG(DISTINCT p.case_material, ', ') as preferred_materials,
             AVG(oi.unit_price) as avg_purchase_price,
-            STRING_AGG(DISTINCT wc.category_name, ', ') as purchased_categories
+            LISTAGG(DISTINCT wc.category_name, ', ') as purchased_categories
         FROM customers c
         LEFT JOIN orders o ON c.customer_id = o.customer_id
         LEFT JOIN order_items oi ON o.order_id = oi.order_id
