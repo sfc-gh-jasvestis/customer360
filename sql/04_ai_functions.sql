@@ -15,7 +15,7 @@ SELECT '🤖 Creating AI Functions for Retail Watch Store...' as ai_setup_step;
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION predict_customer_churn(customer_id STRING)
-RETURNS VARIANT
+RETURNS OBJECT
 LANGUAGE SQL
 AS
 $$
@@ -91,7 +91,7 @@ $$;
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION analyze_review_sentiment(review_text STRING)
-RETURNS VARIANT
+RETURNS OBJECT
 LANGUAGE SQL
 AS
 $$
@@ -145,7 +145,7 @@ $$;
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION optimize_product_pricing(product_id STRING)
-RETURNS VARIANT
+RETURNS OBJECT
 LANGUAGE SQL
 AS
 $$
@@ -263,7 +263,7 @@ $$;
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION get_personal_recommendations(customer_id STRING, context STRING DEFAULT 'general')
-RETURNS VARIANT
+RETURNS OBJECT
 LANGUAGE SQL
 AS
 $$
@@ -412,7 +412,7 @@ $$;
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION get_customer_360_insights(customer_id STRING)
-RETURNS VARIANT
+RETURNS OBJECT
 LANGUAGE SQL
 AS
 $$
