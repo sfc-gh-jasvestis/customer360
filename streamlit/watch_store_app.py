@@ -70,14 +70,8 @@ st.markdown("""
 @st.cache_resource
 def init_connection():
     conn = st.connection("snowflake")
-    # Set the database context
-    try:
-        conn.query("USE DATABASE RETAIL_WATCH_DB")
-        conn.query("USE SCHEMA PUBLIC") 
-        conn.query("USE WAREHOUSE RETAIL_WATCH_WH")
-    except Exception as e:
-        st.error(f"Failed to set database context: {str(e)}")
-        st.error("Please ensure you have access to RETAIL_WATCH_DB database and RETAIL_WATCH_WH warehouse")
+    # Note: USE statements are not supported in Streamlit's Snowflake connection
+    # We'll use fully qualified table names instead (DATABASE.SCHEMA.TABLE)
     return conn
 
 # Helper functions
@@ -96,14 +90,22 @@ def run_query_df(query, params=None):
 def verify_database_setup():
     """Verify that all required tables exist"""
     conn = init_connection()
-    required_tables = ['CUSTOMERS', 'PRODUCTS', 'ORDERS', 'WATCH_BRANDS', 'WATCH_CATEGORIES']
+    # Use fully qualified table names: DATABASE.SCHEMA.TABLE
+    required_tables = [
+        'RETAIL_WATCH_DB.PUBLIC.CUSTOMERS', 
+        'RETAIL_WATCH_DB.PUBLIC.PRODUCTS', 
+        'RETAIL_WATCH_DB.PUBLIC.ORDERS', 
+        'RETAIL_WATCH_DB.PUBLIC.WATCH_BRANDS', 
+        'RETAIL_WATCH_DB.PUBLIC.WATCH_CATEGORIES'
+    ]
     
     try:
         # Check if tables exist
         for table in required_tables:
+            table_name = table.split('.')[-1]  # Get just the table name for display
             result = conn.query(f"SELECT COUNT(*) as count FROM {table} LIMIT 1")
             if result.empty:
-                return False, f"Table {table} exists but is empty"
+                return False, f"Table {table_name} exists but is empty"
         
         return True, "All tables verified successfully"
     
@@ -178,13 +180,18 @@ def main():
         # Customer selection
         customers = run_query("""
             SELECT customer_id, first_name, last_name, email, customer_tier, churn_risk_score
-            FROM customers 
+            FROM RETAIL_WATCH_DB.PUBLIC.customers 
             ORDER BY customer_tier DESC, total_spent DESC
         """)
         
         customer_options = {}
         for customer in customers:
-            risk_level = "🔴 HIGH" if customer[5] > 0.7 else "🟡 MEDIUM" if customer[5] > 0.4 else "🟢 LOW"
+            # Convert risk score to float for comparison
+            try:
+                risk_score = float(customer[5]) if customer[5] is not None else 0.0
+                risk_level = "🔴 HIGH" if risk_score > 0.7 else "🟡 MEDIUM" if risk_score > 0.4 else "🟢 LOW"
+            except (ValueError, TypeError):
+                risk_level = "🟢 LOW"  # Default if conversion fails
             display_name = f"{customer[1]} {customer[2]} ({customer[4]}) - Risk: {risk_level}"
             customer_options[display_name] = customer[0]
         
@@ -313,7 +320,7 @@ def display_customer_dashboard():
             display_price_optimization()
         
         with tab4:
-            display_sentiment_analysis(customer_id)
+            display_sentiment_analysis()
         
         with tab5:
             display_customer_analytics(customer_id, insights)
@@ -442,8 +449,8 @@ def display_price_optimization():
     # Get product list for selection
     products = run_query("""
         SELECT product_id, product_name, brand_name, current_price, stock_quantity
-        FROM products p
-        JOIN watch_brands b ON p.brand_id = b.brand_id
+        FROM RETAIL_WATCH_DB.PUBLIC.products p
+        JOIN RETAIL_WATCH_DB.PUBLIC.watch_brands b ON p.brand_id = b.brand_id
         WHERE p.product_status = 'active'
         ORDER BY p.current_price DESC
     """)
@@ -454,139 +461,101 @@ def display_price_optimization():
         product_options[display_name] = product[0]
     
     selected_product_display = st.selectbox(
-        "Select Product for Price Analysis:",
+        "Select Product for Analysis:",
         options=list(product_options.keys())
     )
     
     if selected_product_display:
-        product_id = product_options[selected_product_display]
+        selected_product_id = product_options[selected_product_display]
+        st.session_state.shopping_context = 'price_optimization'
         
-        # Get price optimization
-        price_query = f"SELECT optimize_product_pricing('{product_id}') as price_data"
-        price_result = run_query(price_query)
+        # Display price optimization
+        st.subheader("📊 Price Analysis")
+        optimization_result = run_query(
+            "SELECT optimize_product_pricing(%s) as result",
+            params=[selected_product_id]
+        )
         
-        if price_result:
-            price_data = json.loads(price_result[0][0])
-            
-            col1, col2 = st.columns(2)
+        if not optimization_result.empty:
+            result = optimization_result.iloc[0]['RESULT']
+            col1, col2, col3 = st.columns(3)
             
             with col1:
-                current_analysis = price_data['current_analysis']
-                st.markdown(f"""
-                <div class="customer-card">
-                    <h4>Current Analysis</h4>
-                    <p><strong>Current Price:</strong> ${current_analysis['current_price']:,.2f}</p>
-                    <p><strong>Margin:</strong> {current_analysis['margin_percent']:.1f}%</p>
-                    <p><strong>vs Category Avg:</strong> {current_analysis['vs_category_avg']:+.1f}%</p>
-                    <p><strong>Demand:</strong> {current_analysis['demand_score']}</p>
-                </div>
-                """, unsafe_allow_html=True)
-            
+                st.metric("Current Price", f"${result.get('current_price', 0):,.0f}")
             with col2:
-                st.markdown(f"""
-                <div class="customer-card">
-                    <h4>Optimization Strategy</h4>
-                    <p><strong>Strategy:</strong> {price_data['optimization_strategy']}</p>
-                    <p><strong>Recommended Price:</strong> ${price_data['recommended_price']:,.2f}</p>
-                    <p><strong>Expected Impact:</strong> {price_data['expected_impact']['revenue_change_estimate']}</p>
-                </div>
-                """, unsafe_allow_html=True)
+                st.metric("Recommended Price", f"${result.get('recommended_price', 0):,.0f}", 
+                         delta=f"${result.get('recommended_price', 0) - result.get('current_price', 0):,.0f}")
+            with col3:
+                st.metric("Confidence Score", f"{result.get('confidence', 0):.1%}")
             
-            # Price factors
-            st.subheader("🔍 Price Factors")
-            factors = price_data['price_factors']
-            for factor in factors:
-                if factor:
-                    st.write(f"• {factor}")
+            # Price elasticity insights
+            st.subheader("🎯 Insights")
+            for insight in result.get('price_insights', []):
+                st.info(f"💡 {insight}")
 
-def display_sentiment_analysis(customer_id):
-    st.header("😊 Sentiment Analysis")
+def display_sentiment_analysis():
+    st.header("😊 Sentiment Analysis Dashboard")
     
-    # Get customer reviews
-    reviews_query = f"""
-        SELECT pr.review_text, pr.rating, pr.sentiment_score, pr.sentiment_label,
-               pr.key_themes, p.product_name, pr.review_date
-        FROM product_reviews pr
-        JOIN products p ON pr.product_id = p.product_id
-        WHERE pr.customer_id = '{customer_id}'
+    # Get recent reviews
+    reviews = run_query("""
+        SELECT pr.review_id, pr.product_id, p.product_name, b.brand_name, 
+               pr.rating, pr.review_text, pr.review_date
+        FROM RETAIL_WATCH_DB.PUBLIC.product_reviews pr
+        JOIN RETAIL_WATCH_DB.PUBLIC.products p ON pr.product_id = p.product_id
+        JOIN RETAIL_WATCH_DB.PUBLIC.watch_brands b ON p.brand_id = b.brand_id
         ORDER BY pr.review_date DESC
-    """
-    reviews = run_query(reviews_query)
+        LIMIT 50
+    """)
     
-    if reviews:
-        # Overall sentiment metrics
-        col1, col2, col3 = st.columns(3)
+    if not reviews.empty:
+        # Review selection
+        review_options = {}
+        for _, review in reviews.iterrows():
+            display_text = f"{review['PRODUCT_NAME']} ({review['BRAND_NAME']}) - {review['RATING']}⭐"
+            review_options[display_text] = review['REVIEW_ID']
         
-        avg_sentiment = sum([review[2] for review in reviews if review[2]]) / len(reviews)
-        avg_rating = sum([review[1] for review in reviews]) / len(reviews)
+        selected_review_display = st.selectbox(
+            "Select Review to Analyze:",
+            options=list(review_options.keys())
+        )
         
-        with col1:
-            sentiment_color = "#28a745" if avg_sentiment > 0.3 else "#fd7e14" if avg_sentiment > -0.3 else "#dc3545"
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3 style="color: {sentiment_color}">😊 {avg_sentiment:.2f}</h3>
-                <p>Average Sentiment</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3>⭐ {avg_rating:.1f}</h3>
-                <p>Average Rating</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col3:
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3>📝 {len(reviews)}</h3>
-                <p>Total Reviews</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Individual reviews
-        st.subheader("Recent Reviews")
-        for review in reviews[:5]:  # Show last 5 reviews
-            sentiment_emoji = "😊" if review[3] == "positive" else "😐" if review[3] == "neutral" else "😞"
+        if selected_review_display:
+            selected_review_id = review_options[selected_review_display]
+            selected_review = reviews[reviews['REVIEW_ID'] == selected_review_id].iloc[0]
             
-            st.markdown(f"""
-            <div class="recommendation-card">
-                <h5>{review[5]} {sentiment_emoji}</h5>
-                <p><strong>Rating:</strong> {'⭐' * int(review[1])}</p>
-                <p><strong>Review:</strong> "{review[0]}"</p>
-                <p><strong>Sentiment:</strong> {review[3].title()} ({review[2]:.2f})</p>
-                <p><strong>Date:</strong> {review[6]}</p>
-            </div>
-            """, unsafe_allow_html=True)
-    else:
-        st.info("No reviews found for this customer.")
-    
-    # Sentiment analysis tool
-    st.subheader("🔍 Analyze New Review")
-    new_review = st.text_area("Enter review text to analyze:")
-    
-    if st.button("Analyze Sentiment") and new_review:
-        sentiment_query = f"SELECT analyze_review_sentiment('{new_review}') as sentiment_data"
-        sentiment_result = run_query(sentiment_query)
-        
-        if sentiment_result:
-            sentiment_data = json.loads(sentiment_result[0][0])
+            # Display review
+            st.subheader("📝 Review Text")
+            st.text_area("Review Content:", selected_review['REVIEW_TEXT'], height=100, disabled=True)
             
-            col1, col2 = st.columns(2)
-            with col1:
-                st.json(sentiment_data)
-            with col2:
-                score = sentiment_data['sentiment_score']
-                label = sentiment_data['sentiment_label']
-                color = "#28a745" if label == "positive" else "#fd7e14" if label == "neutral" else "#dc3545"
+            # Sentiment analysis
+            st.subheader("📊 Sentiment Analysis")
+            sentiment_result = run_query(
+                "SELECT analyze_review_sentiment(%s) as result",
+                params=[selected_review_id]
+            )
+            
+            if not sentiment_result.empty:
+                result = sentiment_result.iloc[0]['RESULT']
                 
-                st.markdown(f"""
-                <div style="background: {color}; color: white; padding: 1rem; border-radius: 10px; text-align: center;">
-                    <h3>{label.upper()}</h3>
-                    <p>Score: {score:.2f}</p>
-                </div>
-                """, unsafe_allow_html=True)
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Sentiment", result.get('sentiment_label', 'Unknown'))
+                with col2:
+                    st.metric("Confidence", f"{result.get('confidence', 0):.1%}")
+                with col3:
+                    st.metric("Score", f"{result.get('sentiment_score', 0):.2f}")
+                
+                # Key themes
+                if 'key_themes' in result and result['key_themes']:
+                    st.subheader("🏷️ Key Themes")
+                    themes = [theme for theme in result['key_themes'] if theme and theme.lower() != 'undefined']
+                    if themes:
+                        cols = st.columns(min(len(themes), 4))
+                        for i, theme in enumerate(themes):
+                            with cols[i % len(cols)]:
+                                st.badge(theme)
+    else:
+        st.info("No reviews available for analysis.")
 
 def display_customer_analytics(customer_id, insights):
     st.header("📊 Customer Analytics")
@@ -598,7 +567,7 @@ def display_customer_analytics(customer_id, insights):
         # Customer journey timeline
         events_query = f"""
             SELECT event_type, COUNT(*) as count
-            FROM customer_events 
+            FROM RETAIL_WATCH_DB.PUBLIC.customer_events 
             WHERE customer_id = '{customer_id}'
             AND event_timestamp >= CURRENT_DATE - 30
             GROUP BY event_type
@@ -616,7 +585,7 @@ def display_customer_analytics(customer_id, insights):
         # Purchase history
         orders_query = f"""
             SELECT DATE_TRUNC('month', order_date) as month, SUM(total_amount) as revenue
-            FROM orders 
+            FROM RETAIL_WATCH_DB.PUBLIC.orders 
             WHERE customer_id = '{customer_id}'
             AND order_date >= CURRENT_DATE - 365
             GROUP BY month
