@@ -1,0 +1,86 @@
+# Site settings
+title: "🌟 Retail Watch Store - AI-Powered Customer 360"
+description: "Complete customer 360 platform featuring churn prediction, sentiment analysis, price optimization, and personal shopper experience powered by Snowflake Cortex AI."
+url: "https://jasvestis.github.io"
+baseurl: "/customer360"
+
+# Theme
+theme: minima
+remote_theme: pages-themes/cayman@v0.2.0
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# Markdown processor
+markdown: kramdown
+highlighter: rouge
+
+# GitHub Pages settings
+github:
+  repository_name: customer360
+  owner_name: jasvestis
+
+# Social links (optional)
+github_username: jasvestis
+
+# Navigation
+header_pages:
+  - README.md
+  - project-structure.md
+
+# Exclude from processing
+exclude:
+  - node_modules/
+  - .github/
+  - streamlit/
+  - sql/
+  - requirements.txt
+  - Gemfile*
+  - vendor/
+
+# Include in processing
+include:
+  - README.md
+
+# Collections
+collections:
+  docs:
+    output: true
+    permalink: /:collection/:name/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "post"
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "page"
+  - scope:
+      path: ""
+      type: "docs"
+    values:
+      layout: "page"
+
+# SEO settings
+author:
+  name: "Customer 360 Team"
+  
+logo: /assets/images/logo.png
+
+# Custom variables
+project:
+  name: "Retail Watch Store"
+  tagline: "AI-Powered Customer 360"
+  features:
+    - "🤖 Churn Prediction"
+    - "😊 Sentiment Analysis" 
+    - "💰 Price Optimization"
+    - "��️ Personal Shopper" 
