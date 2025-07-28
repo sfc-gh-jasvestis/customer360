@@ -68,16 +68,18 @@ SELECT 'APPLE_WATCH_001', 'APPLE', 'SMARTWATCH', 'Apple Watch Series 9', 'MR973L
 -- PRODUCT VARIANTS DATA
 -- ============================================================================
 
-INSERT INTO product_variants (variant_id, product_id, variant_name, variant_type, variant_value, price_adjustment, stock_quantity, variant_images) VALUES
--- Rolex Submariner variants
-('ROLEX_SUB_001_BLACK', 'ROLEX_SUB_001', 'Black Dial', 'dial', 'black', 0, 3, '["https://rolex.com/sub_black.jpg"]',
-('ROLEX_SUB_001_GREEN', 'ROLEX_SUB_001', 'Green Dial', 'dial', 'green', 0, 2, '["https://rolex.com/sub_green.jpg"]',
-
--- Apple Watch variants
-('APPLE_WATCH_001_41MM', 'APPLE_WATCH_001', '41mm', 'size', '41mm', -30.00, 25, '["https://apple.com/watch_41.jpg"]'),
-('APPLE_WATCH_001_45MM', 'APPLE_WATCH_001', '45mm', 'size', '45mm', 0, 30, '["https://apple.com/watch_45.jpg"]'),
-('APPLE_WATCH_001_BLUE', 'APPLE_WATCH_001', 'Blue Band', 'band', 'blue', 0, 15, '["https://apple.com/watch_blue.jpg"]'),
-('APPLE_WATCH_001_RED', 'APPLE_WATCH_001', 'Red Band', 'band', 'red', 0, 12, '["https://apple.com/watch_red.jpg"]');
+INSERT INTO product_variants (variant_id, product_id, variant_name, variant_type, variant_value, price_adjustment, stock_quantity, variant_images)
+SELECT 'ROLEX_SUB_001_BLACK', 'ROLEX_SUB_001', 'Black Dial', 'dial', 'black', 0, 3, PARSE_JSON('["https://rolex.com/sub_black.jpg"]')
+UNION ALL
+SELECT 'ROLEX_SUB_001_GREEN', 'ROLEX_SUB_001', 'Green Dial', 'dial', 'green', 0, 2, PARSE_JSON('["https://rolex.com/sub_green.jpg"]')
+UNION ALL
+SELECT 'APPLE_WATCH_001_41MM', 'APPLE_WATCH_001', '41mm', 'size', '41mm', -30.00, 25, PARSE_JSON('["https://apple.com/watch_41.jpg"]')
+UNION ALL
+SELECT 'APPLE_WATCH_001_45MM', 'APPLE_WATCH_001', '45mm', 'size', '45mm', 0, 30, PARSE_JSON('["https://apple.com/watch_45.jpg"]')
+UNION ALL
+SELECT 'APPLE_WATCH_001_BLUE', 'APPLE_WATCH_001', 'Blue Band', 'band', 'blue', 0, 15, PARSE_JSON('["https://apple.com/watch_blue.jpg"]')
+UNION ALL
+SELECT 'APPLE_WATCH_001_RED', 'APPLE_WATCH_001', 'Red Band', 'band', 'red', 0, 12, PARSE_JSON('["https://apple.com/watch_red.jpg"]');
 
 -- ============================================================================
 -- CUSTOMERS DATA
