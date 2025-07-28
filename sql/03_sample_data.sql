@@ -1,402 +1,283 @@
--- =========================================
--- Customer 360 Demo - Complete Sample Data (Fixed)
--- =========================================
+-- ============================================================================
+-- Retail Watch Store - Sample Data
+-- ============================================================================
+-- Populates tables with realistic sample data for demo purposes
 
-USE DATABASE customer_360_db;
+USE DATABASE retail_watch_db;
 USE SCHEMA public;
-
--- ===============================
--- Sample Customer Data
--- ===============================
-
--- Clear any existing data
-DELETE FROM customer_documents WHERE customer_id IN ('CUST_001', 'CUST_002', 'CUST_003', 'CUST_004', 'CUST_005');
-DELETE FROM customer_communications WHERE customer_id IN ('CUST_001', 'CUST_002', 'CUST_003', 'CUST_004', 'CUST_005');
-DELETE FROM purchases WHERE customer_id IN ('CUST_001', 'CUST_002', 'CUST_003', 'CUST_004', 'CUST_005');
-DELETE FROM support_tickets WHERE customer_id IN ('CUST_001', 'CUST_002', 'CUST_003', 'CUST_004', 'CUST_005');
-DELETE FROM customer_activities WHERE customer_id IN ('CUST_001', 'CUST_002', 'CUST_003', 'CUST_004', 'CUST_005');
-DELETE FROM customers WHERE customer_id IN ('CUST_001', 'CUST_002', 'CUST_003', 'CUST_004', 'CUST_005');
-
--- Step 1: Insert customers WITHOUT JSON data
-INSERT INTO customers (
-    customer_id, first_name, last_name, email, phone, date_of_birth, gender,
-    street_address, city, state_province, postal_code, country,
-    account_status, customer_tier, join_date, last_login_date,
-    total_spent, lifetime_value, credit_limit,
-    churn_risk_score, satisfaction_score, engagement_score,
-    preferred_communication_channel, marketing_opt_in, newsletter_subscription
-) VALUES
-('CUST_001', 'Sarah', 'Johnson', 'sarah.johnson@email.com', '+1-555-0123', '1985-03-15', 'Female',
- '123 Market St', 'San Francisco', 'CA', '94102', 'USA',
- 'active', 'platinum', '2022-01-15', '2024-01-15 10:00:00',
- 47580.50, 65000.00, 50000.00,
- 0.15, 4.8, 0.92,
- 'email', TRUE, TRUE),
-
-('CUST_002', 'Michael', 'Chen', 'michael.chen@email.com', '+1-555-0456', '1978-07-22', 'Male',
- '456 Broadway', 'New York', 'NY', '10013', 'USA',
- 'active', 'gold', '2022-08-10', '2024-01-14 15:30:00',
- 23450.75, 35000.00, 25000.00,
- 0.35, 4.2, 0.68,
- 'sms', TRUE, FALSE),
-
-('CUST_003', 'Emma', 'Davis', 'emma.davis@email.com', '+1-555-0789', '1990-11-08', 'Female',
- '789 Oak Ave', 'Austin', 'TX', '78701', 'USA',
- 'active', 'silver', '2023-02-20', '2024-01-05 08:15:00',
- 8920.25, 15000.00, 10000.00,
- 0.78, 3.1, 0.42,
- 'email', FALSE, FALSE),
-
-('CUST_004', 'James', 'Wilson', 'james.wilson@email.com', '+1-555-0321', '1982-05-30', 'Male',
- '321 Pine St', 'Seattle', 'WA', '98101', 'USA',
- 'active', 'bronze', '2024-01-05', '2024-01-15 09:00:00',
- 1580.99, 5000.00, 5000.00,
- 0.25, 4.5, 0.78,
- 'phone', TRUE, TRUE),
-
-('CUST_005', 'Lisa', 'Rodriguez', 'lisa.rodriguez@enterprise.com', '+1-555-0987', '1975-09-12', 'Female',
- '555 Enterprise Blvd', 'Los Angeles', 'CA', '90210', 'USA',
- 'active', 'platinum', '2021-06-01', '2024-01-15 06:00:00',
- 125000.00, 200000.00, 100000.00,
- 0.08, 4.9, 0.95,
- 'email', TRUE, TRUE);
-
--- Step 2: Update customers with JSON tags
-UPDATE customers SET customer_tags = PARSE_JSON('["high-value", "tech-enthusiast", "early-adopter", "loyal-customer"]') WHERE customer_id = 'CUST_001';
-UPDATE customers SET customer_tags = PARSE_JSON('["frequent-buyer", "mobile-user", "price-sensitive"]') WHERE customer_id = 'CUST_002';
-UPDATE customers SET customer_tags = PARSE_JSON('["at-risk", "support-needed", "occasional-buyer"]') WHERE customer_id = 'CUST_003';
-UPDATE customers SET customer_tags = PARSE_JSON('["new-customer", "onboarding", "high-potential"]') WHERE customer_id = 'CUST_004';
-UPDATE customers SET customer_tags = PARSE_JSON('["enterprise", "vip", "decision-maker", "high-value"]') WHERE customer_id = 'CUST_005';
-
--- ===============================
--- Sample Customer Activities
--- ===============================
-
--- Step 1: Insert activities WITHOUT JSON data
-INSERT INTO customer_activities (
-    activity_id, customer_id, activity_type, activity_title, activity_description,
-    activity_timestamp, channel, device_type, ip_address,
-    transaction_amount, transaction_currency, product_category,
-    priority, status
-) VALUES
-('ACT_001', 'CUST_001', 'purchase', 'Premium Software License', 'Purchased annual premium license with advanced features',
- '2024-01-15 08:00:00', 'web', 'desktop', '192.168.1.100',
- 2499.99, 'USD', 'Software',
- 'high', 'completed'),
-
-('ACT_002', 'CUST_001', 'login', 'Dashboard Access', 'User logged into customer dashboard',
- '2024-01-15 06:00:00', 'web', 'desktop', '192.168.1.100',
- NULL, 'USD', NULL,
- 'low', 'completed'),
-
-('ACT_003', 'CUST_002', 'email_open', 'Newsletter Campaign', 'Opened monthly product update newsletter',
- '2024-01-14 12:00:00', 'email', 'mobile', '10.0.0.50',
- NULL, 'USD', 'Marketing',
- 'low', 'completed'),
-
-('ACT_004', 'CUST_002', 'cart_abandonment', 'Shopping Cart Abandoned', 'Added items to cart but did not complete purchase',
- '2024-01-15 04:00:00', 'mobile', 'smartphone', '10.0.0.50',
- 450.75, 'USD', 'Hardware',
- 'medium', 'abandoned'),
-
-('ACT_005', 'CUST_003', 'support_ticket', 'Billing Inquiry', 'Customer created support ticket about billing discrepancy',
- '2024-01-10 14:00:00', 'web', 'desktop', '172.16.0.25',
- NULL, 'USD', 'Support',
- 'high', 'resolved'),
-
-('ACT_006', 'CUST_003', 'login', 'Account Review', 'Customer logged in to review account status',
- '2024-01-05 16:00:00', 'web', 'desktop', '172.16.0.25',
- NULL, 'USD', NULL,
- 'low', 'completed'),
-
-('ACT_007', 'CUST_003', 'unsubscribe', 'Marketing Unsubscribe', 'Unsubscribed from promotional emails',
- '2024-01-07 11:00:00', 'email', 'mobile', '172.16.0.25',
- NULL, 'USD', 'Marketing',
- 'high', 'completed'),
-
-('ACT_008', 'CUST_004', 'signup', 'Account Creation', 'New customer account created through referral program',
- '2024-01-15 07:00:00', 'web', 'desktop', '203.0.113.10',
- NULL, 'USD', 'Onboarding',
- 'medium', 'completed'),
-
-('ACT_009', 'CUST_004', 'purchase', 'First Purchase', 'Customer made their first purchase with welcome discount',
- '2024-01-15 09:00:00', 'web', 'desktop', '203.0.113.10',
- 149.99, 'USD', 'Software',
- 'high', 'completed'),
-
-('ACT_010', 'CUST_004', 'review', 'Product Review', 'Left positive review for first purchase',
- '2024-01-15 09:30:00', 'web', 'desktop', '203.0.113.10',
- NULL, 'USD', 'Feedback',
- 'medium', 'completed'),
-
-('ACT_011', 'CUST_005', 'contract_renewal', 'Enterprise Contract Renewal', 'Renewed enterprise contract for 2 more years',
- '2024-01-15 04:00:00', 'phone', NULL, NULL,
- 75000.00, 'USD', 'Enterprise',
- 'high', 'completed');
-
--- Step 2: Update activities with JSON metadata
-UPDATE customer_activities SET activity_metadata = PARSE_JSON('{"order_id": "ORD_2024_001", "payment_method": "credit_card"}') WHERE activity_id = 'ACT_001';
-UPDATE customer_activities SET activity_metadata = PARSE_JSON('{"session_duration": 1200}') WHERE activity_id = 'ACT_002';
-UPDATE customer_activities SET activity_metadata = PARSE_JSON('{"campaign_id": "CAMP_2024_001", "open_time": 15}') WHERE activity_id = 'ACT_003';
-UPDATE customer_activities SET activity_metadata = PARSE_JSON('{"cart_value": 450.75, "items_count": 3}') WHERE activity_id = 'ACT_004';
-UPDATE customer_activities SET activity_metadata = PARSE_JSON('{"agent_id": "AGT_001", "resolution_time": 15}') WHERE activity_id = 'ACT_005';
-UPDATE customer_activities SET activity_metadata = PARSE_JSON('{"session_duration": 300}') WHERE activity_id = 'ACT_006';
-UPDATE customer_activities SET activity_metadata = PARSE_JSON('{"reason": "too_frequent"}') WHERE activity_id = 'ACT_007';
-UPDATE customer_activities SET activity_metadata = PARSE_JSON('{"referral_source": "google_ads", "signup_time": 180}') WHERE activity_id = 'ACT_008';
-UPDATE customer_activities SET activity_metadata = PARSE_JSON('{"order_id": "ORD_2024_002", "discount_applied": 50.00}') WHERE activity_id = 'ACT_009';
-UPDATE customer_activities SET activity_metadata = PARSE_JSON('{"rating": 5, "review_length": 150}') WHERE activity_id = 'ACT_010';
-UPDATE customer_activities SET activity_metadata = PARSE_JSON('{"contract_id": "CONT_2024_001", "renewal_period": 24}') WHERE activity_id = 'ACT_011';
-
--- ===============================
--- Sample Support Tickets
--- ===============================
-
--- Step 1: Insert support tickets WITHOUT JSON data
-INSERT INTO support_tickets (
-    ticket_id, customer_id, subject, description, category, priority, status,
-    assigned_agent_id, assigned_team, created_at, updated_at,
-    first_response_at, resolved_at, resolution_time_hours,
-    customer_satisfaction_rating
-) VALUES
-('TKT_001', 'CUST_002', 'Shipping Delay Inquiry', 'Customer asking about delayed shipment of hardware order', 'shipping', 'medium', 'resolved',
- 'AGT_001', 'Customer Success', '2024-01-13 10:00:00', '2024-01-14 10:00:00',
- '2024-01-13 14:00:00', '2024-01-14 10:00:00', 4,
- 4),
-
-('TKT_002', 'CUST_003', 'Billing Question', 'Confusion about recent charges on account statement', 'billing', 'high', 'resolved',
- 'AGT_002', 'Billing Support', '2024-01-10 09:00:00', '2024-01-11 09:00:00',
- '2024-01-10 11:00:00', '2024-01-11 09:00:00', 2,
- 5),
-
-('TKT_003', 'CUST_003', 'Account Credit Request', 'Requesting account credit due to service interruption', 'billing', 'high', 'closed',
- 'AGT_003', 'Billing Support', '2024-01-07 14:00:00', '2024-01-08 14:00:00',
- '2024-01-07 16:00:00', '2024-01-08 14:00:00', 6,
- 3);
-
--- Step 2: Update support tickets with JSON metadata
-UPDATE support_tickets SET ticket_metadata = PARSE_JSON('{"escalated": true, "sla_breach": false}') WHERE ticket_id = 'TKT_001';
-UPDATE support_tickets SET ticket_metadata = PARSE_JSON('{"solution_provided": true, "follow_up_scheduled": true}') WHERE ticket_id = 'TKT_002';
-UPDATE support_tickets SET ticket_metadata = PARSE_JSON('{"refund_issued": true, "account_notes": "recurring_billing_issues"}') WHERE ticket_id = 'TKT_003';
-
--- ===============================
--- Sample Purchases
--- ===============================
-
--- Step 1: Insert purchases WITHOUT JSON data
-INSERT INTO purchases (
-    purchase_id, customer_id, order_id, purchase_date,
-    product_id, product_name, product_category, product_subcategory,
-    quantity, unit_price, total_amount, discount_amount, tax_amount, currency,
-    shipping_address, shipping_method, tracking_number, delivery_date,
-    order_status, payment_status, fulfillment_status
-) VALUES
-('PUR_001', 'CUST_005', 'ORD_2024_001', '2024-01-15 04:00:00',
- 'PROD_ENT_001', 'Enterprise Software Suite', 'Software', 'Enterprise Solutions',
- 1, 75000.00, 75000.00, 0.00, 6750.00, 'USD',
- '555 Enterprise Blvd, Los Angeles, CA 90210', 'Digital Delivery', 'TRACK_001', '2024-01-16',
- 'completed', 'paid', 'delivered'),
-
-('PUR_002', 'CUST_001', 'ORD_2024_002', '2024-01-15 08:00:00',
- 'PROD_PREM_001', 'Premium Analytics Package', 'Software', 'Analytics',
- 1, 2499.99, 2499.99, 250.00, 202.50, 'USD',
- '123 Market St, San Francisco, CA 94102', 'Express Shipping', 'TRACK_002', '2024-01-17',
- 'processing', 'paid', 'pending'),
-
-('PUR_003', 'CUST_004', 'ORD_2024_003', '2024-01-15 09:00:00',
- 'PROD_START_001', 'Starter Package', 'Software', 'Basic',
- 1, 149.99, 149.99, 50.00, 8.00, 'USD',
- '321 Pine St, Seattle, WA 98101', 'Standard Shipping', 'TRACK_003', '2024-01-20',
- 'confirmed', 'paid', 'pending'),
-
-('PUR_004', 'CUST_005', 'ORD_2024_004', '2023-10-15 10:00:00',
- 'PROD_CONS_001', 'Consulting Services', 'Services', 'Professional Services',
- 100, 500.00, 50000.00, 0.00, 4500.00, 'USD',
- '555 Enterprise Blvd, Los Angeles, CA 90210', 'N/A', 'N/A', '2023-11-15',
- 'completed', 'paid', 'delivered');
-
--- Step 2: Update purchases with JSON metadata
-UPDATE purchases SET purchase_metadata = PARSE_JSON('{"license_key": "ENT-2024-001", "auto_renewal": true}') WHERE purchase_id = 'PUR_001';
-UPDATE purchases SET purchase_metadata = PARSE_JSON('{"subscription_id": "SUB_2024_002", "billing_cycle": "monthly"}') WHERE purchase_id = 'PUR_002';
-UPDATE purchases SET purchase_metadata = PARSE_JSON('{"first_purchase": true, "welcome_discount": 50.00}') WHERE purchase_id = 'PUR_003';
-UPDATE purchases SET purchase_metadata = PARSE_JSON('{"contract_period": 24, "service_level": "premium", "dedicated_support": true}') WHERE purchase_id = 'PUR_004';
-
--- ===============================
--- Sample Communications
--- ===============================
-
--- Step 1: Insert communications WITHOUT JSON data
-INSERT INTO customer_communications (
-    communication_id, customer_id, communication_type, direction, subject, message_content,
-    sent_at, delivered_at, opened_at, clicked_at, responded_at,
-    campaign_id, campaign_name, template_id, status
-) VALUES
-('COMM_001', 'CUST_001', 'email', 'outbound', 'Welcome to Premium!', 'Thank you for upgrading to our premium plan...',
- '2024-01-15 08:00:00', '2024-01-15 08:00:00',
- '2024-01-15 08:15:00', '2024-01-15 08:30:00', NULL,
- 'CAMP_WELCOME_001', 'Premium Welcome Series', 'TEMP_001', 'clicked'),
-
-('COMM_002', 'CUST_002', 'email', 'outbound', 'Your Monthly Newsletter', 'Here are this month''s product updates and tips...',
- '2024-01-14 12:00:00', '2024-01-14 12:00:00',
- '2024-01-14 13:00:00', '2024-01-14 13:30:00', NULL,
- 'CAMP_NEWSLETTER_001', 'Monthly Newsletter', 'TEMP_002', 'clicked'),
-
-('COMM_003', 'CUST_003', 'email', 'outbound', 'Support Ticket Update', 'Your support ticket TKT_001 has been resolved...',
- '2024-01-14 10:00:00', '2024-01-14 10:00:00',
- '2024-01-14 10:30:00', NULL, NULL,
- NULL, 'Support Notifications', 'TEMP_003', 'delivered');
-
--- Step 2: Update communications with JSON metadata
-UPDATE customer_communications SET communication_metadata = PARSE_JSON('{"sequence_step": 1, "personalization": "high"}') WHERE communication_id = 'COMM_001';
-UPDATE customer_communications SET communication_metadata = PARSE_JSON('{"engagement_score": 0.85, "time_reading": 180}') WHERE communication_id = 'COMM_002';
-UPDATE customer_communications SET communication_metadata = PARSE_JSON('{"ticket_id": "TKT_001", "auto_generated": true}') WHERE communication_id = 'COMM_003';
-
--- ===============================
--- Sample Documents
--- ===============================
-
--- Step 1: Insert documents WITHOUT JSON data
-INSERT INTO customer_documents (
-    document_id, customer_id, document_title, document_type, document_content,
-    document_category, created_by, created_at,
-    content_summary
-) VALUES
-('DOC_001', 'CUST_002', 'Shipping Delay Support Conversation', 'transcript',
-'Customer: Hi, I placed an order last week but haven''t received any shipping updates. Can you help?
-
-Agent: I''d be happy to help you track your order. Let me look that up for you. Can you provide your order number?
-
-Customer: Sure, it''s ORD_2024_002.
-
-Agent: Thank you. I can see your order here. It looks like there was a delay at our fulfillment center due to high demand. Your order has now been processed and shipped. You should receive tracking information within the next hour.
-
-Customer: That''s frustrating, but I appreciate the update. Will there be any compensation for the delay?
-
-Agent: Absolutely. I''ve applied a $50 credit to your account for the inconvenience. You''ll see this reflected in your next billing cycle.
-
-Customer: Thank you, that''s very helpful. I appreciate your assistance.
-
-Agent: You''re welcome! Is there anything else I can help you with today?
-
-Customer: No, that covers everything. Thanks again!',
- 'support', 'support_agent_001', '2024-01-14 10:00:00',
- 'Customer inquiry about shipping delay, resolved with account credit'),
-
-('DOC_002', 'CUST_005', 'Enterprise Service Agreement', 'contract',
-'ENTERPRISE SOFTWARE LICENSE AGREEMENT
-
-This Enterprise Software License Agreement ("Agreement") is entered into between Company and Customer for the provision of enterprise software services.
-
-TERMS AND CONDITIONS:
-1. License Grant: Customer is granted a non-exclusive license to use the Software
-2. Support Services: 24/7 premium support with dedicated account manager
-3. Service Level Agreement: 99.9% uptime guarantee
-4. Data Protection: Enterprise-grade security and compliance
-5. Contract Term: 24 months with automatic renewal
-6. Payment Terms: Annual payment in advance
-
-SUPPORT PROVISIONS:
-- Dedicated technical account manager
-- Priority support queue
-- Custom integration support
-- Training and onboarding assistance
-- Regular business reviews
-
-This agreement ensures enterprise-level service and support for mission-critical operations.',
- 'legal', 'legal_team', '2023-10-15 09:00:00',
- 'Enterprise software license agreement with premium support provisions'),
-
-('DOC_003', 'CUST_003', 'Customer Feedback Survey Response', 'feedback',
-'CUSTOMER SATISFACTION SURVEY - RESPONSE
-
-Customer ID: CUST_003
-Survey Date: [Date]
-Overall Satisfaction: 3/5
-
-DETAILED FEEDBACK:
-
-Product Quality: 4/5
-"The software works well when it''s working, but I''ve had some billing issues that have been frustrating."
-
-Customer Support: 4/5
-"Support team is helpful and responsive, though it sometimes takes a while to get through."
-
-Value for Money: 2/5
-"I feel like I''m paying too much for what I get, especially with the billing problems I''ve had."
-
-SPECIFIC COMMENTS:
-"I''ve been a customer for about a year now, and while I like the product, the billing issues are really concerning. I''ve had incorrect charges twice now, and while support resolves them, it shouldn''t happen in the first place. I''m considering switching to a competitor if this continues."
-
-IMPROVEMENT SUGGESTIONS:
-- Fix billing system reliability
-- Provide more transparent pricing
-- Offer loyalty discounts for long-term customers
-
-Likelihood to recommend: 6/10',
- 'feedback', 'survey_system', '2024-01-01 12:00:00',
- 'Customer feedback indicating billing issues and potential churn risk'),
-
-('DOC_004', 'CUST_004', 'New Customer Onboarding Notes', 'note',
-'NEW CUSTOMER ONBOARDING - CUST_004
-
-Customer: James Wilson
-Onboarding Date: [Date]
-Account Manager: Sarah Mitchell
-
-CUSTOMER PROFILE:
-- Small business owner in Seattle
-- Technology-savvy
-- Price-conscious but values quality
-- Referred by Google Ads campaign
-- Looking for growth-oriented solutions
-
-INITIAL CONSULTATION NOTES:
-Customer expressed interest in our starter package but asked about upgrade paths. He runs a growing consulting business and anticipates needing more advanced features within 6-12 months.
-
-KEY REQUIREMENTS:
-- Cost-effective solution to start
-- Easy scalability
-- Integration with existing tools
-- Good customer support
-
-RECOMMENDATIONS:
-- Started with Starter Package ($149.99)
-- Applied new customer discount (33% off)
-- Scheduled follow-up in 30 days
-- Flagged for potential upsell opportunity
-
-FOLLOW-UP ACTIONS:
-- Send welcome sequence emails
-- Schedule product training session
-- Monitor usage patterns
-- Prepare upgrade proposal for Q2
-
-NOTES:
-Customer seems very promising. High engagement during onboarding call, asked thoughtful questions about features and scalability. Good candidate for growth into premium tiers.',
- 'onboarding', 'onboarding_specialist', '2024-01-15 07:00:00',
- 'Onboarding notes for new customer with high growth potential');
-
--- Step 2: Update documents with JSON data
-UPDATE customer_documents SET document_tags = PARSE_JSON('["shipping", "delay", "escalation", "credit"]') WHERE document_id = 'DOC_001';
-UPDATE customer_documents SET key_topics = PARSE_JSON('["shipping_delays", "customer_compensation", "service_recovery"]') WHERE document_id = 'DOC_001';
-
-UPDATE customer_documents SET document_tags = PARSE_JSON('["enterprise", "contract", "premium_support", "SLA"]') WHERE document_id = 'DOC_002';
-UPDATE customer_documents SET key_topics = PARSE_JSON('["enterprise_contract", "service_levels", "premium_support", "account_management"]') WHERE document_id = 'DOC_002';
-
-UPDATE customer_documents SET document_tags = PARSE_JSON('["billing_issues", "churn_risk", "service_problems"]') WHERE document_id = 'DOC_003';
-UPDATE customer_documents SET key_topics = PARSE_JSON('["customer_satisfaction", "billing_problems", "churn_risk", "service_improvement"]') WHERE document_id = 'DOC_003';
-
-UPDATE customer_documents SET document_tags = PARSE_JSON('["new_customer", "high_potential", "expansion_opportunity"]') WHERE document_id = 'DOC_004';
-UPDATE customer_documents SET key_topics = PARSE_JSON('["customer_onboarding", "business_requirements", "expansion_potential", "customer_success"]') WHERE document_id = 'DOC_004';
-
--- ===============================
--- Final Verification
--- ===============================
-
-SELECT 'Complete sample data loaded successfully!' AS status,
-       (SELECT COUNT(*) FROM customers) AS customers,
-       (SELECT COUNT(*) FROM customer_activities) AS activities,
-       (SELECT COUNT(*) FROM support_tickets) AS tickets,
-       (SELECT COUNT(*) FROM purchases) AS purchases,
-       (SELECT COUNT(*) FROM customer_communications) AS communications,
-       (SELECT COUNT(*) FROM customer_documents) AS documents,
-       (SELECT COUNT(CASE WHEN customer_tags IS NOT NULL THEN 1 END) FROM customers) AS customers_with_tags; 
+USE WAREHOUSE retail_watch_wh;
+
+SELECT '🎯 Loading sample data for Retail Watch Store...' as data_loading_step;
+
+-- ============================================================================
+-- WATCH BRANDS DATA
+-- ============================================================================
+
+INSERT INTO watch_brands VALUES
+('ROLEX', 'Rolex', 'luxury', 'Switzerland', 1905, 'A crown for every achievement. World-renowned luxury Swiss watch manufacturer.', 'https://rolex.com/logo.png', 15000),
+('OMEGA', 'Omega', 'luxury', 'Switzerland', 1848, 'Masters of precision and innovation since 1848.', 'https://omega.com/logo.png', 8000),
+('TAG_HEUER', 'TAG Heuer', 'luxury', 'Switzerland', 1860, 'Swiss avant-garde since 1860. Don''t Crack Under Pressure.', 'https://tagheuer.com/logo.png', 3500),
+('SEIKO', 'Seiko', 'premium', 'Japan', 1881, 'Moving ahead. Always. Japanese precision and innovation.', 'https://seiko.com/logo.png', 800),
+('CITIZEN', 'Citizen', 'premium', 'Japan', 1918, 'Better Starts Now. Eco-Drive solar technology pioneer.', 'https://citizen.com/logo.png', 600),
+('CASIO', 'Casio', 'mid-range', 'Japan', 1946, 'Creativity and contribution. G-Shock and digital innovation.', 'https://casio.com/logo.png', 200),
+('TISSOT', 'Tissot', 'premium', 'Switzerland', 1853, 'Innovators by tradition. Swiss watchmaking excellence.', 'https://tissot.com/logo.png', 900),
+('HAMILTON', 'Hamilton', 'mid-range', 'USA', 1892, 'American spirit, Swiss precision. Aviation-inspired timepieces.', 'https://hamilton.com/logo.png', 700),
+('FOSSIL', 'Fossil', 'affordable', 'USA', 1984, 'Vintage re-inspired accessories and smartwatches.', 'https://fossil.com/logo.png', 300),
+('APPLE', 'Apple', 'premium', 'USA', 2015, 'The most personal device we''ve ever made. Smartwatch innovation.', 'https://apple.com/logo.png', 450);
+
+-- ============================================================================
+-- WATCH CATEGORIES DATA
+-- ============================================================================
+
+INSERT INTO watch_categories VALUES
+('LUXURY', 'Luxury Watches', NULL, 'High-end Swiss and premium timepieces', 1),
+('SPORT', 'Sport Watches', NULL, 'Active lifestyle and athletic timepieces', 2),
+('DRESS', 'Dress Watches', NULL, 'Elegant formal and business watches', 3),
+('CASUAL', 'Casual Watches', NULL, 'Everyday wear timepieces', 4),
+('SMARTWATCH', 'Smart Watches', NULL, 'Connected and digital timepieces', 5),
+('DIVING', 'Diving Watches', 'SPORT', 'Water-resistant professional diving watches', 6),
+('AVIATION', 'Aviation Watches', 'SPORT', 'Pilot and aviation-inspired timepieces', 7),
+('CHRONOGRAPH', 'Chronograph Watches', NULL, 'Stopwatch and timing function watches', 8);
+
+-- ============================================================================
+-- PRODUCTS DATA
+-- ============================================================================
+
+INSERT INTO products VALUES
+-- Luxury Rolex watches
+('ROLEX_SUB_001', 'ROLEX', 'LUXURY', 'Submariner Date', '126610LV', 'The Rolex Submariner Date in Oystersteel with a green Cerachrom bezel insert and a black dial.', 'steel', 41.00, 12.50, 300, 'automatic', 'analog', 'steel', 10395.00, 10395.00, 5200.00, 0, 5, 2, 'SUP_001', TRUE, FALSE, TRUE, 4.8, 1247, '["https://rolex.com/sub1.jpg", "https://rolex.com/sub2.jpg"]', '["luxury", "diving", "steel", "green"]', '["rolex", "submariner", "diving", "luxury"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+
+('ROLEX_GMT_001', 'ROLEX', 'LUXURY', 'GMT-Master II', '126710BLRO', 'The Rolex GMT-Master II in Oystersteel with a blue and red Cerachrom bezel and Jubilee bracelet.', 'steel', 40.00, 12.00, 100, 'automatic', 'analog', 'steel', 10700.00, 10700.00, 5350.00, 0, 3, 2, 'SUP_001', TRUE, FALSE, TRUE, 4.9, 892, '["https://rolex.com/gmt1.jpg", "https://rolex.com/gmt2.jpg"]', '["luxury", "gmt", "travel", "pepsi"]', '["rolex", "gmt", "master", "travel"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+
+-- Omega luxury watches
+('OMEGA_SPEED_001', 'OMEGA', 'LUXURY', 'Speedmaster Professional', '310.30.42.50.01.001', 'The legendary Moonwatch. First watch worn on the moon.', 'steel', 42.00, 13.00, 50, 'manual', 'analog', 'leather', 6350.00, 6350.00, 3175.00, 0, 8, 3, 'SUP_002', TRUE, TRUE, TRUE, 4.7, 1834, '["https://omega.com/speed1.jpg", "https://omega.com/speed2.jpg"]', '["luxury", "chronograph", "moon", "racing"]', '["omega", "speedmaster", "moon", "chronograph"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+
+('OMEGA_SEAMASTER_001', 'OMEGA', 'LUXURY', 'Seamaster Planet Ocean', '215.30.44.21.01.001', 'Professional diving watch with Co-Axial Master Chronometer movement.', 'steel', 43.50, 15.50, 600, 'automatic', 'analog', 'steel', 5400.00, 5400.00, 2700.00, 0, 12, 3, 'SUP_002', FALSE, FALSE, TRUE, 4.6, 756, '["https://omega.com/sea1.jpg", "https://omega.com/sea2.jpg"]', '["luxury", "diving", "ocean", "master"]', '["omega", "seamaster", "diving", "ocean"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+
+-- TAG Heuer luxury watches  
+('TAG_CARRERA_001', 'TAG_HEUER', 'LUXURY', 'Carrera Chronograph', 'CBK2112.BA0715', 'Racing-inspired chronograph with Swiss automatic movement.', 'steel', 41.00, 14.50, 100, 'automatic', 'analog', 'steel', 2950.00, 2950.00, 1475.00, 0, 15, 5, 'SUP_003', FALSE, TRUE, FALSE, 4.4, 423, '["https://tagheuer.com/car1.jpg", "https://tagheuer.com/car2.jpg"]', '["luxury", "chronograph", "racing", "carrera"]', '["tag", "heuer", "carrera", "racing"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+
+-- Seiko premium watches
+('SEIKO_PROSPEX_001', 'SEIKO', 'SPORT', 'Prospex Solar Diver', 'SSC021', 'Solar-powered diving watch with 200m water resistance.', 'steel', 43.00, 12.00, 200, 'solar', 'analog', 'rubber', 180.00, 180.00, 90.00, 0, 25, 8, 'SUP_004', FALSE, FALSE, TRUE, 4.3, 1567, '["https://seiko.com/pro1.jpg", "https://seiko.com/pro2.jpg"]', '["sport", "diving", "solar", "affordable"]', '["seiko", "prospex", "solar", "diving"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+
+('SEIKO_PRESAGE_001', 'SEIKO', 'DRESS', 'Presage Cocktail Time', 'SSA341', 'Elegant dress watch inspired by Japanese cocktail culture.', 'steel', 40.50, 11.80, 50, 'automatic', 'analog', 'leather', 220.00, 220.00, 110.00, 0, 20, 8, 'SUP_004', FALSE, TRUE, FALSE, 4.5, 892, '["https://seiko.com/pres1.jpg", "https://seiko.com/pres2.jpg"]', '["dress", "cocktail", "elegant", "automatic"]', '["seiko", "presage", "cocktail", "dress"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+
+-- Citizen premium watches
+('CITIZEN_ECO_001', 'CITIZEN', 'CASUAL', 'Eco-Drive Chandler', 'BM8180-03E', 'Solar-powered field watch with canvas strap.', 'steel', 42.00, 11.00, 100, 'solar', 'analog', 'canvas', 95.00, 95.00, 47.50, 0, 35, 10, 'SUP_005', FALSE, FALSE, TRUE, 4.2, 2341, '["https://citizen.com/eco1.jpg", "https://citizen.com/eco2.jpg"]', '["casual", "field", "solar", "canvas"]', '["citizen", "eco-drive", "field", "casual"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+
+-- Casio mid-range watches
+('CASIO_GSHOCK_001', 'CASIO', 'SPORT', 'G-Shock GA-2100', 'GA-2100-1A1', 'Tough, shock-resistant watch with carbon core guard structure.', 'resin', 45.40, 11.80, 200, 'quartz', 'analog-digital', 'resin', 99.00, 99.00, 49.50, 0, 50, 15, 'SUP_006', FALSE, TRUE, TRUE, 4.6, 3247, '["https://casio.com/gshock1.jpg", "https://casio.com/gshock2.jpg"]', '["sport", "tough", "shock", "digital"]', '["casio", "g-shock", "tough", "shock"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+
+-- Apple smartwatch
+('APPLE_WATCH_001', 'APPLE', 'SMARTWATCH', 'Apple Watch Series 9', 'MR973LL/A', 'Advanced health monitoring, fitness tracking, and seamless iPhone integration.', 'aluminum', 45.00, 10.70, 50, 'digital', 'digital', 'sport', 429.00, 429.00, 214.50, 0, 30, 5, 'SUP_007', TRUE, TRUE, TRUE, 4.4, 8934, '["https://apple.com/watch1.jpg", "https://apple.com/watch2.jpg"]', '["smartwatch", "fitness", "health", "connected"]', '["apple", "watch", "smart", "fitness"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
+
+-- ============================================================================
+-- PRODUCT VARIANTS DATA
+-- ============================================================================
+
+INSERT INTO product_variants VALUES
+-- Rolex Submariner variants
+('ROLEX_SUB_001_BLACK', 'ROLEX_SUB_001', 'Black Dial', 'dial', 'black', 0, 3, '["https://rolex.com/sub_black.jpg"]'),
+('ROLEX_SUB_001_GREEN', 'ROLEX_SUB_001', 'Green Dial', 'dial', 'green', 0, 2, '["https://rolex.com/sub_green.jpg"]'),
+
+-- Apple Watch variants
+('APPLE_WATCH_001_41MM', 'APPLE_WATCH_001', '41mm', 'size', '41mm', -30.00, 25, '["https://apple.com/watch_41.jpg"]'),
+('APPLE_WATCH_001_45MM', 'APPLE_WATCH_001', '45mm', 'size', '45mm', 0, 30, '["https://apple.com/watch_45.jpg"]'),
+('APPLE_WATCH_001_BLUE', 'APPLE_WATCH_001', 'Blue Band', 'band', 'blue', 0, 15, '["https://apple.com/watch_blue.jpg"]'),
+('APPLE_WATCH_001_RED', 'APPLE_WATCH_001', 'Red Band', 'band', 'red', 0, 12, '["https://apple.com/watch_red.jpg"]');
+
+-- ============================================================================
+-- CUSTOMERS DATA
+-- ============================================================================
+
+INSERT INTO customers VALUES
+('CUST_001', 'john.smith@email.com', 'John', 'Smith', '555-0101', '1985-03-15', 'Male', '2022-01-15 10:30:00'::timestamp,
+ '123 Main St', 'New York', 'NY', '10001', 'USA', 'Gold', '["Rolex", "Omega"]', 5000, 15000, '["luxury", "formal"]',
+ 28450.00, 8, 3556.25, '2024-01-15 14:30:00'::timestamp, '2024-01-20 09:15:00'::timestamp, 45, 12, 8,
+ 0.2500, 8.5, 0.8200, 45600.00, 'active', TRUE, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+
+('CUST_002', 'sarah.johnson@email.com', 'Sarah', 'Johnson', '555-0102', '1990-07-22', 'Female', '2023-03-20 14:20:00'::timestamp,
+ '456 Oak Ave', 'Los Angeles', 'CA', '90210', 'USA', 'Platinum', '["TAG Heuer", "Omega", "Apple"]', 2000, 8000, '["sport", "casual", "smart"]',
+ 15680.00, 12, 1306.67, '2024-01-10 16:45:00'::timestamp, '2024-01-22 11:30:00'::timestamp, 62, 18, 14,
+ 0.1500, 9.2, 0.9100, 28900.00, 'active', TRUE, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+
+('CUST_003', 'mike.brown@email.com', 'Mike', 'Brown', '555-0103', '1978-11-08', 'Male', '2021-05-10 16:45:00'::timestamp,
+ '789 Pine St', 'Chicago', 'IL', '60601', 'USA', 'Silver', '["Seiko", "Citizen", "Casio"]', 100, 500, '["casual", "sport"]',
+ 1245.00, 5, 249.00, '2023-12-22 13:20:00'::timestamp, '2024-01-18 08:45:00'::timestamp, 23, 8, 6,
+ 0.3200, 7.1, 0.6800, 2100.00, 'active', TRUE, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+
+('CUST_004', 'emily.davis@email.com', 'Emily', 'Davis', '1992-04-30', 'Female', '2023-08-15 09:30:00'::timestamp,
+ '321 Elm St', 'Miami', 'FL', '33101', 'USA', 'Bronze', '["Apple", "Fossil"]', 200, 800, '["smart", "casual"]',
+ 690.00, 3, 230.00, '2024-01-05 12:10:00'::timestamp, '2024-01-21 15:20:00'::timestamp, 38, 15, 11,
+ 0.4500, 6.8, 0.7500, 1200.00, 'active', TRUE, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+
+('CUST_005', 'robert.wilson@email.com', 'Robert', 'Wilson', '555-0105', '1965-09-12', 'Male', '2020-11-30 11:15:00'::timestamp,
+ '654 Maple Dr', 'Seattle', 'WA', '98101', 'USA', 'Platinum', '["Rolex", "Omega", "TAG Heuer"]', 8000, 25000, '["luxury", "formal"]',
+ 45230.00, 15, 3015.33, '2024-01-12 10:30:00'::timestamp, '2024-01-19 14:45:00'::timestamp, 28, 6, 4,
+ 0.1800, 9.0, 0.8800, 78500.00, 'active', TRUE, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+
+('CUST_006', 'lisa.garcia@email.com', 'Lisa', 'Garcia', '555-0106', '1988-12-03', 'Female', '2022-07-18 13:45:00'::timestamp,
+ '987 Cedar Ln', 'Austin', 'TX', '73301', 'USA', 'Gold', '["Tissot", "Hamilton", "Seiko"]', 800, 3000, '["dress", "casual"]',
+ 4560.00, 7, 651.43, '2023-12-28 11:20:00'::timestamp, '2024-01-17 16:30:00'::timestamp, 41, 11, 9,
+ 0.2800, 8.3, 0.7800, 8900.00, 'active', TRUE, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+
+-- High churn risk customer
+('CUST_007', 'inactive.customer@email.com', 'David', 'Miller', '555-0107', '1995-06-18', 'Male', '2023-01-10 08:20:00'::timestamp,
+ '147 Birch St', 'Denver', 'CO', '80201', 'USA', 'Bronze', '["Casio"]', 50, 200, '["casual"]',
+ 150.00, 1, 150.00, '2023-02-15 14:30:00'::timestamp, '2023-08-10 09:15:00'::timestamp, 2, 0, 0,
+ 0.8500, 4.2, 0.2100, 300.00, 'active', FALSE, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
+
+-- ============================================================================
+-- ORDERS DATA
+-- ============================================================================
+
+INSERT INTO orders VALUES
+('ORDER_001', 'CUST_001', '2024-01-15 14:30:00'::timestamp, 'delivered', 'paid', 'Express', 'TRK123456789',
+ 10395.00, 831.60, 29.99, 0, 11256.59, 
+ '{"street": "123 Main St", "city": "New York", "state": "NY", "postal_code": "10001"}',
+ '{"street": "123 Main St", "city": "New York", "state": "NY", "postal_code": "10001"}',
+ 'website', 'online', NULL, '2024-01-18'::date, '2024-01-17'::date),
+
+('ORDER_002', 'CUST_002', '2024-01-10 16:45:00'::timestamp, 'delivered', 'paid', 'Standard', 'TRK987654321',
+ 429.00, 34.32, 9.99, 50.00, 423.31,
+ '{"street": "456 Oak Ave", "city": "Los Angeles", "state": "CA", "postal_code": "90210"}',
+ '{"street": "456 Oak Ave", "city": "Los Angeles", "state": "CA", "postal_code": "90210"}',
+ 'mobile_app', 'online', 'SAVE50', '2024-01-15'::date, '2024-01-13'::date),
+
+('ORDER_003', 'CUST_003', '2023-12-22 13:20:00'::timestamp, 'delivered', 'paid', 'Standard', 'TRK456789123',
+ 99.00, 7.92, 9.99, 0, 116.91,
+ '{"street": "789 Pine St", "city": "Chicago", "state": "IL", "postal_code": "60601"}',
+ '{"street": "789 Pine St", "city": "Chicago", "state": "IL", "postal_code": "60601"}',
+ 'website', 'online', NULL, '2023-12-27'::date, '2023-12-25'::date),
+
+('ORDER_004', 'CUST_005', '2024-01-12 10:30:00'::timestamp, 'shipped', 'paid', 'Express', 'TRK789123456',
+ 6350.00, 508.00, 29.99, 0, 6887.99,
+ '{"street": "654 Maple Dr", "city": "Seattle", "state": "WA", "postal_code": "98101"}',
+ '{"street": "654 Maple Dr", "city": "Seattle", "state": "WA", "postal_code": "98101"}',
+ 'website', 'online', NULL, '2024-01-25'::date, NULL);
+
+-- ============================================================================
+-- ORDER ITEMS DATA
+-- ============================================================================
+
+INSERT INTO order_items VALUES
+('ITEM_001', 'ORDER_001', 'ROLEX_SUB_001', 'ROLEX_SUB_001_GREEN', 1, 10395.00, 10395.00, 0,
+ '{"product_name": "Submariner Date", "brand": "Rolex", "model": "126610LV", "variant": "Green Dial"}'),
+
+('ITEM_002', 'ORDER_002', 'APPLE_WATCH_001', 'APPLE_WATCH_001_45MM', 1, 429.00, 429.00, 50.00,
+ '{"product_name": "Apple Watch Series 9", "brand": "Apple", "model": "MR973LL/A", "variant": "45mm"}'),
+
+('ITEM_003', 'ORDER_003', 'CASIO_GSHOCK_001', NULL, 1, 99.00, 99.00, 0,
+ '{"product_name": "G-Shock GA-2100", "brand": "Casio", "model": "GA-2100-1A1"}'),
+
+('ITEM_004', 'ORDER_004', 'OMEGA_SPEED_001', NULL, 1, 6350.00, 6350.00, 0,
+ '{"product_name": "Speedmaster Professional", "brand": "Omega", "model": "310.30.42.50.01.001"}');
+
+-- ============================================================================
+-- CUSTOMER EVENTS DATA (Behavioral Tracking)
+-- ============================================================================
+
+INSERT INTO customer_events VALUES
+-- John Smith (CUST_001) - Luxury watch buyer behavior
+('EVENT_001', 'CUST_001', 'page_view', '2024-01-22 09:15:00'::timestamp, NULL, 'luxury', '/watches/luxury', 'SESS_001', 'desktop', '{"duration_seconds": 120}', 0),
+('EVENT_002', 'CUST_001', 'product_view', '2024-01-22 09:17:00'::timestamp, 'ROLEX_GMT_001', 'luxury', '/product/rolex-gmt-master-ii', 'SESS_001', 'desktop', '{"view_duration": 180, "images_viewed": 3}', 0),
+('EVENT_003', 'CUST_001', 'product_view', '2024-01-22 09:22:00'::timestamp, 'OMEGA_SEAMASTER_001', 'luxury', '/product/omega-seamaster', 'SESS_001', 'desktop', '{"view_duration": 90}', 0),
+('EVENT_004', 'CUST_001', 'cart_add', '2024-01-22 09:25:00'::timestamp, 'ROLEX_GMT_001', 'luxury', '/cart', 'SESS_001', 'desktop', '{"quantity": 1}', 10700.00),
+
+-- Sarah Johnson (CUST_002) - Multi-category shopper
+('EVENT_005', 'CUST_002', 'search', '2024-01-22 11:30:00'::timestamp, NULL, NULL, '/search?q=sport+watch', 'SESS_002', 'mobile', '{"search_term": "sport watch", "results_count": 15}', 0),
+('EVENT_006', 'CUST_002', 'product_view', '2024-01-22 11:32:00'::timestamp, 'TAG_CARRERA_001', 'luxury', '/product/tag-heuer-carrera', 'SESS_002', 'mobile', '{"view_duration": 60}', 0),
+('EVENT_007', 'CUST_002', 'product_view', '2024-01-22 11:35:00'::timestamp, 'APPLE_WATCH_001', 'smartwatch', '/product/apple-watch-series-9', 'SESS_002', 'mobile', '{"view_duration": 45}', 0),
+
+-- Mike Brown (CUST_003) - Budget-conscious casual shopper
+('EVENT_008', 'CUST_003', 'category_browse', '2024-01-18 08:45:00'::timestamp, NULL, 'casual', '/watches/casual', 'SESS_003', 'desktop', '{"products_viewed": 8}', 0),
+('EVENT_009', 'CUST_003', 'product_view', '2024-01-18 08:48:00'::timestamp, 'SEIKO_PROSPEX_001', 'sport', '/product/seiko-prospex-solar', 'SESS_003', 'desktop', '{"view_duration": 120}', 0),
+('EVENT_010', 'CUST_003', 'product_view', '2024-01-18 08:52:00'::timestamp, 'CITIZEN_ECO_001', 'casual', '/product/citizen-eco-drive', 'SESS_003', 'desktop', '{"view_duration": 90}', 0),
+
+-- David Miller (CUST_007) - High churn risk, minimal engagement
+('EVENT_011', 'CUST_007', 'page_view', '2023-08-10 09:15:00'::timestamp, NULL, 'casual', '/watches', 'SESS_007', 'mobile', '{"duration_seconds": 30}', 0),
+('EVENT_012', 'CUST_007', 'product_view', '2023-08-10 09:16:00'::timestamp, 'CASIO_GSHOCK_001', 'sport', '/product/casio-gshock', 'SESS_007', 'mobile', '{"view_duration": 15}', 0);
+
+-- ============================================================================
+-- PRODUCT REVIEWS DATA (with AI Sentiment Analysis)
+-- ============================================================================
+
+INSERT INTO product_reviews VALUES
+-- Positive reviews
+('REV_001', 'ROLEX_SUB_001', 'CUST_001', 'ORDER_001', 5.0, 'Absolutely Perfect!', 
+ 'This is my third Rolex and the Submariner continues to exceed expectations. The build quality is exceptional, keeps perfect time, and the green bezel is stunning. Worth every penny for a luxury timepiece that will last generations.',
+ '2024-01-20 15:30:00'::timestamp, TRUE, 23, 0.8500, 'positive', '["build quality", "luxury", "durability", "design"]',
+ 'approved', NULL),
+
+('REV_002', 'APPLE_WATCH_001', 'CUST_002', 'ORDER_002', 4.5, 'Great Smart Features', 
+ 'Love the health tracking and fitness features. Battery life could be better but the integration with my iPhone is seamless. The display is bright and clear. Good value for a smartwatch.',
+ '2024-01-15 12:45:00'::timestamp, TRUE, 18, 0.6200, 'positive', '["health tracking", "fitness", "integration", "display"]',
+ 'approved', NULL),
+
+('REV_003', 'CASIO_GSHOCK_001', 'CUST_003', 'ORDER_003', 4.0, 'Tough and Reliable', 
+ 'Exactly what I expected from G-Shock. Super durable, survived several drops and water exposure. The analog-digital combo is practical. Great watch for outdoor activities and sports.',
+ '2023-12-28 16:20:00'::timestamp, TRUE, 31, 0.7100, 'positive', '["durability", "outdoor", "practical", "sports"]',
+ 'approved', NULL),
+
+('REV_004', 'OMEGA_SPEED_001', 'CUST_005', 'ORDER_004', 5.0, 'Moon Watch Excellence', 
+ 'The legendary Speedmaster lives up to its reputation. Manual winding is a joy, the chronograph is precise, and the history behind this watch makes it special. A true classic that never goes out of style.',
+ '2024-01-18 10:15:00'::timestamp, TRUE, 15, 0.9200, 'positive', '["legendary", "history", "classic", "chronograph", "precision"]',
+ 'approved', NULL),
+
+-- Mixed/Neutral review
+('REV_005', 'SEIKO_PROSPEX_001', 'CUST_003', NULL, 3.5, 'Good Value But...', 
+ 'The solar feature is convenient and the watch looks decent. However, the build quality feels a bit cheap for the price. The rubber strap started showing wear after just a few months. Still functional but expected more from Seiko.',
+ '2024-01-10 14:30:00'::timestamp, FALSE, 8, 0.1200, 'neutral', '["value", "solar", "build quality", "durability concerns"]',
+ 'approved', NULL),
+
+-- Negative review
+('REV_006', 'TAG_CARRERA_001', 'CUST_006', NULL, 2.5, 'Disappointing for the Price', 
+ 'For $3000, I expected much better. The watch gains about 15 seconds per day, which is unacceptable for a Swiss automatic. Customer service was unhelpful when I contacted them about the accuracy issue. Would not recommend.',
+ '2024-01-05 09:45:00'::timestamp, FALSE, 4, -0.6500, 'negative', '["price", "accuracy", "customer service", "disappointing"]',
+ 'approved', NULL);
+
+-- ============================================================================
+-- CUSTOMER INTERACTIONS DATA (Support/Service)
+-- ============================================================================
+
+INSERT INTO customer_interactions VALUES
+('INT_001', 'CUST_001', 'chat', '2024-01-22 10:30:00'::timestamp, 'Question about GMT function',
+ 'Hi, I''m interested in the Rolex GMT-Master II. Can you explain how the GMT function works and if it''s suitable for frequent international travel?',
+ 'The GMT function displays a second time zone using the additional hand and rotating bezel. Perfect for travelers who need to track home time while abroad. The Rolex GMT-Master II is specifically designed for pilots and frequent travelers.',
+ 'resolved', 'medium', 'agent_sarah', 0.2500, 'inquiry', 0.1000, 
+ '{"suggested_actions": ["provide_detailed_explanation", "offer_demo"], "confidence": 0.95}', 8, 5.0),
+
+('INT_002', 'CUST_006', 'email', '2024-01-05 14:20:00'::timestamp, 'Watch Accuracy Issue',
+ 'I purchased a TAG Heuer Carrera last month and it''s running fast by about 15 seconds per day. This seems excessive for a Swiss automatic watch. What can be done about this?',
+ 'I understand your concern about the timekeeping accuracy. Swiss automatic watches should maintain better precision. I''d like to arrange a warranty service for regulation. We can also provide a replacement if the issue persists.',
+ 'in_progress', 'high', 'agent_michael', -0.4500, 'complaint', 0.8500,
+ '{"suggested_actions": ["warranty_service", "replacement_offer", "priority_handling"], "confidence": 0.88}', NULL, NULL),
+
+('INT_003', 'CUST_002', 'phone', '2024-01-16 11:15:00'::timestamp, 'Apple Watch Setup Help',
+ 'I just received my Apple Watch and I''m having trouble pairing it with my iPhone. Can someone walk me through the setup process?',
+ 'I''d be happy to help with the Apple Watch setup. Let me guide you through the pairing process step by step. First, make sure both devices have sufficient battery and are close together...',
+ 'resolved', 'low', 'agent_jessica', 0.1000, 'inquiry', 0.2000,
+ '{"suggested_actions": ["step_by_step_guide", "follow_up"], "confidence": 0.92}', 12, 4.5),
+
+('INT_004', 'CUST_007', 'email', '2023-08-15 16:30:00'::timestamp, 'Cancellation Request',
+ 'I want to cancel my account and stop receiving marketing emails. I haven''t been active and don''t plan to purchase anything else.',
+ 'I''ve processed your request to opt out of marketing communications. Your account will remain active in case you change your mind, but you won''t receive promotional emails. Is there anything specific that led to this decision?',
+ 'resolved', 'medium', 'agent_david', -0.3000, 'complaint', 0.9200,
+ '{"suggested_actions": ["retention_offer", "feedback_collection", "opt_out_processing"], "confidence": 0.85}', 15, 3.0);
+
+SELECT '✅ Sample data loaded successfully!' as data_status;
+SELECT 'Brands: ' || COUNT(*) as brand_count FROM watch_brands
+UNION ALL
+SELECT 'Categories: ' || COUNT(*) as category_count FROM watch_categories  
+UNION ALL
+SELECT 'Products: ' || COUNT(*) as product_count FROM products
+UNION ALL
+SELECT 'Customers: ' || COUNT(*) as customer_count FROM customers
+UNION ALL
+SELECT 'Orders: ' || COUNT(*) as order_count FROM orders
+UNION ALL
+SELECT 'Customer Events: ' || COUNT(*) as event_count FROM customer_events
+UNION ALL
+SELECT 'Reviews: ' || COUNT(*) as review_count FROM product_reviews
+UNION ALL
+SELECT 'Interactions: ' || COUNT(*) as interaction_count FROM customer_interactions; 

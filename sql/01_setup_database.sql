@@ -1,39 +1,32 @@
--- =========================================
--- Customer 360 & AI Assistant Demo Setup
--- =========================================
+-- ============================================================================
+-- Retail Watch Store - Customer 360 Database Setup
+-- ============================================================================
+-- This script sets up the database, warehouse, and initial configuration
+-- for a retail watch store with AI-powered customer analytics
 
--- Create database and schema
-CREATE DATABASE IF NOT EXISTS customer_360_db;
-USE DATABASE customer_360_db;
+-- Create database and set context
+CREATE DATABASE IF NOT EXISTS retail_watch_db;
+USE DATABASE retail_watch_db;
 
--- Create warehouse for the demo
-CREATE OR REPLACE WAREHOUSE customer_360_wh WITH
-    WAREHOUSE_SIZE='SMALL'
-    AUTO_SUSPEND = 300  -- 5 minutes
-    AUTO_RESUME = TRUE
-    INITIALLY_SUSPENDED = TRUE
-    COMMENT = 'Warehouse for Customer 360 & AI Assistant demo';
-
-USE WAREHOUSE customer_360_wh;
-
--- Create schema for our demo data
+-- Create schema
 CREATE SCHEMA IF NOT EXISTS public;
 USE SCHEMA public;
 
--- Grant necessary permissions for Cortex features
--- Note: You may need to run these as ACCOUNTADMIN
--- GRANT USAGE ON DATABASE customer_360_db TO ROLE your_role;
--- GRANT USAGE ON SCHEMA customer_360_db.public TO ROLE your_role;
--- GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE your_role;
+-- Create warehouse for processing
+CREATE WAREHOUSE IF NOT EXISTS retail_watch_wh
+WITH WAREHOUSE_SIZE = 'SMALL'
+AUTO_SUSPEND = 60
+AUTO_RESUME = TRUE
+INITIALLY_SUSPENDED = FALSE;
 
--- Create stage for file uploads (if needed)
-CREATE OR REPLACE STAGE customer_360_stage
-    DIRECTORY = (ENABLE = TRUE)
-    COMMENT = 'Stage for Customer 360 demo files';
+USE WAREHOUSE retail_watch_wh;
 
--- Verify setup
-SELECT 'Database setup completed successfully' AS status,
-       CURRENT_DATABASE() AS database_name,
-       CURRENT_SCHEMA() AS schema_name,
-       CURRENT_WAREHOUSE() AS warehouse_name,
-       CURRENT_TIMESTAMP() AS setup_time; 
+SELECT '🏪 Retail Watch Store Database Created Successfully!' as setup_status;
+SELECT CURRENT_DATABASE() as database_name, CURRENT_WAREHOUSE() as warehouse_name;
+
+-- Enable Cortex functions for AI capabilities
+SELECT 'Snowflake Cortex AI functions will be used for:' as ai_features;
+SELECT '• Churn Prediction Analysis' as feature_1;
+SELECT '• Sentiment Analysis of Reviews' as feature_2; 
+SELECT '• Price Optimization Engine' as feature_3;
+SELECT '• Personal Shopping Recommendations' as feature_4; 
