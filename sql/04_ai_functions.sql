@@ -289,6 +289,7 @@ $$
                  c.last_purchase_date, c.last_login_date, c.website_visits_30d, c.email_opens_30d, 
                  c.email_clicks_30d, c.churn_risk_score, c.satisfaction_score, c.engagement_score, 
                  c.lifetime_value, c.account_status, c.marketing_consent, c.created_at, c.updated_at
+        LIMIT 1
     ),
     recommendations AS (
         SELECT 
@@ -377,32 +378,32 @@ $$
         'top_recommendations', (
             SELECT ARRAY_AGG(
                 OBJECT_CONSTRUCT(
-                    'product_id', product_id,
-                    'product_name', product_name,
-                    'brand_name', brand_name,
-                    'price', current_price,
-                    'rating', avg_rating,
-                    'review_count', review_count,
-                    'recommendation_score', recommendation_score + context_boost,
-                    'match_reasons', ARRAY_CONSTRUCT(
-                        CASE WHEN current_price BETWEEN (SELECT price_range_min FROM customer_profile) 
-                                                    AND (SELECT price_range_max FROM customer_profile) 
+                    'product_id', r.product_id,
+                    'product_name', r.product_name,
+                    'brand_name', r.brand_name,
+                    'price', r.current_price,
+                    'rating', r.avg_rating,
+                    'review_count', r.review_count,
+                    'recommendation_score', r.recommendation_score + r.context_boost,
+                    'match_reasons', ARRAY_COMPACT(ARRAY_CONSTRUCT(
+                        CASE WHEN r.current_price BETWEEN cp.price_range_min AND cp.price_range_max 
                              THEN 'Within preferred price range' END,
-                        CASE WHEN (SELECT preferred_brands FROM customer_profile) LIKE '%' || brand_name || '%' 
+                        CASE WHEN cp.preferred_brands LIKE '%' || r.brand_name || '%' 
                              THEN 'Preferred brand' END,
-                        CASE WHEN avg_rating >= 4.5 THEN 'Highly rated' END,
-                        CASE WHEN context = 'luxury' AND brand_name IN ('Rolex', 'Omega') 
+                        CASE WHEN r.avg_rating >= 4.5 THEN 'Highly rated' END,
+                        CASE WHEN context = 'luxury' AND r.brand_name IN ('Rolex', 'Omega') 
                              THEN 'Premium luxury brand' END
-                    ),
-                    'description', description,
-                    'images', product_images
+                    )),
+                    'description', r.description,
+                    'images', r.product_images
                 )
             )
             FROM (
                 SELECT * FROM recommendations 
                 ORDER BY (recommendation_score + context_boost) DESC 
                 LIMIT 5
-            )
+            ) r
+            CROSS JOIN customer_profile cp
         )
     )
 $$;
@@ -457,6 +458,7 @@ $$
             
         FROM customers c
         WHERE c.customer_id = customer_id
+        LIMIT 1
     )
     SELECT OBJECT_CONSTRUCT(
         'customer_overview', OBJECT_CONSTRUCT(
