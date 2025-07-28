@@ -103,7 +103,7 @@ def verify_database_setup():
         # Check if tables exist
         for table in required_tables:
             table_name = table.split('.')[-1]  # Get just the table name for display
-            result = conn.query(f"SELECT COUNT(*) as count FROM {table} LIMIT 1")
+            result = conn.query("SELECT COUNT(*) as count FROM {} LIMIT 1".format(table))
             if result.empty:
                 return False, f"Table {table_name} exists but is empty"
         
@@ -261,6 +261,7 @@ def display_customer_dashboard():
             insights = None
     except Exception as e:
         st.warning("⚠️ AI insights temporarily unavailable. Showing basic customer information.")
+        st.error(f"Debug: {str(e)}")  # Add debug info
         insights = None
     
     # Fallback: Get basic customer info if AI function fails
@@ -392,6 +393,7 @@ def display_personal_recommendations(customer_id):
             recommendations = None
     except Exception as e:
         st.warning("⚠️ AI recommendations temporarily unavailable. Showing popular products.")
+        st.error(f"Debug: {str(e)}")  # Add debug info
         recommendations = None
     
     # Fallback: Show popular products if AI function fails
@@ -460,15 +462,26 @@ def display_personal_recommendations(customer_id):
             with col1:
                 # Display product image from database
                 try:
-                    if 'images' in rec and rec['images'] and len(rec['images']) > 0:
+                    # Debug: Show what's in the rec object
+                    st.write(f"Debug - Available keys: {list(rec.keys())}")
+                    
+                    # Check if images exist and are in the right format
+                    images = rec.get('images', [])
+                    st.write(f"Debug - Images value: {images}")
+                    st.write(f"Debug - Images type: {type(images)}")
+                    
+                    if images and isinstance(images, list) and len(images) > 0:
                         # Use the first image from the product images array
-                        product_image_url = rec['images'][0]
+                        product_image_url = images[0]
+                        st.write(f"Debug - Using image URL: {product_image_url}")
                         st.image(product_image_url, width=200, caption=rec['product_name'])
                     else:
+                        st.write("Debug - No images found, using fallback")
                         # Fallback to a generic watch placeholder
                         st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop", 
                                 width=200, caption="Product Image")
                 except Exception as e:
+                    st.write(f"Debug - Image error: {str(e)}")
                     # If image fails to load, show fallback
                     st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop", 
                             width=200, caption="Product Image")
@@ -507,6 +520,7 @@ def display_churn_analysis(customer_id):
             analysis = None
     except Exception as e:
         st.warning("⚠️ AI churn analysis temporarily unavailable. Showing basic risk assessment.")
+        st.error(f"Debug: {str(e)}")  # Add debug info
         analysis = None
     
     # Fallback: Get basic churn info if AI function fails
@@ -645,8 +659,7 @@ def display_price_optimization():
         # Display price optimization
         st.subheader("📊 Price Analysis")
         optimization_result = run_query(
-            "SELECT optimize_product_pricing(%s) as result",
-            params=[selected_product_id]
+            f"SELECT optimize_product_pricing('{selected_product_id}') as result"
         )
         
         if not optimization_result.empty:
@@ -723,8 +736,7 @@ def display_sentiment_analysis():
             # Sentiment analysis
             st.subheader("📊 Sentiment Analysis")
             sentiment_result = run_query(
-                "SELECT analyze_review_sentiment(%s) as result",
-                params=[selected_review_id]
+                f"SELECT analyze_review_sentiment('{selected_review_id}') as result"
             )
             
             if not sentiment_result.empty:
@@ -766,10 +778,10 @@ def display_customer_analytics(customer_id, insights):
             GROUP BY event_type
             ORDER BY count DESC
         """
-        events = run_query(events_query)
+        events_result = run_query(events_query)
         
-        if events:
-            df_events = pd.DataFrame(events, columns=['Event Type', 'Count'])
+        if events_result:
+            df_events = pd.DataFrame(events_result, columns=['Event Type', 'Count'])
             fig = px.bar(df_events, x='Event Type', y='Count', 
                         title="Recent Activity (Last 30 Days)")
             st.plotly_chart(fig, use_container_width=True)
