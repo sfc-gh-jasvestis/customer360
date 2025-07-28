@@ -78,12 +78,18 @@ def init_connection():
 @st.cache_data
 def run_query(query, params=None):
     conn = init_connection()
-    return conn.query(query, params=params if params else None)
+    if params:
+        return conn.query(query, params=params)
+    else:
+        return conn.query(query)
 
 @st.cache_data
 def run_query_df(query, params=None):
     conn = init_connection()
-    return conn.query(query, params=params if params else None)
+    if params:
+        return conn.query(query, params=params)
+    else:
+        return conn.query(query)
 
 # Verify database setup
 @st.cache_data
@@ -234,12 +240,11 @@ def main():
         if st.button("🔄 Refresh Recommendations"):
             st.cache_data.clear()
             st.rerun()
-        
-        if st.button("📧 Send Retention Email"):
-            st.success("Retention email sent!")
-        
-        if st.button("💰 Apply Discount"):
-            st.success("10% discount applied!")
+        if st.button("🗑️ Clear All Cache"):
+            st.cache_data.clear()
+            st.cache_resource.clear()
+            st.success("Cache cleared! Please refresh the page.")
+        st.markdown("---")
     
     # Main content area
     if st.session_state.current_customer:
@@ -649,9 +654,11 @@ def display_price_optimization():
         
         # Display price optimization
         st.subheader("📊 Price Analysis")
-        optimization_result = run_query(
-            f"SELECT optimize_product_pricing('{selected_product_id}') as result"
-        )
+        query_str = f"SELECT optimize_product_pricing('{selected_product_id}') as result"
+        st.write(f"Debug - Query: {query_str}")  # Temporary debug
+        st.write(f"Debug - Product ID: '{selected_product_id}'")  # Temporary debug
+        
+        optimization_result = run_query(query_str)
         
         if not optimization_result.empty:
             result_raw = optimization_result.iloc[0]['RESULT']
