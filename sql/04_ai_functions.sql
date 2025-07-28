@@ -11,7 +11,7 @@ USE WAREHOUSE retail_watch_wh;
 SELECT '🤖 Creating AI Functions for Retail Watch Store...' as ai_setup_step;
 
 -- ============================================================================
--- 1. CHURN PREDICTION FUNCTION
+-- 1. CHURN PREDICTION FUNCTION (SIMPLIFIED VERSION)  
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION predict_customer_churn(customer_id STRING)
@@ -19,77 +19,75 @@ RETURNS OBJECT
 LANGUAGE SQL
 AS
 $$
+    WITH customer_info AS (
+        SELECT 
+            c.customer_id,
+            c.churn_risk_score,
+            c.satisfaction_score,
+            c.engagement_score,
+            c.total_spent,
+            c.total_orders,
+            c.last_purchase_date,
+            c.last_login_date,
+            c.website_visits_30d,
+            c.email_opens_30d,
+            DATEDIFF('day', c.last_purchase_date, CURRENT_TIMESTAMP()) as days_since_last_purchase,
+            DATEDIFF('day', c.last_login_date, CURRENT_TIMESTAMP()) as days_since_last_login
+        FROM customers c
+        WHERE c.customer_id = customer_id
+        LIMIT 1
+    )
     SELECT OBJECT_CONSTRUCT(
         'customer_id', customer_id,
         'prediction_timestamp', CURRENT_TIMESTAMP(),
-        'churn_analysis', (
-            WITH customer_metrics AS (
-                SELECT 
-                    c.customer_id,
-                    c.churn_risk_score,
-                    c.satisfaction_score,
-                    c.engagement_score,
-                    c.total_spent,
-                    c.total_orders,
-                    c.last_purchase_date,
-                    c.last_login_date,
-                    c.website_visits_30d,
-                    c.email_opens_30d,
-                    DATEDIFF('day', c.last_purchase_date, CURRENT_TIMESTAMP()) as days_since_last_purchase,
-                    DATEDIFF('day', c.last_login_date, CURRENT_TIMESTAMP()) as days_since_last_login,
-                    -- Count recent customer service issues
-                    COALESCE((SELECT COUNT(*) FROM customer_interactions 
-                     WHERE customer_id = c.customer_id 
-                     AND intent_classification = 'complaint' 
-                     AND interaction_date >= DATEADD('day', -90, CURRENT_TIMESTAMP())), 0) as recent_complaints,
-                    -- Average sentiment from recent reviews
-                    COALESCE((SELECT AVG(sentiment_score) FROM product_reviews 
-                     WHERE customer_id = c.customer_id 
-                     AND review_date >= DATEADD('day', -180, CURRENT_TIMESTAMP())), 0) as avg_review_sentiment
-                FROM customers c
-                WHERE c.customer_id = customer_id
-                LIMIT 1  -- Ensure single row
+        'churn_analysis', OBJECT_CONSTRUCT(
+            'risk_score', churn_risk_score,
+            'risk_level', CASE 
+                WHEN churn_risk_score >= 0.7 THEN 'HIGH'
+                WHEN churn_risk_score >= 0.4 THEN 'MEDIUM'
+                WHEN churn_risk_score >= 0.2 THEN 'LOW'
+                ELSE 'VERY_LOW'
+            END,
+            'risk_factors', ARRAY_CONSTRUCT(
+                CASE WHEN days_since_last_purchase > 90 THEN 'No purchases in 90+ days'
+                     ELSE 'Recent purchase activity' END,
+                CASE WHEN days_since_last_login > 30 THEN 'Inactive for 30+ days'
+                     ELSE 'Regular login activity' END,
+                CASE WHEN satisfaction_score < 5.0 THEN 'Low satisfaction score'
+                     ELSE 'Adequate satisfaction' END,
+                CASE WHEN engagement_score < 0.3 THEN 'Low engagement score'
+                     ELSE 'Good engagement' END,
+                CASE WHEN email_opens_30d = 0 THEN 'Not opening marketing emails'
+                     ELSE 'Email engagement present' END,
+                CASE WHEN website_visits_30d < 5 THEN 'Low website engagement'
+                     ELSE 'Active website usage' END
+            ),
+            'retention_recommendations', ARRAY_CONSTRUCT(
+                CASE WHEN churn_risk_score >= 0.7 THEN 'URGENT: Immediate personal outreach required'
+                     ELSE 'Standard retention activities' END,
+                CASE WHEN days_since_last_purchase > 60 THEN 'Send targeted product recommendations'
+                     ELSE 'Maintain regular communication' END,
+                CASE WHEN satisfaction_score < 6.0 THEN 'Proactive customer service follow-up'
+                     ELSE 'Continue current service level' END,
+                CASE WHEN total_spent > 5000 AND churn_risk_score > 0.3 THEN 'VIP retention offer'
+                     ELSE 'Standard offers appropriate' END,
+                CASE WHEN engagement_score < 0.5 THEN 'Re-engagement campaign with personalized content'
+                     ELSE 'Current engagement strategy effective' END,
+                'Monitor customer behavior closely'
+            ),
+            'predicted_actions', OBJECT_CONSTRUCT(
+                'discount_offer', CASE WHEN churn_risk_score > 0.5 THEN TRUE ELSE FALSE END,
+                'personal_outreach', CASE WHEN churn_risk_score > 0.6 THEN TRUE ELSE FALSE END,
+                'priority_support', CASE WHEN satisfaction_score < 5.0 THEN TRUE ELSE FALSE END
             )
-            SELECT OBJECT_CONSTRUCT(
-                'risk_score', churn_risk_score,
-                'risk_level', CASE 
-                    WHEN churn_risk_score >= 0.7 THEN 'HIGH'
-                    WHEN churn_risk_score >= 0.4 THEN 'MEDIUM'
-                    WHEN churn_risk_score >= 0.2 THEN 'LOW'
-                    ELSE 'VERY_LOW'
-                END,
-                'risk_factors', ARRAY_COMPACT(ARRAY_CONSTRUCT(
-                    CASE WHEN days_since_last_purchase > 90 THEN 'No purchases in 90+ days' END,
-                    CASE WHEN days_since_last_login > 30 THEN 'Inactive for 30+ days' END,
-                    CASE WHEN satisfaction_score < 5.0 THEN 'Low satisfaction score' END,
-                    CASE WHEN engagement_score < 0.3 THEN 'Low engagement score' END,
-                    CASE WHEN recent_complaints > 0 THEN 'Recent customer service complaints' END,
-                    CASE WHEN avg_review_sentiment < 0 THEN 'Negative review sentiment' END,
-                    CASE WHEN email_opens_30d = 0 THEN 'Not opening marketing emails' END,
-                    CASE WHEN website_visits_30d < 5 THEN 'Low website engagement' END
-                )),
-                'retention_recommendations', ARRAY_COMPACT(ARRAY_CONSTRUCT(
-                    CASE WHEN churn_risk_score >= 0.7 THEN 'URGENT: Immediate personal outreach required' END,
-                    CASE WHEN days_since_last_purchase > 60 THEN 'Send targeted product recommendations' END,
-                    CASE WHEN satisfaction_score < 6.0 THEN 'Proactive customer service follow-up' END,
-                    CASE WHEN total_spent > 5000 AND churn_risk_score > 0.3 THEN 'VIP retention offer' END,
-                    CASE WHEN engagement_score < 0.5 THEN 'Re-engagement campaign with personalized content' END,
-                    'Monitor customer behavior closely'
-                )),
-                'predicted_actions', OBJECT_CONSTRUCT(
-                    'discount_offer', CASE WHEN churn_risk_score > 0.5 THEN TRUE ELSE FALSE END,
-                    'personal_outreach', CASE WHEN churn_risk_score > 0.6 THEN TRUE ELSE FALSE END,
-                    'priority_support', CASE WHEN recent_complaints > 0 OR satisfaction_score < 5.0 THEN TRUE ELSE FALSE END
-                )
-            )
-            FROM customer_metrics
-            LIMIT 1  -- Ensure single row result
         )
     )
+    FROM customer_info
+    LIMIT 1
 $$;
 
 -- ============================================================================
--- 2. SENTIMENT ANALYSIS FUNCTION
+-- 2. SENTIMENT ANALYSIS FUNCTION (SIMPLIFIED VERSION)
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION analyze_review_sentiment(review_id STRING)
@@ -97,7 +95,7 @@ RETURNS OBJECT
 LANGUAGE SQL
 AS
 $$
-    WITH review_analysis AS (
+    WITH review_info AS (
         SELECT 
             pr.review_id,
             pr.customer_id,
@@ -106,35 +104,12 @@ $$
             pr.review_text,
             pr.review_date,
             p.product_name,
-            b.brand_name,
-            -- Calculate sentiment score based on rating and keywords
-            CASE 
-                WHEN pr.rating >= 4 THEN 0.8 + (RANDOM() * 0.2)
-                WHEN pr.rating = 3 THEN 0.4 + (RANDOM() * 0.4)
-                ELSE 0.1 + (RANDOM() * 0.3)
-            END as sentiment_score,
-            -- Determine sentiment label
-            CASE 
-                WHEN pr.rating >= 4 THEN 'positive'
-                WHEN pr.rating = 3 THEN 'neutral'
-                ELSE 'negative'
-            END as sentiment_label,
-            -- Extract key themes from review text
-            ARRAY_COMPACT(ARRAY_CONSTRUCT(
-                CASE WHEN LOWER(pr.review_text) LIKE '%quality%' THEN 'quality' END,
-                CASE WHEN LOWER(pr.review_text) LIKE '%price%' OR LOWER(pr.review_text) LIKE '%cost%' OR LOWER(pr.review_text) LIKE '%expensive%' OR LOWER(pr.review_text) LIKE '%cheap%' THEN 'price' END,
-                CASE WHEN LOWER(pr.review_text) LIKE '%service%' OR LOWER(pr.review_text) LIKE '%support%' THEN 'service' END,
-                CASE WHEN LOWER(pr.review_text) LIKE '%delivery%' OR LOWER(pr.review_text) LIKE '%shipping%' THEN 'delivery' END,
-                CASE WHEN LOWER(pr.review_text) LIKE '%design%' OR LOWER(pr.review_text) LIKE '%style%' OR LOWER(pr.review_text) LIKE '%beautiful%' THEN 'design' END,
-                CASE WHEN LOWER(pr.review_text) LIKE '%comfort%' OR LOWER(pr.review_text) LIKE '%fit%' THEN 'comfort' END,
-                CASE WHEN LOWER(pr.review_text) LIKE '%durable%' OR LOWER(pr.review_text) LIKE '%durability%' THEN 'durability' END,
-                CASE WHEN LOWER(pr.review_text) LIKE '%recommend%' THEN 'recommendation' END
-            )) as key_themes
+            b.brand_name
         FROM product_reviews pr
         JOIN products p ON pr.product_id = p.product_id
         JOIN watch_brands b ON p.brand_id = b.brand_id
         WHERE pr.review_id = review_id
-        LIMIT 1  -- Ensure single row
+        LIMIT 1
     )
     SELECT OBJECT_CONSTRUCT(
         'review_id', review_id,
@@ -143,28 +118,42 @@ $$
             'product_name', product_name,
             'brand_name', brand_name
         ),
-        'sentiment_score', sentiment_score,
-        'sentiment_label', sentiment_label,
+        'sentiment_score', CASE 
+            WHEN rating >= 4 THEN 0.8 + (RANDOM() * 0.2)
+            WHEN rating = 3 THEN 0.4 + (RANDOM() * 0.4)
+            ELSE 0.1 + (RANDOM() * 0.3)
+        END,
+        'sentiment_label', CASE 
+            WHEN rating >= 4 THEN 'positive'
+            WHEN rating = 3 THEN 'neutral'
+            ELSE 'negative'
+        END,
         'confidence', CASE 
             WHEN rating IN (1, 5) THEN 0.95
             WHEN rating IN (2, 4) THEN 0.85
             ELSE 0.65
         END,
-        'key_themes', key_themes,
-        'actionable_insights', ARRAY_COMPACT(ARRAY_CONSTRUCT(
-            CASE WHEN sentiment_label = 'negative' AND rating <= 2 THEN 'Follow up with customer service' END,
-            CASE WHEN sentiment_label = 'positive' AND rating >= 4 THEN 'Feature as product testimonial' END,
-            CASE WHEN 'price' = ANY(key_themes) AND sentiment_label = 'negative' THEN 'Review pricing strategy' END,
-            CASE WHEN 'service' = ANY(key_themes) AND sentiment_label = 'negative' THEN 'Customer service training needed' END,
-            CASE WHEN 'quality' = ANY(key_themes) AND sentiment_label = 'positive' THEN 'Highlight quality in marketing' END
-        ))
+        'key_themes', ARRAY_CONSTRUCT(
+            CASE WHEN LOWER(review_text) LIKE '%quality%' THEN 'quality' ELSE 'general' END,
+            CASE WHEN LOWER(review_text) LIKE '%price%' OR LOWER(review_text) LIKE '%cost%' THEN 'price' ELSE 'value' END,
+            CASE WHEN LOWER(review_text) LIKE '%service%' OR LOWER(review_text) LIKE '%support%' THEN 'service' ELSE 'product' END
+        ),
+        'actionable_insights', ARRAY_CONSTRUCT(
+            CASE WHEN rating <= 2 THEN 'Follow up with customer service'
+                 WHEN rating >= 4 THEN 'Feature as product testimonial'
+                 ELSE 'Monitor for trends' END,
+            CASE WHEN LOWER(review_text) LIKE '%price%' AND rating <= 3 THEN 'Review pricing strategy'
+                 ELSE 'Pricing appears acceptable' END,
+            CASE WHEN LOWER(review_text) LIKE '%service%' AND rating <= 3 THEN 'Customer service training needed'
+                 ELSE 'Service quality maintained' END
+        )
     ) as result
-    FROM review_analysis
-    LIMIT 1  -- Ensure single row result
+    FROM review_info
+    LIMIT 1
 $$;
 
 -- ============================================================================
--- 3. PRICE OPTIMIZATION FUNCTION
+-- 3. PRICE OPTIMIZATION FUNCTION (SIMPLIFIED VERSION)
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION optimize_product_pricing(product_id STRING)
@@ -172,7 +161,7 @@ RETURNS OBJECT
 LANGUAGE SQL
 AS
 $$
-    WITH product_metrics AS (
+    WITH product_info AS (
         SELECT 
             p.product_id,
             p.product_name,
@@ -183,65 +172,49 @@ $$
             p.avg_rating,
             p.review_count,
             b.brand_name,
-            wc.category_name,
-            -- Calculate demand indicators
-            COALESCE((SELECT COUNT(*) FROM order_items oi 
-                     JOIN orders o ON oi.order_id = o.order_id 
-                     WHERE oi.product_id = p.product_id 
-                     AND o.order_date >= DATEADD('day', -90, CURRENT_TIMESTAMP())), 0) as recent_sales,
-            -- Competition analysis
-            COALESCE((SELECT AVG(current_price) FROM products 
-                     WHERE brand_id = p.brand_id 
-                     AND product_id != p.product_id 
-                     AND product_status = 'active'), p.current_price) as brand_avg_price,
-            -- Inventory turnover
-            CASE WHEN p.stock_quantity < 5 THEN 'low' 
-                 WHEN p.stock_quantity < 20 THEN 'medium' 
-                 ELSE 'high' END as inventory_level
+            wc.category_name
         FROM products p
         JOIN watch_brands b ON p.brand_id = b.brand_id
         JOIN watch_categories wc ON p.category_id = wc.category_id
         WHERE p.product_id = product_id
-        LIMIT 1  -- Ensure single row
+        LIMIT 1
     )
     SELECT OBJECT_CONSTRUCT(
         'product_id', product_id,
         'analysis_timestamp', CURRENT_TIMESTAMP(),
         'current_price', current_price,
         'recommended_price', CASE
-            WHEN recent_sales > 10 AND inventory_level = 'low' THEN current_price * 1.15  -- High demand, low stock
-            WHEN recent_sales < 2 AND inventory_level = 'high' THEN current_price * 0.90  -- Low demand, high stock
-            WHEN avg_rating >= 4.5 AND recent_sales > 5 THEN current_price * 1.08  -- High rating, good sales
-            WHEN avg_rating < 3.5 THEN current_price * 0.95  -- Poor rating
-            ELSE current_price * 1.02  -- Small increase for inflation
+            WHEN stock_quantity < 5 THEN current_price * 1.15  -- Low stock premium
+            WHEN avg_rating >= 4.5 THEN current_price * 1.08   -- High rating premium
+            WHEN avg_rating < 3.5 THEN current_price * 0.95    -- Poor rating discount
+            ELSE current_price * 1.02  -- Standard inflation adjustment
         END,
         'confidence', CASE
-            WHEN recent_sales >= 5 AND review_count >= 10 THEN 0.85
-            WHEN recent_sales >= 2 AND review_count >= 5 THEN 0.70
+            WHEN review_count >= 10 THEN 0.85
+            WHEN review_count >= 5 THEN 0.70
             ELSE 0.55
         END,
-        'price_insights', ARRAY_COMPACT(ARRAY_CONSTRUCT(
-            CASE WHEN recent_sales > 10 THEN 'High demand product - premium pricing opportunity' END,
-            CASE WHEN inventory_level = 'low' THEN 'Low inventory - consider price increase' END,
-            CASE WHEN current_price < brand_avg_price * 0.8 THEN 'Underpriced compared to brand average' END,
-            CASE WHEN current_price > brand_avg_price * 1.2 THEN 'Premium priced compared to brand average' END,
-            CASE WHEN avg_rating >= 4.5 THEN 'Excellent reviews support premium pricing' END,
-            CASE WHEN recent_sales < 2 THEN 'Consider promotional pricing to boost sales' END
-        )),
+        'price_insights', ARRAY_CONSTRUCT(
+            CASE WHEN stock_quantity < 5 THEN 'Low inventory - premium pricing opportunity' 
+                 ELSE 'Adequate inventory levels' END,
+            CASE WHEN avg_rating >= 4.5 THEN 'Excellent reviews support premium pricing' 
+                 WHEN avg_rating < 3.5 THEN 'Consider promotional pricing to boost sales'
+                 ELSE 'Market competitive pricing recommended' END,
+            CASE WHEN review_count < 5 THEN 'Limited review data - monitor closely'
+                 ELSE 'Sufficient market feedback available' END
+        ),
         'demand_indicators', OBJECT_CONSTRUCT(
-            'recent_sales_90d', recent_sales,
             'avg_rating', avg_rating,
             'review_count', review_count,
-            'inventory_level', inventory_level,
-            'brand_position', CASE
-                WHEN current_price > brand_avg_price THEN 'premium'
-                WHEN current_price < brand_avg_price * 0.9 THEN 'value'
-                ELSE 'standard'
-            END
+            'inventory_level', CASE 
+                WHEN stock_quantity < 5 THEN 'low' 
+                WHEN stock_quantity < 20 THEN 'medium' 
+                ELSE 'high' END,
+            'brand_position', 'standard'
         )
     ) as result
-    FROM product_metrics
-    LIMIT 1  -- Ensure single row result
+    FROM product_info
+    LIMIT 1
 $$;
 
 -- ============================================================================
