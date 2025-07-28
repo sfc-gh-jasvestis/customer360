@@ -250,13 +250,63 @@ def main():
 def display_customer_dashboard():
     customer_id = st.session_state.current_customer
     
-    # Get customer insights
-    insights_query = f"SELECT get_customer_360_insights('{customer_id}') as insights"
-    insights_result = run_query(insights_query)
-    
-    if not insights_result.empty:
-        insights = json.loads(insights_result.iloc[0]['INSIGHTS'])
+    # Get customer insights with error handling
+    try:
+        insights_query = f"SELECT get_customer_360_insights('{customer_id}', 'general') as insights"
+        insights_result = run_query(insights_query)
         
+        if not insights_result.empty:
+            insights = json.loads(insights_result.iloc[0]['INSIGHTS'])
+        else:
+            insights = None
+    except Exception as e:
+        st.warning("⚠️ AI insights temporarily unavailable. Showing basic customer information.")
+        insights = None
+    
+    # Fallback: Get basic customer info if AI function fails
+    if insights is None:
+        try:
+            basic_customer_query = f"""
+            SELECT customer_id, first_name, last_name, email, customer_tier, 
+                   total_spent, total_orders, avg_order_value, churn_risk_score,
+                   satisfaction_score, engagement_score, lifetime_value
+            FROM RETAIL_WATCH_DB.PUBLIC.customers 
+            WHERE customer_id = '{customer_id}'
+            """
+            basic_result = run_query(basic_customer_query)
+            if not basic_result.empty:
+                customer_data = basic_result.iloc[0]
+                # Create a simplified insights structure
+                insights = {
+                    'customer_overview': {
+                        'name': f"{customer_data['FIRST_NAME']} {customer_data['LAST_NAME']}",
+                        'email': customer_data['EMAIL'],
+                        'tier': customer_data['CUSTOMER_TIER'],
+                        'lifetime_value': customer_data['LIFETIME_VALUE'],
+                        'total_spent': customer_data['TOTAL_SPENT'],
+                        'total_orders': customer_data['TOTAL_ORDERS'],
+                        'avg_order_value': customer_data['AVG_ORDER_VALUE']
+                    },
+                    'risk_assessment': {
+                        'churn_risk_score': customer_data['CHURN_RISK_SCORE'],
+                        'risk_level': 'HIGH' if customer_data['CHURN_RISK_SCORE'] > 0.7 else 'MEDIUM' if customer_data['CHURN_RISK_SCORE'] > 0.4 else 'LOW',
+                        'satisfaction_score': customer_data['SATISFACTION_SCORE'],
+                        'engagement_score': customer_data['ENGAGEMENT_SCORE']
+                    },
+                    'ai_recommendations': {
+                        'next_best_actions': ['Contact customer service', 'Review account status'],
+                        'recommended_products_context': 'general'
+                    }
+                }
+            else:
+                st.error("Customer data not found.")
+                return
+        except Exception as e:
+            st.error(f"Unable to load customer data: {str(e)}")
+            return
+    
+    # Display customer overview (works with both AI and fallback data)
+    if insights:
         # Customer overview section
         st.header("👤 Customer Overview")
         
@@ -333,20 +383,71 @@ def display_customer_dashboard():
 def display_personal_recommendations(customer_id):
     st.header(f"🎯 Personal Recommendations - {st.session_state.shopping_context.title()} Context")
     
-    # Get AI recommendations
-    recommendations_query = f"SELECT get_personal_recommendations('{customer_id}', '{st.session_state.shopping_context}') as recommendations"
-    rec_result = run_query(recommendations_query)
-    
-    if not rec_result.empty:
-        recommendations = json.loads(rec_result.iloc[0]['RECOMMENDATIONS'])
+    # Get AI recommendations with error handling
+    try:
+        recommendations_query = f"SELECT get_personal_recommendations('{customer_id}', '{st.session_state.shopping_context}') as recommendations"
+        rec_result = run_query(recommendations_query)
         
+        if not rec_result.empty:
+            recommendations = json.loads(rec_result.iloc[0]['RECOMMENDATIONS'])
+        else:
+            recommendations = None
+    except Exception as e:
+        st.warning("⚠️ AI recommendations temporarily unavailable. Showing popular products.")
+        recommendations = None
+    
+    # Fallback: Show popular products if AI function fails
+    if recommendations is None:
+        try:
+            popular_products_query = """
+            SELECT p.product_id, p.product_name, b.brand_name, p.current_price, 
+                   p.avg_rating, p.review_count, p.description, p.product_images
+            FROM RETAIL_WATCH_DB.PUBLIC.products p
+            JOIN RETAIL_WATCH_DB.PUBLIC.watch_brands b ON p.brand_id = b.brand_id
+            WHERE p.product_status = 'active' AND p.stock_quantity > 0
+            ORDER BY p.avg_rating DESC, p.review_count DESC
+            LIMIT 5
+            """
+            popular_result = run_query(popular_products_query) 
+            
+            if not popular_result.empty:
+                # Create simplified recommendations structure
+                top_recs = []
+                for _, product in popular_result.iterrows():
+                    top_recs.append({
+                        'product_id': product['PRODUCT_ID'],
+                        'product_name': product['PRODUCT_NAME'],
+                        'brand_name': product['BRAND_NAME'],
+                        'price': product['CURRENT_PRICE'],
+                        'rating': product['AVG_RATING'],
+                        'review_count': product['REVIEW_COUNT'],
+                        'description': product['DESCRIPTION'],
+                        'images': product['PRODUCT_IMAGES'],
+                        'match_reasons': ['Popular choice', 'Highly rated']
+                    })
+                
+                recommendations = {
+                    'customer_insights': {
+                        'tier': 'N/A',
+                        'preferred_brands': 'N/A',
+                        'style_preferences': 'N/A'
+                    },
+                    'top_recommendations': top_recs
+                }
+            else:
+                st.error("Unable to load product recommendations.")
+                return
+        except Exception as e:
+            st.error(f"Unable to load recommendations: {str(e)}")
+            return
+
+    if recommendations:
         # Customer insights summary
         insights = recommendations['customer_insights']
         st.markdown(f"""
         <div class="customer-card">
             <h4>Customer Profile Summary</h4>
-            <p><strong>Tier:</strong> {insights['tier']} | 
-               <strong>Price Range:</strong> ${insights['price_range']['min']:,.0f} - ${insights['price_range']['max']:,.0f}</p>
+            <p><strong>Tier:</strong> {insights.get('tier', 'N/A')}</p>
             <p><strong>Preferred Brands:</strong> {insights.get('preferred_brands', 'None specified')}</p>
             <p><strong>Style Preferences:</strong> {insights.get('style_preferences', 'None specified')}</p>
         </div>
@@ -396,14 +497,46 @@ def display_personal_recommendations(customer_id):
 def display_churn_analysis(customer_id):
     st.header("⚠️ Churn Risk Analysis")
     
-    # Get churn prediction
-    churn_query = f"SELECT predict_customer_churn('{customer_id}') as churn_data"
-    churn_result = run_query(churn_query)
-    
-    if not churn_result.empty:
-        churn_data = json.loads(churn_result.iloc[0]['CHURN_DATA'])
-        analysis = churn_data['churn_analysis']
+    # Get churn prediction with error handling
+    try:
+        churn_query = f"SELECT predict_customer_churn('{customer_id}') as churn_data"
+        churn_result = run_query(churn_query)
         
+        if not churn_result.empty:
+            churn_data = json.loads(churn_result.iloc[0]['CHURN_DATA'])
+            analysis = churn_data['churn_analysis']
+        else:
+            analysis = None
+    except Exception as e:
+        st.warning("⚠️ AI churn analysis temporarily unavailable. Showing basic risk assessment.")
+        analysis = None
+    
+    # Fallback: Get basic churn info if AI function fails
+    if analysis is None:
+        try:
+            basic_churn_query = f"""
+            SELECT churn_risk_score, satisfaction_score, engagement_score, 
+                   total_spent, total_orders, last_purchase_date
+            FROM RETAIL_WATCH_DB.PUBLIC.customers 
+            WHERE customer_id = '{customer_id}'
+            """
+            basic_result = run_query(basic_churn_query)
+            if not basic_result.empty:
+                customer_data = basic_result.iloc[0]
+                analysis = {
+                    'risk_score': customer_data['CHURN_RISK_SCORE'],
+                    'risk_level': 'HIGH' if customer_data['CHURN_RISK_SCORE'] > 0.7 else 'MEDIUM' if customer_data['CHURN_RISK_SCORE'] > 0.4 else 'LOW',
+                    'risk_factors': ['Basic assessment available'],
+                    'retention_recommendations': ['Contact customer service', 'Review engagement strategy']
+                }
+            else:
+                st.error("Customer churn data not found.")
+                return
+        except Exception as e:
+            st.error(f"Unable to load churn analysis: {str(e)}")
+            return
+    
+    if analysis:
         col1, col2 = st.columns(2)
         
         with col1:
