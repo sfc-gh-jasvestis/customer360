@@ -654,11 +654,9 @@ def display_price_optimization():
         
         # Display price optimization
         st.subheader("📊 Price Analysis")
-        query_str = f"SELECT optimize_product_pricing('{selected_product_id}') as result"
-        st.write(f"Debug - Query: {query_str}")  # Temporary debug
-        st.write(f"Debug - Product ID: '{selected_product_id}'")  # Temporary debug
-        
-        optimization_result = run_query(query_str)
+        optimization_result = run_query(
+            f"SELECT optimize_product_pricing('{selected_product_id}') as result"
+        )
         
         if not optimization_result.empty:
             result_raw = optimization_result.iloc[0]['RESULT']
