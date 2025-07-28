@@ -321,12 +321,12 @@ SELECT '✅ All tables created successfully!' as step_result;
 SELECT '🎯 Step 3: Loading sample data...' as step_status;
 
 -- Insert sample data (abbreviated for space - run full sample data script)
-INSERT INTO watch_brands VALUES
+INSERT INTO watch_brands (brand_id, brand_name, brand_tier, country_origin, founded_year, brand_description, brand_image_url, avg_price_range) VALUES
 ('ROLEX', 'Rolex', 'luxury', 'Switzerland', 1905, 'A crown for every achievement.', 'https://rolex.com/logo.png', 15000),
 ('OMEGA', 'Omega', 'luxury', 'Switzerland', 1848, 'Masters of precision and innovation.', 'https://omega.com/logo.png', 8000),
 ('APPLE', 'Apple', 'premium', 'USA', 2015, 'The most personal device.', 'https://apple.com/logo.png', 450);
 
-INSERT INTO watch_categories VALUES
+INSERT INTO watch_categories (category_id, category_name, parent_category_id, category_description, display_order) VALUES
 ('LUXURY', 'Luxury Watches', NULL, 'High-end Swiss and premium timepieces', 1),
 ('SPORT', 'Sport Watches', NULL, 'Active lifestyle and athletic timepieces', 2),
 ('SMARTWATCH', 'Smart Watches', NULL, 'Connected and digital timepieces', 5);
@@ -465,11 +465,11 @@ UNION ALL
 SELECT 'Brand Count: ' || COUNT(*) as test_result FROM watch_brands;
 
 -- Test AI functions (add sample customers first for testing)
-INSERT INTO customers (customer_id, email, first_name, last_name, customer_tier, churn_risk_score, satisfaction_score, engagement_score, total_spent, price_range_min, price_range_max) VALUES
-('CUST_001', 'test@example.com', 'Test', 'Customer', 'Gold', 0.25, 8.5, 0.82, 5000, 1000, 10000);
+INSERT INTO customers (customer_id, email, first_name, last_name, customer_tier, churn_risk_score, satisfaction_score, engagement_score, total_spent, price_range_min, price_range_max, last_purchase_date, last_login_date) VALUES
+('CUST_001', 'test@example.com', 'Test', 'Customer', 'Gold', 0.25, 8.5, 0.82, 5000, 1000, 10000, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
 
-INSERT INTO products (product_id, brand_id, category_id, product_name, current_price, avg_rating, product_status) VALUES
-('PROD_001', 'ROLEX', 'LUXURY', 'Test Watch', 5000, 4.5, 'active');
+INSERT INTO products (product_id, brand_id, category_id, product_name, current_price, retail_price, avg_rating, product_status) VALUES
+('PROD_001', 'ROLEX', 'LUXURY', 'Test Watch', 5000, 5000, 4.5, 'active');
 
 -- Test AI functions
 SELECT 'Testing churn prediction...' as test_name;

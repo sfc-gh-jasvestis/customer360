@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌟 Retail Watch Store - AI-Powered Customer 360</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 0;
+        }
+        .feature-card {
+            transition: transform 0.3s;
+            height: 100%;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .code-block {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 mb-4">🌟 Retail Watch Store</h1>
+            <p class="lead mb-4">AI-Powered Customer 360 Platform</p>
+            <p class="mb-4">Complete customer 360 platform featuring <strong>churn prediction</strong>, <strong>sentiment analysis</strong>, <strong>price optimization</strong>, and <strong>personal shopper experience</strong></p>
+            <a href="#features" class="btn btn-light btn-lg me-3">Explore Features</a>
+            <a href="#quick-start" class="btn btn-outline-light btn-lg">Quick Start</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">✨ Key Features</h2>
+            <div class="row">
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-3 display-4">🤖</div>
+                            <h5 class="card-title">Churn Prediction</h5>
+                            <p class="card-text">AI-powered identification of at-risk customers with 85%+ accuracy</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-3 display-4">😊</div>
+                            <h5 class="card-title">Sentiment Analysis</h5>
+                            <p class="card-text">Real-time analysis of customer reviews and feedback</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-3 display-4">💰</div>
+                            <h5 class="card-title">Price Optimization</h5>
+                            <p class="card-text">Dynamic pricing based on demand and market conditions</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-3 display-4">🛍️</div>
+                            <h5 class="card-title">Personal Shopper</h5>
+                            <p class="card-text">AI-driven recommendations tailored to individual preferences</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start Section -->
+    <section id="quick-start" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5">🚀 Quick Start</h2>
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="code-block">
+                        <h5>1. Database Setup</h5>
+                        <pre><code class="language-sql">-- Execute in Snowflake
+@sql/99_deploy_complete.sql</code></pre>
+                    </div>
+                    <div class="code-block">
+                        <h5>2. Configure Credentials</h5>
+                        <pre><code class="language-toml">[snowflake]
+user = "your_username"
+password = "your_password" 
+account = "your_account_identifier"
+warehouse = "RETAIL_WATCH_WH"
+database = "RETAIL_WATCH_DB"</code></pre>
+                    </div>
+                    <div class="code-block">
+                        <h5>3. Launch Application</h5>
+                        <pre><code class="language-bash">pip install -r requirements.txt
+cd streamlit
+streamlit run watch_store_app.py</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">🏗️ Architecture</h2>
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted mb-4">Data Flow Architecture</h6>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <div class="p-3 bg-primary text-white rounded">
+                                        <strong>Customer Data</strong>
+                                        <br><small>Profiles, Events, Reviews</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="p-3 bg-info text-white rounded">
+                                        <strong>Snowflake Cortex</strong>
+                                        <br><small>AI & ML Processing</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="p-3 bg-success text-white rounded">
+                                        <strong>AI Functions</strong>
+                                        <br><small>Predictions & Insights</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="p-3 bg-warning text-white rounded">
+                                        <strong>Streamlit App</strong>
+                                        <br><small>Personal Shopper UI</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Watch Brands Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5">⌚ Watch Shopping Experience</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="mb-3 display-4">🏆</div>
+                            <h5 class="card-title">Luxury Collection</h5>
+                            <p class="card-text">Rolex, Omega, TAG Heuer</p>
+                            <small class="text-muted">Premium Swiss timepieces for the discerning collector</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="mb-3 display-4">⚡</div>
+                            <h5 class="card-title">Smart Watches</h5>
+                            <p class="card-text">Apple Watch Series</p>
+                            <small class="text-muted">Connected health, fitness, and productivity</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="mb-3 display-4">🎯</div>
+                            <h5 class="card-title">Sport & Active</h5>
+                            <p class="card-text">Seiko, Citizen, Casio</p>
+                            <small class="text-muted">Durable timepieces for active lifestyles</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Business Impact Section -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">📈 Business Impact</h2>
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="text-center">
+                        <div class="display-4 text-success mb-3">85%+</div>
+                        <h5>Churn Prediction Accuracy</h5>
+                        <p class="text-muted">Early identification of at-risk customers</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="text-center">
+                        <div class="display-4 text-primary mb-3">25%</div>
+                        <h5>Revenue Increase</h5>
+                        <p class="text-muted">Through personalized recommendations</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="text-center">
+                        <div class="display-4 text-warning mb-3">12%</div>
+                        <h5>Margin Improvement</h5>
+                        <p class="text-muted">Via dynamic pricing optimization</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">🌟 Ready to transform your watch retail business with AI-powered customer 360? ⌚</p>
+            <p class="mb-0 mt-2">
+                <a href="https://github.com/sfc-gh-jasvestis/customer360" class="text-white me-3">📁 View Code</a>
+                <a href="#quick-start" class="text-white">🚀 Get Started</a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html> 
