@@ -185,24 +185,29 @@ def main():
         """)
         
         customer_options = {}
-        for customer in customers:
-            # Convert risk score to float for comparison
-            try:
-                risk_score = float(customer[5]) if customer[5] is not None else 0.0
-                risk_level = "🔴 HIGH" if risk_score > 0.7 else "🟡 MEDIUM" if risk_score > 0.4 else "🟢 LOW"
-            except (ValueError, TypeError):
-                risk_level = "🟢 LOW"  # Default if conversion fails
-            display_name = f"{customer[1]} {customer[2]} ({customer[4]}) - Risk: {risk_level}"
-            customer_options[display_name] = customer[0]
+        if not customers.empty:
+            for _, customer in customers.iterrows():
+                # Convert risk score to float for comparison
+                try:
+                    risk_score = float(customer['CHURN_RISK_SCORE']) if customer['CHURN_RISK_SCORE'] is not None else 0.0
+                    risk_level = "🔴 HIGH" if risk_score > 0.7 else "🟡 MEDIUM" if risk_score > 0.4 else "🟢 LOW"
+                except (ValueError, TypeError):
+                    risk_level = "🟢 LOW"  # Default if conversion fails
+                display_name = f"{customer['FIRST_NAME']} {customer['LAST_NAME']} ({customer['CUSTOMER_TIER']}) - Risk: {risk_level}"
+                customer_options[display_name] = customer['CUSTOMER_ID']
         
         selected_customer_display = st.selectbox(
             "Select Customer:",
-            options=list(customer_options.keys()),
-            index=0
+            options=list(customer_options.keys()) if customer_options else ["No customers available"],
+            index=0 if customer_options else 0
         )
         
-        if selected_customer_display:
+        if selected_customer_display and customer_options and selected_customer_display != "No customers available":
             st.session_state.current_customer = customer_options[selected_customer_display]
+        else:
+            st.session_state.current_customer = None
+            if not customer_options:
+                st.warning("⚠️ No customers found. Please check your database setup.")
         
         st.markdown("---")
         
@@ -249,8 +254,8 @@ def display_customer_dashboard():
     insights_query = f"SELECT get_customer_360_insights('{customer_id}') as insights"
     insights_result = run_query(insights_query)
     
-    if insights_result:
-        insights = json.loads(insights_result[0][0])
+    if not insights_result.empty:
+        insights = json.loads(insights_result.iloc[0]['INSIGHTS'])
         
         # Customer overview section
         st.header("👤 Customer Overview")
@@ -332,8 +337,8 @@ def display_personal_recommendations(customer_id):
     recommendations_query = f"SELECT get_personal_recommendations('{customer_id}', '{st.session_state.shopping_context}') as recommendations"
     rec_result = run_query(recommendations_query)
     
-    if rec_result:
-        recommendations = json.loads(rec_result[0][0])
+    if not rec_result.empty:
+        recommendations = json.loads(rec_result.iloc[0]['RECOMMENDATIONS'])
         
         # Customer insights summary
         insights = recommendations['customer_insights']
@@ -382,8 +387,8 @@ def display_churn_analysis(customer_id):
     churn_query = f"SELECT predict_customer_churn('{customer_id}') as churn_data"
     churn_result = run_query(churn_query)
     
-    if churn_result:
-        churn_data = json.loads(churn_result[0][0])
+    if not churn_result.empty:
+        churn_data = json.loads(churn_result.iloc[0]['CHURN_DATA'])
         analysis = churn_data['churn_analysis']
         
         col1, col2 = st.columns(2)
@@ -456,16 +461,17 @@ def display_price_optimization():
     """)
     
     product_options = {}
-    for product in products:
-        display_name = f"{product[1]} ({product[2]}) - ${product[3]:,.0f}"
-        product_options[display_name] = product[0]
+    if not products.empty:
+        for _, product in products.iterrows():
+            display_name = f"{product['PRODUCT_NAME']} ({product['BRAND_NAME']}) - ${product['CURRENT_PRICE']:,.0f}"
+            product_options[display_name] = product['PRODUCT_ID']
     
     selected_product_display = st.selectbox(
         "Select Product for Analysis:",
-        options=list(product_options.keys())
+        options=list(product_options.keys()) if product_options else ["No products available"]
     )
     
-    if selected_product_display:
+    if selected_product_display and product_options and selected_product_display != "No products available":
         selected_product_id = product_options[selected_product_display]
         st.session_state.shopping_context = 'price_optimization'
         
