@@ -45,31 +45,31 @@ INSERT INTO watch_categories (category_id, category_name, parent_category_id, ca
 
 INSERT INTO products (product_id, brand_id, category_id, product_name, model_number, description, case_material, case_diameter, case_thickness, water_resistance, movement_type, display_type, strap_material, retail_price, current_price, cost_price, discount_percentage, stock_quantity, reorder_level, supplier_id, featured, new_arrival, bestseller, avg_rating, review_count, product_images, product_tags, seo_keywords, product_status, created_at, updated_at) VALUES
 -- Luxury Rolex watches
-('ROLEX_SUB_001', 'ROLEX', 'LUXURY', 'Submariner Date', '126610LV', 'The Rolex Submariner Date in Oystersteel with a green Cerachrom bezel insert and a black dial.', 'steel', 41.00, 12.50, 300, 'automatic', 'analog', 'steel', 10395.00, 10395.00, 5200.00, 0, 5, 2, 'SUP_001', TRUE, FALSE, TRUE, 4.8, 1247, '["https://rolex.com/sub1.jpg", "https://rolex.com/sub2.jpg"]', '["luxury", "diving", "steel", "green"]', '["rolex", "submariner", "diving", "luxury"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+('ROLEX_SUB_001', 'ROLEX', 'LUXURY', 'Submariner Date', '126610LV', 'The Rolex Submariner Date in Oystersteel with a green Cerachrom bezel insert and a black dial.', 'steel', 41.00, 12.50, 300, 'automatic', 'analog', 'steel', 10395.00, 10395.00, 5200.00, 0, 5, 2, 'SUP_001', TRUE, FALSE, TRUE, 4.8, 1247, PARSE_JSON('["https://rolex.com/sub1.jpg", "https://rolex.com/sub2.jpg"]'), PARSE_JSON('["luxury", "diving", "steel", "green"]'), PARSE_JSON('["rolex", "submariner", "diving", "luxury"]'), 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
-('ROLEX_GMT_001', 'ROLEX', 'LUXURY', 'GMT-Master II', '126710BLRO', 'The Rolex GMT-Master II in Oystersteel with a blue and red Cerachrom bezel and Jubilee bracelet.', 'steel', 40.00, 12.00, 100, 'automatic', 'analog', 'steel', 10700.00, 10700.00, 5350.00, 0, 3, 2, 'SUP_001', TRUE, FALSE, TRUE, 4.9, 892, '["https://rolex.com/gmt1.jpg", "https://rolex.com/gmt2.jpg"]', '["luxury", "gmt", "travel", "pepsi"]', '["rolex", "gmt", "master", "travel"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+('ROLEX_GMT_001', 'ROLEX', 'LUXURY', 'GMT-Master II', '126710BLRO', 'The Rolex GMT-Master II in Oystersteel with a blue and red Cerachrom bezel and Jubilee bracelet.', 'steel', 40.00, 12.00, 100, 'automatic', 'analog', 'steel', 10700.00, 10700.00, 5350.00, 0, 3, 2, 'SUP_001', TRUE, FALSE, TRUE, 4.9, 892, PARSE_JSON('["https://rolex.com/gmt1.jpg", "https://rolex.com/gmt2.jpg"]'), PARSE_JSON('["luxury", "gmt", "travel", "pepsi"]'), PARSE_JSON('["rolex", "gmt", "master", "travel"]'), 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
 -- Omega luxury watches
-('OMEGA_SPEED_001', 'OMEGA', 'LUXURY', 'Speedmaster Professional', '310.30.42.50.01.001', 'The legendary Moonwatch. First watch worn on the moon.', 'steel', 42.00, 13.00, 50, 'manual', 'analog', 'leather', 6350.00, 6350.00, 3175.00, 0, 8, 3, 'SUP_002', TRUE, TRUE, TRUE, 4.7, 1834, '["https://omega.com/speed1.jpg", "https://omega.com/speed2.jpg"]', '["luxury", "chronograph", "moon", "racing"]', '["omega", "speedmaster", "moon", "chronograph"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+('OMEGA_SPEED_001', 'OMEGA', 'LUXURY', 'Speedmaster Professional', '310.30.42.50.01.001', 'The legendary Moonwatch. First watch worn on the moon.', 'steel', 42.00, 13.00, 50, 'manual', 'analog', 'leather', 6350.00, 6350.00, 3175.00, 0, 8, 3, 'SUP_002', TRUE, TRUE, TRUE, 4.7, 1834, PARSE_JSON('["https://omega.com/speed1.jpg", "https://omega.com/speed2.jpg"]'), PARSE_JSON('["luxury", "chronograph", "moon", "racing"]'), PARSE_JSON('["omega", "speedmaster", "moon", "chronograph"]'), 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
-('OMEGA_SEAMASTER_001', 'OMEGA', 'LUXURY', 'Seamaster Planet Ocean', '215.30.44.21.01.001', 'Professional diving watch with Co-Axial Master Chronometer movement.', 'steel', 43.50, 15.50, 600, 'automatic', 'analog', 'steel', 5400.00, 5400.00, 2700.00, 0, 12, 3, 'SUP_002', FALSE, FALSE, TRUE, 4.6, 756, '["https://omega.com/sea1.jpg", "https://omega.com/sea2.jpg"]', '["luxury", "diving", "ocean", "master"]', '["omega", "seamaster", "diving", "ocean"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+('OMEGA_SEAMASTER_001', 'OMEGA', 'LUXURY', 'Seamaster Planet Ocean', '215.30.44.21.01.001', 'Professional diving watch with Co-Axial Master Chronometer movement.', 'steel', 43.50, 15.50, 600, 'automatic', 'analog', 'steel', 5400.00, 5400.00, 2700.00, 0, 12, 3, 'SUP_002', FALSE, FALSE, TRUE, 4.6, 756, PARSE_JSON('["https://omega.com/sea1.jpg", "https://omega.com/sea2.jpg"]'), PARSE_JSON('["luxury", "diving", "ocean", "master"]'), PARSE_JSON('["omega", "seamaster", "diving", "ocean"]'), 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
 -- TAG Heuer luxury watches  
-('TAG_CARRERA_001', 'TAG_HEUER', 'LUXURY', 'Carrera Chronograph', 'CBK2112.BA0715', 'Racing-inspired chronograph with Swiss automatic movement.', 'steel', 41.00, 14.50, 100, 'automatic', 'analog', 'steel', 2950.00, 2950.00, 1475.00, 0, 15, 5, 'SUP_003', FALSE, TRUE, FALSE, 4.4, 423, '["https://tagheuer.com/car1.jpg", "https://tagheuer.com/car2.jpg"]', '["luxury", "chronograph", "racing", "carrera"]', '["tag", "heuer", "carrera", "racing"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+('TAG_CARRERA_001', 'TAG_HEUER', 'LUXURY', 'Carrera Chronograph', 'CBK2112.BA0715', 'Racing-inspired chronograph with Swiss automatic movement.', 'steel', 41.00, 14.50, 100, 'automatic', 'analog', 'steel', 2950.00, 2950.00, 1475.00, 0, 15, 5, 'SUP_003', FALSE, TRUE, FALSE, 4.4, 423, PARSE_JSON('["https://tagheuer.com/car1.jpg", "https://tagheuer.com/car2.jpg"]'), PARSE_JSON('["luxury", "chronograph", "racing", "carrera"]'), PARSE_JSON('["tag", "heuer", "carrera", "racing"]'), 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
 -- Seiko premium watches
-('SEIKO_PROSPEX_001', 'SEIKO', 'SPORT', 'Prospex Solar Diver', 'SSC021', 'Solar-powered diving watch with 200m water resistance.', 'steel', 43.00, 12.00, 200, 'solar', 'analog', 'rubber', 180.00, 180.00, 90.00, 0, 25, 8, 'SUP_004', FALSE, FALSE, TRUE, 4.3, 1567, '["https://seiko.com/pro1.jpg", "https://seiko.com/pro2.jpg"]', '["sport", "diving", "solar", "affordable"]', '["seiko", "prospex", "solar", "diving"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+('SEIKO_PROSPEX_001', 'SEIKO', 'SPORT', 'Prospex Solar Diver', 'SSC021', 'Solar-powered diving watch with 200m water resistance.', 'steel', 43.00, 12.00, 200, 'solar', 'analog', 'rubber', 180.00, 180.00, 90.00, 0, 25, 8, 'SUP_004', FALSE, FALSE, TRUE, 4.3, 1567, PARSE_JSON('["https://seiko.com/pro1.jpg", "https://seiko.com/pro2.jpg"]'), PARSE_JSON('["sport", "diving", "solar", "affordable"]'), PARSE_JSON('["seiko", "prospex", "solar", "diving"]'), 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
-('SEIKO_PRESAGE_001', 'SEIKO', 'DRESS', 'Presage Cocktail Time', 'SSA341', 'Elegant dress watch inspired by Japanese cocktail culture.', 'steel', 40.50, 11.80, 50, 'automatic', 'analog', 'leather', 220.00, 220.00, 110.00, 0, 20, 8, 'SUP_004', FALSE, TRUE, FALSE, 4.5, 892, '["https://seiko.com/pres1.jpg", "https://seiko.com/pres2.jpg"]', '["dress", "cocktail", "elegant", "automatic"]', '["seiko", "presage", "cocktail", "dress"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+('SEIKO_PRESAGE_001', 'SEIKO', 'DRESS', 'Presage Cocktail Time', 'SSA341', 'Elegant dress watch inspired by Japanese cocktail culture.', 'steel', 40.50, 11.80, 50, 'automatic', 'analog', 'leather', 220.00, 220.00, 110.00, 0, 20, 8, 'SUP_004', FALSE, TRUE, FALSE, 4.5, 892, PARSE_JSON('["https://seiko.com/pres1.jpg", "https://seiko.com/pres2.jpg"]'), PARSE_JSON('["dress", "cocktail", "elegant", "automatic"]'), PARSE_JSON('["seiko", "presage", "cocktail", "dress"]'), 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
 -- Citizen premium watches
-('CITIZEN_ECO_001', 'CITIZEN', 'CASUAL', 'Eco-Drive Chandler', 'BM8180-03E', 'Solar-powered field watch with canvas strap.', 'steel', 42.00, 11.00, 100, 'solar', 'analog', 'canvas', 95.00, 95.00, 47.50, 0, 35, 10, 'SUP_005', FALSE, FALSE, TRUE, 4.2, 2341, '["https://citizen.com/eco1.jpg", "https://citizen.com/eco2.jpg"]', '["casual", "field", "solar", "canvas"]', '["citizen", "eco-drive", "field", "casual"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+('CITIZEN_ECO_001', 'CITIZEN', 'CASUAL', 'Eco-Drive Chandler', 'BM8180-03E', 'Solar-powered field watch with canvas strap.', 'steel', 42.00, 11.00, 100, 'solar', 'analog', 'canvas', 95.00, 95.00, 47.50, 0, 35, 10, 'SUP_005', FALSE, FALSE, TRUE, 4.2, 2341, PARSE_JSON('["https://citizen.com/eco1.jpg", "https://citizen.com/eco2.jpg"]'), PARSE_JSON('["casual", "field", "solar", "canvas"]'), PARSE_JSON('["citizen", "eco-drive", "field", "casual"]'), 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
 -- Casio mid-range watches
-('CASIO_GSHOCK_001', 'CASIO', 'SPORT', 'G-Shock GA-2100', 'GA-2100-1A1', 'Tough, shock-resistant watch with carbon core guard structure.', 'resin', 45.40, 11.80, 200, 'quartz', 'analog-digital', 'resin', 99.00, 99.00, 49.50, 0, 50, 15, 'SUP_006', FALSE, TRUE, TRUE, 4.6, 3247, '["https://casio.com/gshock1.jpg", "https://casio.com/gshock2.jpg"]', '["sport", "tough", "shock", "digital"]', '["casio", "g-shock", "tough", "shock"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+('CASIO_GSHOCK_001', 'CASIO', 'SPORT', 'G-Shock GA-2100', 'GA-2100-1A1', 'Tough, shock-resistant watch with carbon core guard structure.', 'resin', 45.40, 11.80, 200, 'quartz', 'analog-digital', 'resin', 99.00, 99.00, 49.50, 0, 50, 15, 'SUP_006', FALSE, TRUE, TRUE, 4.6, 3247, PARSE_JSON('["https://casio.com/gshock1.jpg", "https://casio.com/gshock2.jpg"]'), PARSE_JSON('["sport", "tough", "shock", "digital"]'), PARSE_JSON('["casio", "g-shock", "tough", "shock"]'), 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
 -- Apple smartwatch
-('APPLE_WATCH_001', 'APPLE', 'SMARTWATCH', 'Apple Watch Series 9', 'MR973LL/A', 'Advanced health monitoring, fitness tracking, and seamless iPhone integration.', 'aluminum', 45.00, 10.70, 50, 'digital', 'digital', 'sport', 429.00, 429.00, 214.50, 0, 30, 5, 'SUP_007', TRUE, TRUE, TRUE, 4.4, 8934, '["https://apple.com/watch1.jpg", "https://apple.com/watch2.jpg"]', '["smartwatch", "fitness", "health", "connected"]', '["apple", "watch", "smart", "fitness"]', 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
+('APPLE_WATCH_001', 'APPLE', 'SMARTWATCH', 'Apple Watch Series 9', 'MR973LL/A', 'Advanced health monitoring, fitness tracking, and seamless iPhone integration.', 'aluminum', 45.00, 10.70, 50, 'digital', 'digital', 'sport', 429.00, 429.00, 214.50, 0, 30, 5, 'SUP_007', TRUE, TRUE, TRUE, 4.4, 8934, PARSE_JSON('["https://apple.com/watch1.jpg", "https://apple.com/watch2.jpg"]'), PARSE_JSON('["smartwatch", "fitness", "health", "connected"]'), PARSE_JSON('["apple", "watch", "smart", "fitness"]'), 'active', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
 
 -- ============================================================================
 -- PRODUCT VARIANTS DATA
@@ -92,38 +92,38 @@ INSERT INTO product_variants (variant_id, product_id, variant_name, variant_type
 
 INSERT INTO customers (customer_id, email, first_name, last_name, phone, date_of_birth, gender, registration_date, street_address, city, state, postal_code, country, customer_tier, preferred_brands, price_range_min, price_range_max, style_preferences, total_spent, total_orders, avg_order_value, last_purchase_date, last_login_date, website_visits_30d, email_opens_30d, email_clicks_30d, churn_risk_score, satisfaction_score, engagement_score, lifetime_value, account_status, marketing_consent, created_at, updated_at) VALUES
 ('CUST_001', 'john.smith@email.com', 'John', 'Smith', '555-0101', '1985-03-15', 'Male', '2022-01-15 10:30:00'::timestamp,
- '123 Main St', 'New York', 'NY', '10001', 'USA', 'Gold', '["Rolex", "Omega"]', 5000, 15000, '["luxury", "formal"]',
+ '123 Main St', 'New York', 'NY', '10001', 'USA', 'Gold', PARSE_JSON('["Rolex", "Omega"]'), 5000, 15000, PARSE_JSON('["luxury", "formal"]'),
  28450.00, 8, 3556.25, '2024-01-15 14:30:00'::timestamp, '2024-01-20 09:15:00'::timestamp, 45, 12, 8,
  0.2500, 8.5, 0.8200, 45600.00, 'active', TRUE, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
 ('CUST_002', 'sarah.johnson@email.com', 'Sarah', 'Johnson', '555-0102', '1990-07-22', 'Female', '2023-03-20 14:20:00'::timestamp,
- '456 Oak Ave', 'Los Angeles', 'CA', '90210', 'USA', 'Platinum', '["TAG Heuer", "Omega", "Apple"]', 2000, 8000, '["sport", "casual", "smart"]',
+ '456 Oak Ave', 'Los Angeles', 'CA', '90210', 'USA', 'Platinum', PARSE_JSON('["TAG Heuer", "Omega", "Apple"]'), 2000, 8000, PARSE_JSON('["sport", "casual", "smart"]'),
  15680.00, 12, 1306.67, '2024-01-10 16:45:00'::timestamp, '2024-01-22 11:30:00'::timestamp, 62, 18, 14,
  0.1500, 9.2, 0.9100, 28900.00, 'active', TRUE, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
 ('CUST_003', 'mike.brown@email.com', 'Mike', 'Brown', '555-0103', '1978-11-08', 'Male', '2021-05-10 16:45:00'::timestamp,
- '789 Pine St', 'Chicago', 'IL', '60601', 'USA', 'Silver', '["Seiko", "Citizen", "Casio"]', 100, 500, '["casual", "sport"]',
+ '789 Pine St', 'Chicago', 'IL', '60601', 'USA', 'Silver', PARSE_JSON('["Seiko", "Citizen", "Casio"]'), 100, 500, PARSE_JSON('["casual", "sport"]'),
  1245.00, 5, 249.00, '2023-12-22 13:20:00'::timestamp, '2024-01-18 08:45:00'::timestamp, 23, 8, 6,
  0.3200, 7.1, 0.6800, 2100.00, 'active', TRUE, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
 ('CUST_004', 'emily.davis@email.com', 'Emily', 'Davis', '1992-04-30', 'Female', '2023-08-15 09:30:00'::timestamp,
- '321 Elm St', 'Miami', 'FL', '33101', 'USA', 'Bronze', '["Apple", "Fossil"]', 200, 800, '["smart", "casual"]',
+ '321 Elm St', 'Miami', 'FL', '33101', 'USA', 'Bronze', PARSE_JSON('["Apple", "Fossil"]'), 200, 800, PARSE_JSON('["smart", "casual"]'),
  690.00, 3, 230.00, '2024-01-05 12:10:00'::timestamp, '2024-01-21 15:20:00'::timestamp, 38, 15, 11,
  0.4500, 6.8, 0.7500, 1200.00, 'active', TRUE, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
 ('CUST_005', 'robert.wilson@email.com', 'Robert', 'Wilson', '555-0105', '1965-09-12', 'Male', '2020-11-30 11:15:00'::timestamp,
- '654 Maple Dr', 'Seattle', 'WA', '98101', 'USA', 'Platinum', '["Rolex", "Omega", "TAG Heuer"]', 8000, 25000, '["luxury", "formal"]',
+ '654 Maple Dr', 'Seattle', 'WA', '98101', 'USA', 'Platinum', PARSE_JSON('["Rolex", "Omega", "TAG Heuer"]'), 8000, 25000, PARSE_JSON('["luxury", "formal"]'),
  45230.00, 15, 3015.33, '2024-01-12 10:30:00'::timestamp, '2024-01-19 14:45:00'::timestamp, 28, 6, 4,
  0.1800, 9.0, 0.8800, 78500.00, 'active', TRUE, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
 ('CUST_006', 'lisa.garcia@email.com', 'Lisa', 'Garcia', '555-0106', '1988-12-03', 'Female', '2022-07-18 13:45:00'::timestamp,
- '987 Cedar Ln', 'Austin', 'TX', '73301', 'USA', 'Gold', '["Tissot", "Hamilton", "Seiko"]', 800, 3000, '["dress", "casual"]',
+ '987 Cedar Ln', 'Austin', 'TX', '73301', 'USA', 'Gold', PARSE_JSON('["Tissot", "Hamilton", "Seiko"]'), 800, 3000, PARSE_JSON('["dress", "casual"]'),
  4560.00, 7, 651.43, '2023-12-28 11:20:00'::timestamp, '2024-01-17 16:30:00'::timestamp, 41, 11, 9,
  0.2800, 8.3, 0.7800, 8900.00, 'active', TRUE, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
 
 -- High churn risk customer
 ('CUST_007', 'inactive.customer@email.com', 'David', 'Miller', '555-0107', '1995-06-18', 'Male', '2023-01-10 08:20:00'::timestamp,
- '147 Birch St', 'Denver', 'CO', '80201', 'USA', 'Bronze', '["Casio"]', 50, 200, '["casual"]',
+ '147 Birch St', 'Denver', 'CO', '80201', 'USA', 'Bronze', PARSE_JSON('["Casio"]'), 50, 200, PARSE_JSON('["casual"]'),
  150.00, 1, 150.00, '2023-02-15 14:30:00'::timestamp, '2023-08-10 09:15:00'::timestamp, 2, 0, 0,
  0.8500, 4.2, 0.2100, 300.00, 'active', FALSE, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
 
@@ -206,34 +206,34 @@ INSERT INTO product_reviews (review_id, product_id, customer_id, order_id, ratin
 -- Positive reviews
 ('REV_001', 'ROLEX_SUB_001', 'CUST_001', 'ORDER_001', 5.0, 'Absolutely Perfect!', 
  'This is my third Rolex and the Submariner continues to exceed expectations. The build quality is exceptional, keeps perfect time, and the green bezel is stunning. Worth every penny for a luxury timepiece that will last generations.',
- '2024-01-20 15:30:00'::timestamp, TRUE, 23, 0.8500, 'positive', '["build quality", "luxury", "durability", "design"]',
+ '2024-01-20 15:30:00'::timestamp, TRUE, 23, 0.8500, 'positive', PARSE_JSON('["build quality", "luxury", "durability", "design"]'),
  'approved', NULL),
 
 ('REV_002', 'APPLE_WATCH_001', 'CUST_002', 'ORDER_002', 4.5, 'Great Smart Features', 
  'Love the health tracking and fitness features. Battery life could be better but the integration with my iPhone is seamless. The display is bright and clear. Good value for a smartwatch.',
- '2024-01-15 12:45:00'::timestamp, TRUE, 18, 0.6200, 'positive', '["health tracking", "fitness", "integration", "display"]',
+ '2024-01-15 12:45:00'::timestamp, TRUE, 18, 0.6200, 'positive', PARSE_JSON('["health tracking", "fitness", "integration", "display"]'),
  'approved', NULL),
 
 ('REV_003', 'CASIO_GSHOCK_001', 'CUST_003', 'ORDER_003', 4.0, 'Tough and Reliable', 
  'Exactly what I expected from G-Shock. Super durable, survived several drops and water exposure. The analog-digital combo is practical. Great watch for outdoor activities and sports.',
- '2023-12-28 16:20:00'::timestamp, TRUE, 31, 0.7100, 'positive', '["durability", "outdoor", "practical", "sports"]',
+ '2023-12-28 16:20:00'::timestamp, TRUE, 31, 0.7100, 'positive', PARSE_JSON('["durability", "outdoor", "practical", "sports"]'),
  'approved', NULL),
 
 ('REV_004', 'OMEGA_SPEED_001', 'CUST_005', 'ORDER_004', 5.0, 'Moon Watch Excellence', 
  'The legendary Speedmaster lives up to its reputation. Manual winding is a joy, the chronograph is precise, and the history behind this watch makes it special. A true classic that never goes out of style.',
- '2024-01-18 10:15:00'::timestamp, TRUE, 15, 0.9200, 'positive', '["legendary", "history", "classic", "chronograph", "precision"]',
+ '2024-01-18 10:15:00'::timestamp, TRUE, 15, 0.9200, 'positive', PARSE_JSON('["legendary", "history", "classic", "chronograph", "precision"]'),
  'approved', NULL),
 
 -- Mixed/Neutral review
 ('REV_005', 'SEIKO_PROSPEX_001', 'CUST_003', NULL, 3.5, 'Good Value But...', 
  'The solar feature is convenient and the watch looks decent. However, the build quality feels a bit cheap for the price. The rubber strap started showing wear after just a few months. Still functional but expected more from Seiko.',
- '2024-01-10 14:30:00'::timestamp, FALSE, 8, 0.1200, 'neutral', '["value", "solar", "build quality", "durability concerns"]',
+ '2024-01-10 14:30:00'::timestamp, FALSE, 8, 0.1200, 'neutral', PARSE_JSON('["value", "solar", "build quality", "durability concerns"]'),
  'approved', NULL),
 
 -- Negative review
 ('REV_006', 'TAG_CARRERA_001', 'CUST_006', NULL, 2.5, 'Disappointing for the Price', 
  'For $3000, I expected much better. The watch gains about 15 seconds per day, which is unacceptable for a Swiss automatic. Customer service was unhelpful when I contacted them about the accuracy issue. Would not recommend.',
- '2024-01-05 09:45:00'::timestamp, FALSE, 4, -0.6500, 'negative', '["price", "accuracy", "customer service", "disappointing"]',
+ '2024-01-05 09:45:00'::timestamp, FALSE, 4, -0.6500, 'negative', PARSE_JSON('["price", "accuracy", "customer service", "disappointing"]'),
  'approved', NULL);
 
 -- ============================================================================
@@ -245,25 +245,25 @@ INSERT INTO customer_interactions (interaction_id, customer_id, interaction_type
  'Hi, I''m interested in the Rolex GMT-Master II. Can you explain how the GMT function works and if it''s suitable for frequent international travel?',
  'The GMT function displays a second time zone using the additional hand and rotating bezel. Perfect for travelers who need to track home time while abroad. The Rolex GMT-Master II is specifically designed for pilots and frequent travelers.',
  'resolved', 'medium', 'agent_sarah', 0.2500, 'inquiry', 0.1000, 
- '{"suggested_actions": ["provide_detailed_explanation", "offer_demo"], "confidence": 0.95}', 8, 5.0),
+ PARSE_JSON('{"suggested_actions": ["provide_detailed_explanation", "offer_demo"], "confidence": 0.95}'), 8, 5.0),
 
 ('INT_002', 'CUST_006', 'email', '2024-01-05 14:20:00'::timestamp, 'Watch Accuracy Issue',
  'I purchased a TAG Heuer Carrera last month and it''s running fast by about 15 seconds per day. This seems excessive for a Swiss automatic watch. What can be done about this?',
  'I understand your concern about the timekeeping accuracy. Swiss automatic watches should maintain better precision. I''d like to arrange a warranty service for regulation. We can also provide a replacement if the issue persists.',
  'in_progress', 'high', 'agent_michael', -0.4500, 'complaint', 0.8500,
- '{"suggested_actions": ["warranty_service", "replacement_offer", "priority_handling"], "confidence": 0.88}', NULL, NULL),
+ PARSE_JSON('{"suggested_actions": ["warranty_service", "replacement_offer", "priority_handling"], "confidence": 0.88}'), NULL, NULL),
 
 ('INT_003', 'CUST_002', 'phone', '2024-01-16 11:15:00'::timestamp, 'Apple Watch Setup Help',
  'I just received my Apple Watch and I''m having trouble pairing it with my iPhone. Can someone walk me through the setup process?',
  'I''d be happy to help with the Apple Watch setup. Let me guide you through the pairing process step by step. First, make sure both devices have sufficient battery and are close together...',
  'resolved', 'low', 'agent_jessica', 0.1000, 'inquiry', 0.2000,
- '{"suggested_actions": ["step_by_step_guide", "follow_up"], "confidence": 0.92}', 12, 4.5),
+ PARSE_JSON('{"suggested_actions": ["step_by_step_guide", "follow_up"], "confidence": 0.92}'), 12, 4.5),
 
 ('INT_004', 'CUST_007', 'email', '2023-08-15 16:30:00'::timestamp, 'Cancellation Request',
  'I want to cancel my account and stop receiving marketing emails. I haven''t been active and don''t plan to purchase anything else.',
  'I''ve processed your request to opt out of marketing communications. Your account will remain active in case you change your mind, but you won''t receive promotional emails. Is there anything specific that led to this decision?',
  'resolved', 'medium', 'agent_david', -0.3000, 'complaint', 0.9200,
- '{"suggested_actions": ["retention_offer", "feedback_collection", "opt_out_processing"], "confidence": 0.85}', 15, 3.0);
+ PARSE_JSON('{"suggested_actions": ["retention_offer", "feedback_collection", "opt_out_processing"], "confidence": 0.85}'), 15, 3.0);
 
 SELECT '✅ Sample data loaded successfully!' as data_status;
 SELECT 'Brands: ' || COUNT(*) as brand_count FROM watch_brands
