@@ -98,6 +98,83 @@ def safe_boolean_filter(series, condition_func):
     except Exception:
         return pd.Series(False, index=series.index)
 
+def safe_query_customer_purchases(customer_id, days=30):
+    """Safely query customer purchases with error handling"""
+    try:
+        query = """
+        SELECT 
+            activity_id,
+            customer_id,
+            activity_type,
+            activity_title,
+            activity_description,
+            activity_timestamp,
+            transaction_amount,
+            channel,
+            status
+        FROM customer_activities
+        WHERE customer_id = ? 
+        AND activity_type IN ('purchase', 'transaction', 'order')
+        AND activity_timestamp >= DATEADD('day', ?, CURRENT_TIMESTAMP())
+        ORDER BY activity_timestamp DESC
+        LIMIT 20
+        """
+        df = session.sql(query, params=[customer_id, -days]).to_pandas()
+        
+        # Ensure numeric columns are properly typed
+        if 'transaction_amount' in df.columns:
+            df['transaction_amount'] = pd.to_numeric(df['transaction_amount'], errors='coerce')
+            
+        return df
+    except Exception as e:
+        st.error(f"Error fetching customer purchases: {str(e)}")
+        return pd.DataFrame()
+
+def safe_analyze_customer_purchases(customer_id):
+    """Safely analyze customer purchase data"""
+    try:
+        # Get purchase data
+        purchases_df = safe_query_customer_purchases(customer_id, days=90)
+        
+        if purchases_df.empty:
+            return "This customer has no recent purchases in the last 90 days."
+        
+        # Safe analysis with proper NaN handling
+        total_purchases = len(purchases_df)
+        
+        # Safe sum calculation
+        if 'transaction_amount' in purchases_df.columns:
+            valid_amounts = purchases_df['transaction_amount'].dropna()
+            total_spent = valid_amounts.sum() if not valid_amounts.empty else 0
+            avg_purchase = valid_amounts.mean() if not valid_amounts.empty else 0
+        else:
+            total_spent = 0
+            avg_purchase = 0
+        
+        # Get recent purchases (last 30 days)
+        recent_purchases = safe_query_customer_purchases(customer_id, days=30)
+        recent_count = len(recent_purchases)
+        
+        # Build response
+        response = f"Customer Purchase Analysis:\n\n"
+        response += f"• Total purchases (90 days): {total_purchases}\n"
+        response += f"• Recent purchases (30 days): {recent_count}\n"
+        response += f"• Total spent: {safe_format_currency(total_spent)}\n"
+        response += f"• Average purchase: {safe_format_currency(avg_purchase)}\n\n"
+        
+        if not recent_purchases.empty:
+            response += "Recent purchases:\n"
+            for _, purchase in recent_purchases.head(5).iterrows():
+                title = safe_get_str(purchase.get('activity_title', ''), 'Purchase')
+                amount = safe_format_currency(purchase.get('transaction_amount', 0))
+                date = safe_get_str(purchase.get('activity_timestamp', ''), 'Unknown date')
+                response += f"• {title} - {amount} on {date}\n"
+        
+        return response
+        
+    except Exception as e:
+        return f"Error analyzing customer purchases: {str(e)}"
+
 # Data access functions using Snowpark
 @st.cache_data(ttl=300)
 def get_customers():
@@ -231,6 +308,26 @@ def search_documents(search_term):
         return "No results found"
     except Exception as e:
         return f"Search error: {str(e)}"
+
+def handle_ai_query(user_input, customer_id=None):
+    """Handle AI queries with special processing for purchase-related questions"""
+    try:
+        # Check if the query is about purchases
+        purchase_keywords = ['purchase', 'bought', 'buy', 'order', 'transaction', 'spent', 'shopping']
+        is_purchase_query = any(keyword in user_input.lower() for keyword in purchase_keywords)
+        
+        if is_purchase_query and customer_id:
+            # Handle purchase queries with safe data processing
+            return safe_analyze_customer_purchases(customer_id)
+        elif customer_id:
+            # Regular customer analysis
+            return analyze_customer_ai(customer_id)
+        else:
+            # General insights
+            return get_customer_insights()
+            
+    except Exception as e:
+        return f"I encountered an error processing your request: {str(e)}"
 
 # Custom CSS
 st.markdown("""
@@ -566,14 +663,15 @@ def render_ai_assistant():
             'timestamp': datetime.now()
         })
         
-        # Get AI response
+        # Get AI response with safe handling
         with st.spinner("AI is thinking..."):
             try:
+                customer_id = None
                 if st.session_state.selected_customer:
                     customer_id = st.session_state.selected_customer['CUSTOMER_ID']
-                    response = analyze_customer_ai(customer_id)
-                else:
-                    response = get_customer_insights()
+                
+                # Use the safe AI query handler
+                response = handle_ai_query(user_input, customer_id)
                 
                 st.session_state.chat_history.append({
                     'role': 'assistant',
@@ -593,6 +691,76 @@ def render_ai_assistant():
             st.chat_message("user").write(message['content'])
         else:
             st.chat_message("assistant").write(message['content'])
+    
+    # Suggested queries section
+    st.subheader("💡 Suggested Queries")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**General Questions:**")
+        general_queries = [
+            "What are our customer trends?",
+            "Show me high-risk customers",
+            "Analyze customer satisfaction",
+            "What are the revenue opportunities?"
+        ]
+        
+        for query in general_queries:
+            if st.button(query, key=f"general_{hash(query)}", use_container_width=True):
+                # Trigger the query
+                st.session_state.chat_history.append({
+                    'role': 'user',
+                    'content': query,
+                    'timestamp': datetime.now()
+                })
+                with st.spinner("AI is thinking..."):
+                    try:
+                        response = handle_ai_query(query)
+                        st.session_state.chat_history.append({
+                            'role': 'assistant',
+                            'content': response,
+                            'timestamp': datetime.now()
+                        })
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error: {str(e)}")
+    
+    with col2:
+        if st.session_state.selected_customer:
+            customer = st.session_state.selected_customer
+            first_name = safe_get_str(customer.get('FIRST_NAME', ''), 'Customer')
+            
+            st.markdown("**Customer-Specific Questions:**")
+            customer_queries = [
+                f"What has {first_name} purchased recently?",
+                f"Analyze {first_name}'s profile",
+                f"What's {first_name}'s churn risk?",
+                f"Show {first_name}'s activity patterns"
+            ]
+            
+            for query in customer_queries:
+                if st.button(query, key=f"customer_{hash(query)}", use_container_width=True):
+                    # Trigger the customer-specific query
+                    st.session_state.chat_history.append({
+                        'role': 'user',
+                        'content': query,
+                        'timestamp': datetime.now()
+                    })
+                    with st.spinner("AI is thinking..."):
+                        try:
+                            customer_id = st.session_state.selected_customer['CUSTOMER_ID']
+                            response = handle_ai_query(query, customer_id)
+                            st.session_state.chat_history.append({
+                                'role': 'assistant',
+                                'content': response,
+                                'timestamp': datetime.now()
+                            })
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error: {str(e)}")
+        else:
+            st.info("Select a customer from the sidebar for personalized questions")
     
     # Clear chat button
     if st.button("🗑️ Clear Chat History"):

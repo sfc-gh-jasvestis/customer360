@@ -1,5 +1,5 @@
 -- =========================================
--- Customer 360 AI Assistant (Alternative Implementation)
+-- Customer 360 AI Assistant (Alternative Implementation)  
 -- =========================================
 
 USE DATABASE customer_360_db;
@@ -84,169 +84,187 @@ $$
     )::VARIANT
 $$;
 
--- Function 2: Get Customer Insights Summary
+-- Function 2: Get Customer Insights Summary (Fixed to return STRING)
 CREATE OR REPLACE FUNCTION get_customer_insights_summary()
-RETURNS TABLE(
-    insight_type STRING,
-    insight_value STRING,
-    customer_count NUMBER,
-    details VARIANT
-)
-LANGUAGE SQL
-AS
-$$
-    SELECT * FROM (
-        -- High churn risk customers
-        SELECT 
-            'High Churn Risk' as insight_type,
-            'Customers with churn risk > 0.7' as insight_value,
-            COUNT(*) as customer_count,
-            ARRAY_AGG(OBJECT_CONSTRUCT('customer_id', customer_id, 'name', CONCAT(first_name, ' ', last_name), 'risk_score', churn_risk_score))::VARIANT as details
-        FROM customers 
-        WHERE churn_risk_score > 0.7
-        
-        UNION ALL
-        
-        -- Low satisfaction customers
-        SELECT 
-            'Low Satisfaction' as insight_type,
-            'Customers with satisfaction < 3.5' as insight_value,
-            COUNT(*) as customer_count,
-            ARRAY_AGG(OBJECT_CONSTRUCT('customer_id', customer_id, 'name', CONCAT(first_name, ' ', last_name), 'satisfaction', satisfaction_score))::VARIANT as details
-        FROM customers 
-        WHERE satisfaction_score < 3.5
-        
-        UNION ALL
-        
-        -- High value customers
-        SELECT 
-            'High Value' as insight_type,
-            'Platinum tier customers' as insight_value,
-            COUNT(*) as customer_count,
-            ARRAY_AGG(OBJECT_CONSTRUCT('customer_id', customer_id, 'name', CONCAT(first_name, ' ', last_name), 'lifetime_value', lifetime_value))::VARIANT as details
-        FROM customers 
-        WHERE customer_tier = 'platinum'
-        
-        UNION ALL
-        
-        -- Recent support issues
-        SELECT 
-            'Recent Support Issues' as insight_type,
-            'Open or recent tickets' as insight_value,
-            COUNT(DISTINCT customer_id) as customer_count,
-            ARRAY_AGG(OBJECT_CONSTRUCT('ticket_id', ticket_id, 'customer_id', customer_id, 'subject', subject, 'priority', priority))::VARIANT as details
-        FROM support_tickets 
-        WHERE status IN ('open', 'pending') OR created_at > DATEADD('day', -7, CURRENT_TIMESTAMP())
-    )
-$$;
-
--- Function 3: Search Customer Documents (Alternative to Cortex Search)
-CREATE OR REPLACE FUNCTION search_customer_documents_text(search_term STRING)
-RETURNS TABLE(
-    document_id STRING,
-    customer_id STRING,
-    customer_name STRING,
-    document_title STRING,
-    document_type STRING,
-    match_snippet STRING,
-    relevance_score NUMBER
-)
+RETURNS STRING
 LANGUAGE SQL
 AS
 $$
     SELECT 
-        cd.document_id,
-        cd.customer_id,
-        CONCAT(c.first_name, ' ', c.last_name) as customer_name,
-        cd.document_title,
-        cd.document_type,
-        SUBSTRING(cd.document_content, 
-            GREATEST(1, POSITION(UPPER(search_term) IN UPPER(cd.document_content)) - 50), 
-            200
-        ) as match_snippet,
-        -- Simple relevance scoring based on term frequency
-        (LENGTH(cd.document_content) - LENGTH(REPLACE(UPPER(cd.document_content), UPPER(search_term), ''))) / LENGTH(search_term) as relevance_score
-    FROM customer_documents cd
-    JOIN customers c ON c.customer_id = cd.customer_id
-    WHERE UPPER(cd.document_content) LIKE CONCAT('%', UPPER(search_term), '%')
-       OR UPPER(cd.document_title) LIKE CONCAT('%', UPPER(search_term), '%')
-    ORDER BY relevance_score DESC
+        'Customer 360 Business Insights:\n\n' ||
+        
+        -- High churn risk customers
+        'HIGH CHURN RISK CUSTOMERS:\n' ||
+        '• Count: ' || (SELECT COUNT(*) FROM customers WHERE churn_risk_score > 0.7)::STRING || '\n' ||
+        '• These customers need immediate attention to prevent churn\n' ||
+        CASE WHEN (SELECT COUNT(*) FROM customers WHERE churn_risk_score > 0.7) > 0 THEN
+            '• Top risk customers: ' || (
+                SELECT LISTAGG(CONCAT(first_name, ' ', last_name), ', ') WITHIN GROUP (ORDER BY churn_risk_score DESC)
+                FROM (SELECT first_name, last_name, churn_risk_score FROM customers WHERE churn_risk_score > 0.7 LIMIT 3)
+            ) || '\n'
+        ELSE '• No high-risk customers found\n' END ||
+        '\n' ||
+        
+        -- Low satisfaction customers  
+        'LOW SATISFACTION CUSTOMERS:\n' ||
+        '• Count: ' || (SELECT COUNT(*) FROM customers WHERE satisfaction_score < 3.5)::STRING || '\n' ||
+        '• These customers may need service recovery efforts\n' ||
+        CASE WHEN (SELECT COUNT(*) FROM customers WHERE satisfaction_score < 3.5) > 0 THEN
+            '• Lowest satisfaction: ' || (
+                SELECT LISTAGG(CONCAT(first_name, ' ', last_name, ' (', satisfaction_score::STRING, ')'), ', ') WITHIN GROUP (ORDER BY satisfaction_score ASC)
+                FROM (SELECT first_name, last_name, satisfaction_score FROM customers WHERE satisfaction_score < 3.5 LIMIT 3)
+            ) || '\n'
+        ELSE '• All customers have good satisfaction scores\n' END ||
+        '\n' ||
+        
+        -- High value customers
+        'HIGH VALUE CUSTOMERS:\n' ||
+        '• Platinum tier count: ' || (SELECT COUNT(*) FROM customers WHERE customer_tier = 'platinum')::STRING || '\n' ||
+        '• Total platinum lifetime value: $' || (SELECT COALESCE(SUM(lifetime_value), 0)::STRING FROM customers WHERE customer_tier = 'platinum') || '\n' ||
+        CASE WHEN (SELECT COUNT(*) FROM customers WHERE customer_tier = 'platinum') > 0 THEN
+            '• Top platinum customers: ' || (
+                SELECT LISTAGG(CONCAT(first_name, ' ', last_name), ', ') WITHIN GROUP (ORDER BY lifetime_value DESC)
+                FROM (SELECT first_name, last_name, lifetime_value FROM customers WHERE customer_tier = 'platinum' LIMIT 3)
+            ) || '\n'
+        ELSE '• No platinum customers found\n' END ||
+        '\n' ||
+        
+        -- Recent support activity
+        'RECENT SUPPORT ACTIVITY:\n' ||
+        '• Open tickets: ' || (SELECT COUNT(*) FROM support_tickets WHERE status IN ('open', 'pending'))::STRING || '\n' ||
+        '• Tickets in last 7 days: ' || (SELECT COUNT(*) FROM support_tickets WHERE created_at > DATEADD('day', -7, CURRENT_TIMESTAMP()))::STRING || '\n' ||
+        '• Customers with open tickets: ' || (SELECT COUNT(DISTINCT customer_id) FROM support_tickets WHERE status IN ('open', 'pending'))::STRING || '\n' ||
+        '\n' ||
+        
+        -- Overall trends
+        'OVERALL TRENDS:\n' ||
+        '• Total customers: ' || (SELECT COUNT(*) FROM customers)::STRING || '\n' ||
+        '• Average satisfaction: ' || (SELECT ROUND(AVG(satisfaction_score), 2)::STRING FROM customers) || '/5.0\n' ||
+        '• Average churn risk: ' || (SELECT ROUND(AVG(churn_risk_score) * 100, 1)::STRING FROM customers) || '%\n' ||
+        '• Total revenue: $' || (SELECT COALESCE(SUM(total_spent), 0)::STRING FROM customers) || '\n' ||
+        '\n' ||
+        
+        -- Key recommendations
+        'KEY RECOMMENDATIONS:\n' ||
+        CASE WHEN (SELECT COUNT(*) FROM customers WHERE churn_risk_score > 0.7) > 0 THEN
+            '• URGENT: Contact high-risk customers immediately\n'
+        ELSE '' END ||
+        CASE WHEN (SELECT COUNT(*) FROM support_tickets WHERE status = 'open') > 0 THEN
+            '• Follow up on open support tickets\n'
+        ELSE '' END ||
+        CASE WHEN (SELECT COUNT(*) FROM customers WHERE satisfaction_score < 3.5) > 0 THEN
+            '• Implement service recovery for low-satisfaction customers\n'
+        ELSE '' END ||
+        '• Continue monitoring customer health metrics\n' ||
+        '• Focus on customer retention and satisfaction programs'
+$$;
+
+-- Function 3: Search Customer Documents (Alternative to Cortex Search)
+CREATE OR REPLACE FUNCTION search_customer_documents_text(search_term STRING)
+RETURNS STRING
+LANGUAGE SQL
+AS
+$$
+    SELECT 
+        CASE 
+            WHEN (SELECT COUNT(*) FROM customer_documents WHERE UPPER(document_content) LIKE CONCAT('%', UPPER(search_term), '%')) = 0 THEN
+                'No documents found matching "' || search_term || '"'
+            ELSE
+                'Search Results for "' || search_term || '":\n\n' ||
+                (
+                    SELECT LISTAGG(
+                        '• Document: ' || document_title || '\n' ||
+                        '  Customer: ' || customer_name || '\n' ||
+                        '  Type: ' || document_type || '\n' ||
+                        '  Snippet: ' || SUBSTRING(match_snippet, 1, 150) || '...\n',
+                        '\n'
+                    ) WITHIN GROUP (ORDER BY relevance_score DESC)
+                    FROM (
+                        SELECT 
+                            cd.document_title,
+                            CONCAT(c.first_name, ' ', c.last_name) as customer_name,
+                            cd.document_type,
+                            SUBSTRING(cd.document_content, 
+                                GREATEST(1, POSITION(UPPER(search_term) IN UPPER(cd.document_content)) - 50), 
+                                200
+                            ) as match_snippet,
+                            (LENGTH(cd.document_content) - LENGTH(REPLACE(UPPER(cd.document_content), UPPER(search_term), ''))) / LENGTH(search_term) as relevance_score
+                        FROM customer_documents cd
+                        JOIN customers c ON c.customer_id = cd.customer_id
+                        WHERE UPPER(cd.document_content) LIKE CONCAT('%', UPPER(search_term), '%')
+                           OR UPPER(cd.document_title) LIKE CONCAT('%', UPPER(search_term), '%')
+                        ORDER BY relevance_score DESC
+                        LIMIT 5
+                    )
+                )
+        END
 $$;
 
 -- Function 4: Generate Customer Summary Report (Simplified)
 CREATE OR REPLACE FUNCTION generate_customer_report(customer_id STRING)
-RETURNS VARIANT
+RETURNS STRING
 LANGUAGE SQL  
 AS
 $$
-    SELECT OBJECT_CONSTRUCT(
-        'generated_at', CURRENT_TIMESTAMP(),
-        'customer', (
-            SELECT OBJECT_CONSTRUCT(
-                'id', c.customer_id,
-                'name', CONCAT(c.first_name, ' ', c.last_name),
-                'email', c.email,
-                'tier', c.customer_tier,
-                'status', c.account_status,
-                'join_date', c.join_date,
-                'last_login', c.last_login_date
-            )
-            FROM customers c WHERE c.customer_id = customer_id
-        ),
-        'metrics', (
-            SELECT OBJECT_CONSTRUCT(
-                'total_spent', c.total_spent,
-                'lifetime_value', c.lifetime_value,
-                'credit_limit', c.credit_limit,
-                'churn_risk_score', c.churn_risk_score,
-                'satisfaction_score', c.satisfaction_score,
-                'engagement_score', c.engagement_score
-            )
-            FROM customers c WHERE c.customer_id = customer_id
-        ),
-        'activity_counts', OBJECT_CONSTRUCT(
-            'recent_activities', (
-                SELECT COUNT(*) 
-                FROM customer_activities 
-                WHERE customer_id = customer_id AND activity_timestamp > DATEADD('day', -30, CURRENT_TIMESTAMP())
-            ),
-            'open_tickets', (
-                SELECT COUNT(*) 
-                FROM support_tickets 
-                WHERE customer_id = customer_id AND status IN ('open', 'pending')
-            ),
-            'total_purchases', (
-                SELECT COUNT(*) 
-                FROM purchases 
-                WHERE customer_id = customer_id
-            )
-        ),
-        'last_purchase_date', (
-            SELECT MAX(purchase_date) 
-            FROM purchases 
-            WHERE customer_id = customer_id
-        ),
-        'communication_preferences', (
-            SELECT OBJECT_CONSTRUCT(
-                'channel', c.preferred_communication_channel,
-                'marketing_opt_in', c.marketing_opt_in,
-                'newsletter_subscription', c.newsletter_subscription
-            )
-            FROM customers c WHERE c.customer_id = customer_id
-        ),
-        'risk_indicators', (
-            SELECT ARRAY_CONSTRUCT(
-                CASE WHEN c.churn_risk_score > 0.7 THEN 'High churn risk' END,
-                CASE WHEN c.satisfaction_score < 3.5 THEN 'Low satisfaction' END,
-                CASE WHEN c.last_login_date < DATEADD('day', -30, CURRENT_TIMESTAMP()) THEN 'Inactive user' END,
-                CASE WHEN (SELECT COUNT(*) FROM support_tickets WHERE customer_id = customer_id AND status = 'open') > 0 THEN 'Open support tickets' END
-            )
-            FROM customers c WHERE c.customer_id = customer_id
-        )
-    )::VARIANT
+    SELECT 
+        CASE 
+            WHEN (SELECT COUNT(*) FROM customers WHERE customer_id = customer_id) = 0 THEN
+                'Customer not found: ' || customer_id
+            ELSE
+                'CUSTOMER REPORT\n' ||
+                '================\n\n' ||
+                
+                -- Customer basic info
+                'CUSTOMER PROFILE:\n' ||
+                '• Name: ' || (SELECT CONCAT(first_name, ' ', last_name) FROM customers WHERE customer_id = customer_id) || '\n' ||
+                '• ID: ' || customer_id || '\n' ||
+                '• Tier: ' || (SELECT customer_tier FROM customers WHERE customer_id = customer_id) || '\n' ||
+                '• Status: ' || (SELECT account_status FROM customers WHERE customer_id = customer_id) || '\n' ||
+                '• Join Date: ' || (SELECT join_date FROM customers WHERE customer_id = customer_id)::STRING || '\n' ||
+                '• Email: ' || (SELECT email FROM customers WHERE customer_id = customer_id) || '\n\n' ||
+                
+                -- Financial metrics
+                'FINANCIAL METRICS:\n' ||
+                '• Total Spent: $' || (SELECT COALESCE(total_spent, 0)::STRING FROM customers WHERE customer_id = customer_id) || '\n' ||
+                '• Lifetime Value: $' || (SELECT COALESCE(lifetime_value, 0)::STRING FROM customers WHERE customer_id = customer_id) || '\n' ||
+                '• Average Order Value: $' || (SELECT COALESCE(ROUND(total_spent / NULLIF((SELECT COUNT(*) FROM purchases WHERE customer_id = customer_id), 0), 2), 0)::STRING FROM customers WHERE customer_id = customer_id) || '\n\n' ||
+                
+                -- Risk and satisfaction
+                'CUSTOMER HEALTH:\n' ||
+                '• Churn Risk Score: ' || (SELECT COALESCE(ROUND(churn_risk_score * 100, 1), 0)::STRING FROM customers WHERE customer_id = customer_id) || '%\n' ||
+                '• Satisfaction Score: ' || (SELECT COALESCE(satisfaction_score, 0)::STRING FROM customers WHERE customer_id = customer_id) || '/5.0\n' ||
+                '• Engagement Score: ' || (SELECT COALESCE(ROUND(engagement_score * 100, 1), 0)::STRING FROM customers WHERE customer_id = customer_id) || '%\n\n' ||
+                
+                -- Activity summary
+                'ACTIVITY SUMMARY:\n' ||
+                '• Total Activities: ' || (SELECT COUNT(*) FROM customer_activities WHERE customer_id = customer_id)::STRING || '\n' ||
+                '• Recent Activities (30 days): ' || (SELECT COUNT(*) FROM customer_activities WHERE customer_id = customer_id AND activity_timestamp > DATEADD('day', -30, CURRENT_TIMESTAMP()))::STRING || '\n' ||
+                '• Last Activity: ' || COALESCE((SELECT MAX(activity_timestamp)::STRING FROM customer_activities WHERE customer_id = customer_id), 'No activities') || '\n\n' ||
+                
+                -- Support summary
+                'SUPPORT SUMMARY:\n' ||
+                '• Total Support Tickets: ' || (SELECT COUNT(*) FROM support_tickets WHERE customer_id = customer_id)::STRING || '\n' ||
+                '• Open Tickets: ' || (SELECT COUNT(*) FROM support_tickets WHERE customer_id = customer_id AND status IN ('open', 'pending'))::STRING || '\n' ||
+                '• Recent Tickets (30 days): ' || (SELECT COUNT(*) FROM support_tickets WHERE customer_id = customer_id AND created_at > DATEADD('day', -30, CURRENT_TIMESTAMP()))::STRING || '\n\n' ||
+                
+                -- Purchase summary
+                'PURCHASE SUMMARY:\n' ||
+                '• Total Purchases: ' || (SELECT COUNT(*) FROM purchases WHERE customer_id = customer_id)::STRING || '\n' ||
+                '• Recent Purchases (90 days): ' || (SELECT COUNT(*) FROM purchases WHERE customer_id = customer_id AND purchase_date > DATEADD('day', -90, CURRENT_TIMESTAMP()))::STRING || '\n' ||
+                '• Last Purchase: ' || COALESCE((SELECT MAX(purchase_date)::STRING FROM purchases WHERE customer_id = customer_id), 'No purchases') || '\n\n' ||
+                
+                -- Recommendations
+                'RECOMMENDATIONS:\n' ||
+                CASE WHEN (SELECT churn_risk_score FROM customers WHERE customer_id = customer_id) > 0.7 THEN '• HIGH PRIORITY: This customer is at high risk of churning - immediate outreach recommended\n' ELSE '' END ||
+                CASE WHEN (SELECT satisfaction_score FROM customers WHERE customer_id = customer_id) < 3.5 THEN '• Customer satisfaction is low - consider service recovery actions\n' ELSE '' END ||
+                CASE WHEN (SELECT COUNT(*) FROM support_tickets WHERE customer_id = customer_id AND status = 'open') > 0 THEN '• Follow up on open support tickets\n' ELSE '' END ||
+                CASE WHEN (SELECT customer_tier FROM customers WHERE customer_id = customer_id) = 'bronze' AND (SELECT total_spent FROM customers WHERE customer_id = customer_id) > 5000 THEN '• Consider offering tier upgrade based on spending\n' ELSE '' END ||
+                CASE WHEN (SELECT engagement_score FROM customers WHERE customer_id = customer_id) > 0.8 THEN '• High engagement - good candidate for upselling opportunities\n' ELSE '' END ||
+                '• Continue monitoring customer health metrics regularly'
+        END
 $$;
 
--- Create views for easy dashboard access
+-- Helper Views for Dashboard Access
 CREATE OR REPLACE VIEW customer_360_dashboard AS
 SELECT 
     c.customer_id,
@@ -258,55 +276,65 @@ SELECT
     c.churn_risk_score,
     c.satisfaction_score,
     c.engagement_score,
-    c.last_login_date,
-    -- Activity summary
-    COALESCE(recent_activities.activity_count, 0) as recent_activity_count,
-    COALESCE(recent_activities.last_activity_date, c.join_date) as last_activity_date,
-    -- Support summary  
-    COALESCE(support_summary.open_tickets, 0) as open_tickets,
-    COALESCE(support_summary.total_tickets, 0) as total_tickets,
-    -- Purchase summary
-    COALESCE(purchase_summary.recent_purchases, 0) as recent_purchases,
-    COALESCE(purchase_summary.last_purchase_date, c.join_date) as last_purchase_date,
-    -- Risk indicators
+    
+    -- Activity metrics
+    COALESCE(a.total_activities, 0) as total_activities,
+    COALESCE(a.recent_activity_count, 0) as recent_activity_count,
+    a.last_activity_date,
+    
+    -- Support metrics  
+    COALESCE(s.total_tickets, 0) as total_tickets,
+    COALESCE(s.open_tickets, 0) as open_tickets,
+    
+    -- Purchase metrics
+    COALESCE(p.total_purchases, 0) as total_purchases,
+    COALESCE(p.recent_purchases, 0) as recent_purchases,
+    
+    -- Risk categorization
     CASE 
         WHEN c.churn_risk_score > 0.7 THEN 'HIGH'
-        WHEN c.churn_risk_score > 0.4 THEN 'MEDIUM'
+        WHEN c.churn_risk_score > 0.4 THEN 'MEDIUM' 
         ELSE 'LOW'
     END as risk_level,
-    CASE 
+    
+    -- Engagement categorization
+    CASE
         WHEN c.engagement_score > 0.8 THEN 'HIGH'
-        WHEN c.engagement_score > 0.5 THEN 'MEDIUM'  
-        ELSE 'LOW'
+        WHEN c.engagement_score > 0.5 THEN 'MEDIUM'
+        ELSE 'LOW' 
     END as engagement_level
+
 FROM customers c
+
 LEFT JOIN (
     SELECT 
         customer_id,
-        COUNT(*) as activity_count,
+        COUNT(*) as total_activities,
+        COUNT(CASE WHEN activity_timestamp > DATEADD('day', -30, CURRENT_TIMESTAMP()) THEN 1 END) as recent_activity_count,
         MAX(activity_timestamp) as last_activity_date
     FROM customer_activities 
-    WHERE activity_timestamp > DATEADD('day', -30, CURRENT_TIMESTAMP())
     GROUP BY customer_id
-) recent_activities ON c.customer_id = recent_activities.customer_id
+) a ON c.customer_id = a.customer_id
+
 LEFT JOIN (
     SELECT 
         customer_id,
-        COUNT(CASE WHEN status IN ('open', 'pending') THEN 1 END) as open_tickets,
-        COUNT(*) as total_tickets
+        COUNT(*) as total_tickets,
+        COUNT(CASE WHEN status IN ('open', 'pending') THEN 1 END) as open_tickets
     FROM support_tickets
-    GROUP BY customer_id
-) support_summary ON c.customer_id = support_summary.customer_id
+    GROUP BY customer_id  
+) s ON c.customer_id = s.customer_id
+
 LEFT JOIN (
     SELECT 
         customer_id,
-        COUNT(CASE WHEN purchase_date > DATEADD('day', -90, CURRENT_TIMESTAMP()) THEN 1 END) as recent_purchases,
-        MAX(purchase_date) as last_purchase_date
+        COUNT(*) as total_purchases,
+        COUNT(CASE WHEN purchase_date > DATEADD('day', -90, CURRENT_TIMESTAMP()) THEN 1 END) as recent_purchases
     FROM purchases
     GROUP BY customer_id
-) purchase_summary ON c.customer_id = purchase_summary.customer_id;
+) p ON c.customer_id = p.customer_id;
 
--- Create additional helper views for quick insights
+-- View for High Risk Customers
 CREATE OR REPLACE VIEW high_risk_customers AS
 SELECT 
     customer_id,
@@ -314,47 +342,36 @@ SELECT
     customer_tier,
     churn_risk_score,
     satisfaction_score,
-    last_login_date,
     total_spent,
-    lifetime_value
+    lifetime_value,
+    last_login_date,
+    CASE 
+        WHEN churn_risk_score > 0.8 THEN 'CRITICAL'
+        WHEN churn_risk_score > 0.7 THEN 'HIGH'
+        ELSE 'ELEVATED'
+    END as risk_category
 FROM customers 
 WHERE churn_risk_score > 0.6
 ORDER BY churn_risk_score DESC;
 
+-- View for Customer Value Segments
 CREATE OR REPLACE VIEW customer_value_segments AS
 SELECT 
     customer_tier,
     COUNT(*) as customer_count,
-    AVG(total_spent) as avg_spent,
+    SUM(total_spent) as total_revenue,
+    AVG(total_spent) as avg_spent_per_customer,
     AVG(lifetime_value) as avg_lifetime_value,
     AVG(churn_risk_score) as avg_churn_risk,
     AVG(satisfaction_score) as avg_satisfaction,
     AVG(engagement_score) as avg_engagement
 FROM customers
 GROUP BY customer_tier
-ORDER BY avg_lifetime_value DESC;
-
--- Test the alternative AI functions
-SELECT 'Alternative AI Assistant functions created successfully' AS status,
-       'Functions: analyze_customer_ai, get_customer_insights_summary, search_customer_documents_text, generate_customer_report' AS available_functions,
-       'Views: customer_360_dashboard, high_risk_customers, customer_value_segments' AS dashboard_views;
-
--- Sample usage (uncomment to test):
-/*
--- Test customer analysis
-SELECT analyze_customer_ai('CUST_001');
-
--- Test insights summary
-SELECT * FROM TABLE(get_customer_insights_summary());
-
--- Test document search
-SELECT * FROM TABLE(search_customer_documents_text('billing'));
-
--- Test customer report
-SELECT generate_customer_report('CUST_001');
-
--- Test dashboard views
-SELECT * FROM customer_360_dashboard WHERE risk_level = 'HIGH';
-SELECT * FROM high_risk_customers;
-SELECT * FROM customer_value_segments;
-*/ 
+ORDER BY 
+    CASE customer_tier 
+        WHEN 'platinum' THEN 1
+        WHEN 'gold' THEN 2  
+        WHEN 'silver' THEN 3
+        WHEN 'bronze' THEN 4
+        ELSE 5
+    END; 
