@@ -1,5 +1,4 @@
 import streamlit as st
-import snowflake.connector
 import pandas as pd
 import json
 import plotly.express as px
@@ -67,27 +66,21 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Database connection
+# Database connection for Streamlit in Snowflake
 @st.cache_resource
 def init_connection():
-    return snowflake.connector.connect(**st.secrets["snowflake"])
+    return st.connection("snowflake")
 
 # Helper functions
 @st.cache_data
 def run_query(query, params=None):
     conn = init_connection()
-    cur = conn.cursor()
-    if params:
-        cur.execute(query, params)
-    else:
-        cur.execute(query)
-    return cur.fetchall()
+    return conn.query(query, params=params if params else None)
 
-def get_column_names(query):
+@st.cache_data
+def run_query_df(query, params=None):
     conn = init_connection()
-    cur = conn.cursor()
-    cur.execute(query)
-    return [desc[0] for desc in cur.description]
+    return conn.query(query, params=params if params else None)
 
 # Initialize session state
 if 'current_customer' not in st.session_state:

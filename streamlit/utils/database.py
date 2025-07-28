@@ -1,60 +1,39 @@
 """
 Database utility functions for the Retail Watch Store Streamlit app
+Compatible with Streamlit in Snowflake (SiS)
 """
 
 import streamlit as st
-import snowflake.connector
 import pandas as pd
 import json
 from typing import List, Dict, Any, Optional
 
 class SnowflakeConnection:
-    """Handles Snowflake database connections and queries"""
+    """Handles Snowflake database connections and queries for Streamlit in Snowflake"""
     
     def __init__(self):
         self.connection = None
         self._connect()
     
     def _connect(self):
-        """Initialize connection to Snowflake"""
+        """Initialize connection to Snowflake using Streamlit native connection"""
         try:
-            self.connection = snowflake.connector.connect(**st.secrets["snowflake"])
+            self.connection = st.connection("snowflake")
         except Exception as e:
             st.error(f"Failed to connect to Snowflake: {str(e)}")
             raise e
     
-    def execute_query(self, query: str, params: Optional[Dict] = None) -> List[Any]:
-        """Execute a query and return results"""
-        try:
-            cursor = self.connection.cursor()
-            if params:
-                cursor.execute(query, params)
-            else:
-                cursor.execute(query)
-            return cursor.fetchall()
-        except Exception as e:
-            st.error(f"Query execution failed: {str(e)}")
-            return []
-    
-    def execute_query_df(self, query: str, params: Optional[Dict] = None) -> pd.DataFrame:
+    def execute_query(self, query: str, params: Optional[Dict] = None) -> pd.DataFrame:
         """Execute a query and return results as DataFrame"""
         try:
-            cursor = self.connection.cursor()
-            if params:
-                cursor.execute(query, params)
-            else:
-                cursor.execute(query)
-            
-            # Get column names
-            columns = [desc[0] for desc in cursor.description]
-            
-            # Get data
-            data = cursor.fetchall()
-            
-            return pd.DataFrame(data, columns=columns)
+            return self.connection.query(query, params=params if params else None)
         except Exception as e:
             st.error(f"Query execution failed: {str(e)}")
             return pd.DataFrame()
+    
+    def execute_query_df(self, query: str, params: Optional[Dict] = None) -> pd.DataFrame:
+        """Execute a query and return results as DataFrame (alias for consistency)"""
+        return self.execute_query(query, params)
     
     def close(self):
         """Close the connection"""
