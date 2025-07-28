@@ -69,7 +69,16 @@ st.markdown("""
 # Database connection for Streamlit in Snowflake
 @st.cache_resource
 def init_connection():
-    return st.connection("snowflake")
+    conn = st.connection("snowflake")
+    # Set the database context
+    try:
+        conn.query("USE DATABASE RETAIL_WATCH_DB")
+        conn.query("USE SCHEMA PUBLIC") 
+        conn.query("USE WAREHOUSE RETAIL_WATCH_WH")
+    except Exception as e:
+        st.error(f"Failed to set database context: {str(e)}")
+        st.error("Please ensure you have access to RETAIL_WATCH_DB database and RETAIL_WATCH_WH warehouse")
+    return conn
 
 # Helper functions
 @st.cache_data
@@ -81,6 +90,70 @@ def run_query(query, params=None):
 def run_query_df(query, params=None):
     conn = init_connection()
     return conn.query(query, params=params if params else None)
+
+# Verify database setup
+@st.cache_data
+def verify_database_setup():
+    """Verify that all required tables exist"""
+    conn = init_connection()
+    required_tables = ['CUSTOMERS', 'PRODUCTS', 'ORDERS', 'WATCH_BRANDS', 'WATCH_CATEGORIES']
+    
+    try:
+        # Check if tables exist
+        for table in required_tables:
+            result = conn.query(f"SELECT COUNT(*) as count FROM {table} LIMIT 1")
+            if result.empty:
+                return False, f"Table {table} exists but is empty"
+        
+        return True, "All tables verified successfully"
+    
+    except Exception as e:
+        error_msg = str(e)
+        if "does not exist" in error_msg or "not authorized" in error_msg:
+            return False, f"Database setup incomplete. Missing tables or access. Error: {error_msg}"
+        else:
+            return False, f"Database connection issue: {error_msg}"
+
+# Initialize and verify database
+def check_database_status():
+    """Check database status and show setup instructions if needed"""
+    is_valid, message = verify_database_setup()
+    
+    if not is_valid:
+        st.error("🚨 Database Setup Required")
+        st.error(message)
+        
+        with st.expander("📋 Setup Instructions"):
+            st.markdown("""
+            **To fix this error, run these SQL scripts in Snowflake:**
+            
+            1. **Database Setup**: `@sql/01_setup_database.sql`
+            2. **Create Tables**: `@sql/02_create_tables.sql`  
+            3. **Load Sample Data**: `@sql/03_sample_data.sql`
+            4. **Create AI Functions**: `@sql/04_ai_functions.sql`
+            
+            **Or run the complete setup:**
+            ```sql
+            @sql/99_deploy_complete.sql
+            ```
+            
+            **Verify your access:**
+            ```sql
+            USE DATABASE RETAIL_WATCH_DB;
+            USE SCHEMA PUBLIC;
+            USE WAREHOUSE RETAIL_WATCH_WH;
+            SHOW TABLES;
+            ```
+            """)
+        
+        st.stop()  # Stop execution until database is set up
+    
+    else:
+        st.success("✅ Database connection verified")
+        return True
+
+# Check database setup before proceeding
+check_database_status()
 
 # Initialize session state
 if 'current_customer' not in st.session_state:
