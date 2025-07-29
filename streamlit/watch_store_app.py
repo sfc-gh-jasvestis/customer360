@@ -434,7 +434,14 @@ def display_sentiment_analysis():
                 st.subheader(f"{selected_review['PRODUCT_NAME']}")
                 st.write(f"**Brand:** {selected_review['BRAND_NAME']}")
                 st.write(f"**Rating:** {selected_review['RATING']}⭐")
-                st.write(f"**Review Date:** {selected_review['REVIEW_DATE'].strftime('%Y-%m-%d')}")
+                # Fix date formatting to avoid % character issues
+                review_date = selected_review['REVIEW_DATE']
+                if hasattr(review_date, 'strftime'):
+                    # Use safer date formatting without % characters
+                    date_str = f"{review_date.year}-{review_date.month:02d}-{review_date.day:02d}"
+                else:
+                    date_str = str(review_date)[:10]  # Take first 10 characters for date
+                st.write(f"**Review Date:** {date_str}")
             
             # Display review
             st.subheader("📝 Review Text")
