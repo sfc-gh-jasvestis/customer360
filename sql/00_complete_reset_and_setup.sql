@@ -289,7 +289,7 @@ SELECT 'VAR_005', 'CASIO_GSHOCK_001', 'Olive Green', 'CASIO-GA2100-OLV', 10.00, 
 
 -- Step 5: Create all AI functions with bulletproof error handling
 
-CREATE OR REPLACE FUNCTION get_customer_360_insights(customer_id STRING, context STRING)
+CREATE OR REPLACE FUNCTION get_customer_360_insights(input_customer_id STRING)
 RETURNS OBJECT
 LANGUAGE SQL
 AS
@@ -328,29 +328,29 @@ FROM RETAIL_WATCH_DB.PUBLIC.customers c
 LEFT JOIN (
     SELECT customer_id, COUNT(*) as cnt
     FROM RETAIL_WATCH_DB.PUBLIC.orders 
-    WHERE customer_id = $1
+    WHERE customer_id = input_customer_id
     GROUP BY customer_id
     LIMIT 1
 ) order_count ON c.customer_id = order_count.customer_id
 LEFT JOIN (
     SELECT customer_id, COUNT(*) as event_count
     FROM RETAIL_WATCH_DB.PUBLIC.customer_events 
-    WHERE customer_id = $1 AND event_date >= DATEADD(month, -1, CURRENT_DATE())
+    WHERE customer_id = input_customer_id AND event_date >= DATEADD(month, -1, CURRENT_DATE())
     GROUP BY customer_id
     LIMIT 1
 ) recent_events ON c.customer_id = recent_events.customer_id
 LEFT JOIN (
     SELECT customer_id, MAX(order_date) as order_date
     FROM RETAIL_WATCH_DB.PUBLIC.orders 
-    WHERE customer_id = $1
+    WHERE customer_id = input_customer_id
     GROUP BY customer_id
     LIMIT 1
 ) last_order ON c.customer_id = last_order.customer_id
-WHERE c.customer_id = $1
+WHERE c.customer_id = input_customer_id
 LIMIT 1
 $$;
 
-CREATE OR REPLACE FUNCTION get_personal_recommendations(customer_id STRING, context STRING)
+CREATE OR REPLACE FUNCTION get_personal_recommendations(input_customer_id STRING)
 RETURNS OBJECT
 LANGUAGE SQL
 AS
@@ -426,16 +426,16 @@ SELECT OBJECT_CONSTRUCT(
     'recommendation_summary', OBJECT_CONSTRUCT(
         'total_products', 5,
         'avg_price', 4848.80,
-        'context', context,
+        'context', 'personal_recommendations',
         'generated_at', CURRENT_TIMESTAMP()
     )
 )
 FROM RETAIL_WATCH_DB.PUBLIC.customers c
-WHERE c.customer_id = $1
+WHERE c.customer_id = input_customer_id
 LIMIT 1
 $$;
 
-CREATE OR REPLACE FUNCTION predict_customer_churn(customer_id STRING)
+CREATE OR REPLACE FUNCTION predict_customer_churn(input_customer_id STRING)
 RETURNS OBJECT
 LANGUAGE SQL
 AS
@@ -473,22 +473,22 @@ FROM RETAIL_WATCH_DB.PUBLIC.customers c
 LEFT JOIN (
     SELECT customer_id, DATEDIFF(day, MAX(order_date), CURRENT_DATE()) as days
     FROM RETAIL_WATCH_DB.PUBLIC.orders 
-    WHERE customer_id = $1
+    WHERE customer_id = input_customer_id
     GROUP BY customer_id
     LIMIT 1
 ) last_order_days ON c.customer_id = last_order_days.customer_id
 LEFT JOIN (
     SELECT customer_id, COUNT(*) as event_count
     FROM RETAIL_WATCH_DB.PUBLIC.customer_events 
-    WHERE customer_id = $1 AND event_date >= DATEADD(month, -3, CURRENT_DATE())
+    WHERE customer_id = input_customer_id AND event_date >= DATEADD(month, -3, CURRENT_DATE())
     GROUP BY customer_id
     LIMIT 1
 ) recent_events ON c.customer_id = recent_events.customer_id
-WHERE c.customer_id = $1
+WHERE c.customer_id = input_customer_id
 LIMIT 1
 $$;
 
-CREATE OR REPLACE FUNCTION optimize_product_pricing(product_id STRING)
+CREATE OR REPLACE FUNCTION optimize_product_pricing(input_product_id STRING)
 RETURNS OBJECT
 LANGUAGE SQL
 AS
@@ -526,7 +526,7 @@ FROM RETAIL_WATCH_DB.PUBLIC.products p
 LEFT JOIN (
     SELECT product_id, AVG(rating) as rating
     FROM RETAIL_WATCH_DB.PUBLIC.product_reviews 
-    WHERE product_id = $1
+    WHERE product_id = input_product_id
     GROUP BY product_id
     LIMIT 1
 ) avg_rating ON p.product_id = avg_rating.product_id
@@ -542,16 +542,16 @@ CROSS JOIN (
     LEFT JOIN (
         SELECT AVG(rating) as rating
         FROM RETAIL_WATCH_DB.PUBLIC.product_reviews 
-        WHERE product_id = $1
+        WHERE product_id = input_product_id
         LIMIT 1
     ) avg_rating ON true
     LIMIT 1
 ) price_factor
-WHERE p.product_id = $1
+WHERE p.product_id = input_product_id
 LIMIT 1
 $$;
 
-CREATE OR REPLACE FUNCTION analyze_review_sentiment(review_id STRING)
+CREATE OR REPLACE FUNCTION analyze_review_sentiment(input_review_id STRING)
 RETURNS OBJECT
 LANGUAGE SQL
 AS
@@ -591,7 +591,7 @@ SELECT OBJECT_CONSTRUCT(
 FROM RETAIL_WATCH_DB.PUBLIC.product_reviews r
 JOIN RETAIL_WATCH_DB.PUBLIC.products p ON r.product_id = p.product_id
 JOIN RETAIL_WATCH_DB.PUBLIC.watch_brands b ON p.brand_id = b.brand_id
-WHERE r.review_id = $1
+WHERE r.review_id = input_review_id
 LIMIT 1
 $$;
 

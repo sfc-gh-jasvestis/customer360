@@ -240,7 +240,7 @@ def display_customer_dashboard():
     
     # Get customer insights (simplified version without risk_assessment)
     try:
-        insights_query = f"SELECT get_customer_360_insights('{customer_id}', 'general') as insights"
+        insights_query = f"SELECT get_customer_360_insights('{customer_id}') as insights"
         insights_result = run_query(insights_query)
         
         if not insights_result.empty:
@@ -290,7 +290,7 @@ def display_personal_recommendations(customer_id):
     
     # Get AI recommendations with error handling
     try:
-        recommendations_query = f"SELECT get_personal_recommendations('{customer_id}', '{st.session_state.shopping_context}') as recommendations"
+        recommendations_query = f"SELECT get_personal_recommendations('{customer_id}') as recommendations"
         rec_result = run_query(recommendations_query)
         
         if not rec_result.empty:
