@@ -24,40 +24,6 @@ def get_customer_tier_image(tier):
     }
     return tier_images.get(tier, '👤')
 
-# Circular sentiment display function
-def create_sentiment_circle(sentiment_score, confidence, sentiment_label):
-    """Create circular sentiment display with score in the middle"""
-    return f"""
-    <div style="display: flex; justify-content: center; align-items: center; margin: 20px 0;">
-        <div style="
-            width: 150px; 
-            height: 150px; 
-            border-radius: 50%; 
-            background: conic-gradient(#00ff88 0% {confidence*100}%, #e0e0e0 {confidence*100}% 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        ">
-            <div style="
-                width: 120px; 
-                height: 120px; 
-                border-radius: 50%; 
-                background: white;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                font-weight: bold;
-            ">
-                <div style="font-size: 24px; color: #333;">{sentiment_score:.2f}</div>
-                <div style="font-size: 14px; color: #666;">{sentiment_label}</div>
-            </div>
-        </div>
-    </div>
-    """
-
-# Copy all the existing functions from the original app but with fixes applied
 # Database connection for Streamlit in Snowflake
 @st.cache_resource
 def init_connection():
@@ -198,8 +164,7 @@ def display_customer_dashboard():
         </div>
         """, unsafe_allow_html=True)
         
-        # Remove risk assessment section completely
-        # Display other metrics instead
+        # Display other metrics instead of risk assessment
         col1, col2, col3 = st.columns(3)
         
         with col1:
@@ -237,26 +202,41 @@ def display_personal_recommendations(customer_id):
         </div>
         """, unsafe_allow_html=True)
         
-        # Display recommendations
+        # Display recommendations with better image handling
         top_recs = recommendations['top_recommendations']
         
         for i, rec in enumerate(top_recs):
             col1, col2 = st.columns([1, 3])
             
             with col1:
-                # Display product image from database
+                # Better image handling with known working URLs
                 try:
-                    # Check if images exist and are in the right format
                     images = rec.get('images', [])
                     if images and isinstance(images, list) and len(images) > 0:
-                        product_image_url = images[0]
+                        # Use the second image (Unsplash) since external URLs may not work
+                        if len(images) > 1:
+                            product_image_url = images[1]  # Use Unsplash fallback
+                        else:
+                            product_image_url = images[0]
                         st.image(product_image_url, width=200, caption=rec['product_name'])
                     else:
-                        # Fallback to a generic watch placeholder
-                        st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop", 
-                                width=200, caption="Product Image")
+                        # Use specific fallback images based on product
+                        fallback_images = {
+                            'Submariner': "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop",
+                            'G-Shock': "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200&h=200&fit=crop", 
+                            'Speedmaster': "https://images.unsplash.com/photo-1594534475808-b18fc33b045e?w=200&h=200&fit=crop",
+                            'Apple Watch': "https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=200&h=200&fit=crop",
+                            'Prospex': "https://images.unsplash.com/photo-1434056886845-dac89ffe9b56?w=200&h=200&fit=crop"
+                        }
+                        # Find appropriate fallback based on product name
+                        fallback_url = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop"
+                        for key, url in fallback_images.items():
+                            if key.lower() in rec['product_name'].lower():
+                                fallback_url = url
+                                break
+                        st.image(fallback_url, width=200, caption="Product Image")
                 except Exception as e:
-                    # If image fails to load, show fallback
+                    # Final fallback
                     st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop", 
                             width=200, caption="Product Image")
             
@@ -342,16 +322,33 @@ def display_price_optimization():
         # Get selected product details for display
         selected_product = products[products['PRODUCT_ID'] == selected_product_id].iloc[0]
         
-        # Display product image and info
+        # Display product image and info with better image handling
         col1, col2 = st.columns([1, 2])
         with col1:
             try:
+                # Use better fallback logic for product images
                 if selected_product['PRODUCT_IMAGES'] and len(selected_product['PRODUCT_IMAGES']) > 0:
-                    product_image_url = selected_product['PRODUCT_IMAGES'][0]
+                    # Try to get images from database, but use fallbacks
+                    if len(selected_product['PRODUCT_IMAGES']) > 1:
+                        product_image_url = selected_product['PRODUCT_IMAGES'][1]  # Use second image if available  
+                    else:
+                        product_image_url = selected_product['PRODUCT_IMAGES'][0]
                     st.image(product_image_url, width=200, caption=selected_product['PRODUCT_NAME'])
                 else:
-                    st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop", 
-                            width=200, caption="Product Image")
+                    # Specific fallbacks based on product ID
+                    fallback_images = {
+                        'ROLEX': "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop",
+                        'CASIO': "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200&h=200&fit=crop",
+                        'OMEGA': "https://images.unsplash.com/photo-1594534475808-b18fc33b045e?w=200&h=200&fit=crop",
+                        'APPLE': "https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=200&h=200&fit=crop",
+                        'SEIKO': "https://images.unsplash.com/photo-1434056886845-dac89ffe9b56?w=200&h=200&fit=crop"
+                    }
+                    fallback_url = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop"
+                    for brand, url in fallback_images.items():
+                        if brand in selected_product_id:
+                            fallback_url = url
+                            break
+                    st.image(fallback_url, width=200, caption="Product Image")
             except Exception:
                 st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop", 
                         width=200, caption="Product Image")
@@ -416,12 +413,15 @@ def display_sentiment_analysis():
             selected_review_id = review_options[selected_review_display]
             selected_review = reviews[reviews['REVIEW_ID'] == selected_review_id].iloc[0]
             
-            # Display review context
+            # Display review context with better image handling
             col1, col2 = st.columns([1, 3])
             with col1:
                 try:
                     if selected_review['PRODUCT_IMAGES'] and len(selected_review['PRODUCT_IMAGES']) > 0:
-                        product_image_url = selected_review['PRODUCT_IMAGES'][0]
+                        if len(selected_review['PRODUCT_IMAGES']) > 1:
+                            product_image_url = selected_review['PRODUCT_IMAGES'][1]  # Use second image
+                        else:
+                            product_image_url = selected_review['PRODUCT_IMAGES'][0]
                         st.image(product_image_url, width=150, caption=selected_review['PRODUCT_NAME'])
                     else:
                         st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150&h=150&fit=crop", 
@@ -434,20 +434,19 @@ def display_sentiment_analysis():
                 st.subheader(f"{selected_review['PRODUCT_NAME']}")
                 st.write(f"**Brand:** {selected_review['BRAND_NAME']}")
                 st.write(f"**Rating:** {selected_review['RATING']}⭐")
-                # Fix date formatting to avoid % character issues
+                # Safe date formatting
                 review_date = selected_review['REVIEW_DATE']
-                if hasattr(review_date, 'strftime'):
-                    # Use safer date formatting without % characters
+                if hasattr(review_date, 'year'):
                     date_str = f"{review_date.year}-{review_date.month:02d}-{review_date.day:02d}"
                 else:
-                    date_str = str(review_date)[:10]  # Take first 10 characters for date
+                    date_str = str(review_date)[:10]
                 st.write(f"**Review Date:** {date_str}")
             
             # Display review
             st.subheader("📝 Review Text")
             st.text_area("Review Content:", selected_review['REVIEW_TEXT'], height=100, disabled=True)
             
-            # Sentiment analysis with circular display
+            # Simplified sentiment analysis (NO SCORE)
             st.subheader("📊 Sentiment Analysis")
             sentiment_result = run_query(
                 f"SELECT analyze_review_sentiment('{selected_review_id}') as result"
@@ -457,25 +456,15 @@ def display_sentiment_analysis():
                 result_raw = sentiment_result.iloc[0]['RESULT']
                 result = json.loads(result_raw) if isinstance(result_raw, str) else result_raw
                 
-                # Create circular sentiment score display
-                sentiment_score = result.get('sentiment_score', 0)
                 confidence = result.get('confidence', 0)
                 sentiment_label = result.get('sentiment_label', 'Unknown')
                 
-                col1, col2, col3 = st.columns([1, 2, 1])
-                with col2:
-                    # Display circular sentiment indicator
-                    st.markdown(create_sentiment_circle(sentiment_score, confidence, sentiment_label), 
-                               unsafe_allow_html=True)
-                
-                # Show metrics below (with 2 decimal places)
-                col1, col2, col3 = st.columns(3)
+                # Simple metrics without score
+                col1, col2 = st.columns(2)
                 with col1:
                     st.metric("Sentiment", sentiment_label)
                 with col2:
                     st.metric("Confidence", f"{confidence:.1%}")
-                with col3:
-                    st.metric("Score", f"{sentiment_score:.2f}")  # Limited to 2 digits
                 
                 # Key themes
                 if 'key_themes' in result and result['key_themes']:
