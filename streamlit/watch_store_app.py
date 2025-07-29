@@ -12,6 +12,49 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Hardcoded working image URLs - guaranteed to work
+PRODUCT_IMAGES = {
+    'ROLEX_SUB_001': "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop",
+    'ROLEX_GMT_001': "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=400&h=300&fit=crop", 
+    'OMEGA_SPEED_001': "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?w=400&h=300&fit=crop",
+    'OMEGA_SEAMASTER_001': "https://images.unsplash.com/photo-1533139502658-0198f920d8e8?w=400&h=300&fit=crop",
+    'TAG_CARRERA_001': "https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?w=400&h=300&fit=crop",
+    'SEIKO_PROSPEX_001': "https://images.unsplash.com/photo-1434056886845-dac89ffe9b56?w=400&h=300&fit=crop",
+    'SEIKO_PRESAGE_001': "https://images.unsplash.com/photo-1548171915-e79a380a2a4b?w=400&h=300&fit=crop",
+    'CITIZEN_ECODRIVE_001': "https://images.unsplash.com/photo-1542496658-e33a6d0d50b6?w=400&h=300&fit=crop",
+    'CASIO_GSHOCK_001': "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop",
+    'APPLE_WATCH_001': "https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=400&h=300&fit=crop"
+}
+
+# Default fallback image
+DEFAULT_IMAGE = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop"
+
+def get_product_image(product_id, product_name="", width=200):
+    """Get working image URL for any product"""
+    # First try exact product ID match
+    if product_id in PRODUCT_IMAGES:
+        return PRODUCT_IMAGES[product_id]
+    
+    # Then try partial matches based on product name
+    name_lower = product_name.lower()
+    if 'submariner' in name_lower or 'rolex' in name_lower:
+        return PRODUCT_IMAGES['ROLEX_SUB_001']
+    elif 'g-shock' in name_lower or 'casio' in name_lower:
+        return PRODUCT_IMAGES['CASIO_GSHOCK_001']
+    elif 'speedmaster' in name_lower or 'omega' in name_lower:
+        return PRODUCT_IMAGES['OMEGA_SPEED_001']
+    elif 'apple' in name_lower or 'watch series' in name_lower:
+        return PRODUCT_IMAGES['APPLE_WATCH_001']
+    elif 'prospex' in name_lower or 'seiko' in name_lower:
+        return PRODUCT_IMAGES['SEIKO_PROSPEX_001']
+    elif 'tag' in name_lower or 'carrera' in name_lower:
+        return PRODUCT_IMAGES['TAG_CARRERA_001']
+    elif 'citizen' in name_lower:
+        return PRODUCT_IMAGES['CITIZEN_ECODRIVE_001']
+    
+    # Final fallback
+    return DEFAULT_IMAGE
+
 # Customer tier images function
 def get_customer_tier_image(tier):
     """Return appropriate tier image based on customer tier"""
@@ -202,43 +245,19 @@ def display_personal_recommendations(customer_id):
         </div>
         """, unsafe_allow_html=True)
         
-        # Display recommendations with better image handling
+        # Display recommendations with guaranteed working images
         top_recs = recommendations['top_recommendations']
         
         for i, rec in enumerate(top_recs):
             col1, col2 = st.columns([1, 3])
             
             with col1:
-                # Better image handling with known working URLs
-                try:
-                    images = rec.get('images', [])
-                    if images and isinstance(images, list) and len(images) > 0:
-                        # Use the second image (Unsplash) since external URLs may not work
-                        if len(images) > 1:
-                            product_image_url = images[1]  # Use Unsplash fallback
-                        else:
-                            product_image_url = images[0]
-                        st.image(product_image_url, width=200, caption=rec['product_name'])
-                    else:
-                        # Use specific fallback images based on product
-                        fallback_images = {
-                            'Submariner': "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop",
-                            'G-Shock': "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200&h=200&fit=crop", 
-                            'Speedmaster': "https://images.unsplash.com/photo-1594534475808-b18fc33b045e?w=200&h=200&fit=crop",
-                            'Apple Watch': "https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=200&h=200&fit=crop",
-                            'Prospex': "https://images.unsplash.com/photo-1434056886845-dac89ffe9b56?w=200&h=200&fit=crop"
-                        }
-                        # Find appropriate fallback based on product name
-                        fallback_url = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop"
-                        for key, url in fallback_images.items():
-                            if key.lower() in rec['product_name'].lower():
-                                fallback_url = url
-                                break
-                        st.image(fallback_url, width=200, caption="Product Image")
-                except Exception as e:
-                    # Final fallback
-                    st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop", 
-                            width=200, caption="Product Image")
+                # Force working image using our hardcoded URLs
+                product_id = rec.get('product_id', '')
+                product_name = rec.get('product_name', '')
+                image_url = get_product_image(product_id, product_name, width=200)
+                
+                st.image(image_url, width=200, caption=rec['product_name'])
             
             with col2:
                 match_reasons = [reason for reason in rec['match_reasons'] if reason]
@@ -322,36 +341,12 @@ def display_price_optimization():
         # Get selected product details for display
         selected_product = products[products['PRODUCT_ID'] == selected_product_id].iloc[0]
         
-        # Display product image and info with better image handling
+        # Display product image and info with guaranteed working image
         col1, col2 = st.columns([1, 2])
         with col1:
-            try:
-                # Use better fallback logic for product images
-                if selected_product['PRODUCT_IMAGES'] and len(selected_product['PRODUCT_IMAGES']) > 0:
-                    # Try to get images from database, but use fallbacks
-                    if len(selected_product['PRODUCT_IMAGES']) > 1:
-                        product_image_url = selected_product['PRODUCT_IMAGES'][1]  # Use second image if available  
-                    else:
-                        product_image_url = selected_product['PRODUCT_IMAGES'][0]
-                    st.image(product_image_url, width=200, caption=selected_product['PRODUCT_NAME'])
-                else:
-                    # Specific fallbacks based on product ID
-                    fallback_images = {
-                        'ROLEX': "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop",
-                        'CASIO': "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200&h=200&fit=crop",
-                        'OMEGA': "https://images.unsplash.com/photo-1594534475808-b18fc33b045e?w=200&h=200&fit=crop",
-                        'APPLE': "https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=200&h=200&fit=crop",
-                        'SEIKO': "https://images.unsplash.com/photo-1434056886845-dac89ffe9b56?w=200&h=200&fit=crop"
-                    }
-                    fallback_url = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop"
-                    for brand, url in fallback_images.items():
-                        if brand in selected_product_id:
-                            fallback_url = url
-                            break
-                    st.image(fallback_url, width=200, caption="Product Image")
-            except Exception:
-                st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop", 
-                        width=200, caption="Product Image")
+            # Force working image using our hardcoded URLs
+            image_url = get_product_image(selected_product_id, selected_product['PRODUCT_NAME'], width=200)
+            st.image(image_url, width=200, caption=selected_product['PRODUCT_NAME'])
         
         with col2:
             st.subheader(f"{selected_product['PRODUCT_NAME']}")
@@ -413,22 +408,14 @@ def display_sentiment_analysis():
             selected_review_id = review_options[selected_review_display]
             selected_review = reviews[reviews['REVIEW_ID'] == selected_review_id].iloc[0]
             
-            # Display review context with better image handling
+            # Display review context with guaranteed working image
             col1, col2 = st.columns([1, 3])
             with col1:
-                try:
-                    if selected_review['PRODUCT_IMAGES'] and len(selected_review['PRODUCT_IMAGES']) > 0:
-                        if len(selected_review['PRODUCT_IMAGES']) > 1:
-                            product_image_url = selected_review['PRODUCT_IMAGES'][1]  # Use second image
-                        else:
-                            product_image_url = selected_review['PRODUCT_IMAGES'][0]
-                        st.image(product_image_url, width=150, caption=selected_review['PRODUCT_NAME'])
-                    else:
-                        st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150&h=150&fit=crop", 
-                                width=150, caption="Product Image")
-                except Exception:
-                    st.image("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150&h=150&fit=crop", 
-                            width=150, caption="Product Image")
+                # Force working image using our hardcoded URLs
+                product_id = selected_review['PRODUCT_ID']
+                product_name = selected_review['PRODUCT_NAME']
+                image_url = get_product_image(product_id, product_name, width=150)
+                st.image(image_url, width=150, caption=selected_review['PRODUCT_NAME'])
             
             with col2:
                 st.subheader(f"{selected_review['PRODUCT_NAME']}")
@@ -446,7 +433,7 @@ def display_sentiment_analysis():
             st.subheader("📝 Review Text")
             st.text_area("Review Content:", selected_review['REVIEW_TEXT'], height=100, disabled=True)
             
-            # Simplified sentiment analysis (NO SCORE)
+            # Simplified sentiment analysis (NO SCORE - as requested)
             st.subheader("📊 Sentiment Analysis")
             sentiment_result = run_query(
                 f"SELECT analyze_review_sentiment('{selected_review_id}') as result"
@@ -459,7 +446,7 @@ def display_sentiment_analysis():
                 confidence = result.get('confidence', 0)
                 sentiment_label = result.get('sentiment_label', 'Unknown')
                 
-                # Simple metrics without score
+                # Simple metrics without score (as requested)
                 col1, col2 = st.columns(2)
                 with col1:
                     st.metric("Sentiment", sentiment_label)
