@@ -110,8 +110,6 @@ def main():
     # Initialize session state with proper defaults
     if 'current_customer' not in st.session_state:
         st.session_state.current_customer = None
-    if 'shopping_context' not in st.session_state:
-        st.session_state.shopping_context = 'general'
     if 'previous_customer' not in st.session_state:
         st.session_state.previous_customer = None
     
@@ -155,30 +153,6 @@ def main():
                 if st.session_state.previous_customer is not None:
                     st.rerun()
         
-        # Shopping context
-        st.header("🎯 Shopping Context")
-        context_options = {
-            "General Browsing": "general",
-            "Luxury Shopping": "luxury", 
-            "Sport & Active": "sport",
-            "Gift Shopping": "gift",
-            "Budget Conscious": "budget"
-        }
-        
-        selected_context = st.selectbox(
-            "Shopping Intent:",
-            options=list(context_options.keys()),
-            index=0,
-            key="context_selector"
-        )
-        
-        # Update shopping context and refresh if changed
-        new_context = context_options[selected_context]
-        if st.session_state.shopping_context != new_context:
-            st.session_state.shopping_context = new_context
-            # Clear recommendations cache when context changes
-            st.cache_data.clear()
-        
         # Quick actions with cache clearing
         st.markdown("---")
         st.header("⚡ Quick Actions")
@@ -196,7 +170,6 @@ def main():
         if st.session_state.current_customer:
             st.markdown("---")
             st.markdown(f"**Current Customer:** {st.session_state.current_customer}")
-            st.markdown(f"**Context:** {st.session_state.shopping_context.title()}")
     
     # Main content area
     if st.session_state.current_customer:
@@ -286,7 +259,7 @@ def display_customer_dashboard():
             st.info(f"• {activity}")
 
 def display_personal_recommendations(customer_id):
-    st.header(f"🎯 Personal Recommendations - {st.session_state.shopping_context.title()} Context")
+    st.header("🎯 Personal Recommendations")
     
     # Get AI recommendations with error handling
     try:
