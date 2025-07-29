@@ -145,115 +145,147 @@ CREATE OR REPLACE TABLE product_variants (
 -- Step 4: Insert sample data with accurate WatchBase.com-inspired specifications
 
 -- Watch Brands (based on WatchBase.com data)
-INSERT INTO watch_brands 
-SELECT * FROM VALUES
-    ('ROLEX', 'Rolex', 'Switzerland', 1905, 'https://www.rolex.com', 'Crown jewel of Swiss luxury watchmaking, known for precision and prestige', 'Ultra-Luxury'),
-    ('OMEGA', 'Omega', 'Switzerland', 1848, 'https://www.omegawatches.com', 'Official Olympic timekeeper with moon landing heritage', 'Luxury'),
-    ('TAG_HEUER', 'TAG Heuer', 'Switzerland', 1860, 'https://www.tagheuer.com', 'Swiss avant-garde watchmaking with motorsport DNA', 'Luxury'),
-    ('SEIKO', 'Seiko', 'Japan', 1881, 'https://www.seiko.com', 'Japanese innovation leader in watch technology', 'Mid'),
-    ('CITIZEN', 'Citizen', 'Japan', 1918, 'https://www.citizen.com', 'Eco-Drive solar technology pioneer', 'Mid'),
-    ('CASIO', 'Casio', 'Japan', 1946, 'https://www.casio.com', 'Durable digital and analog sport watches', 'Entry'),
-    ('APPLE', 'Apple', 'USA', 1976, 'https://www.apple.com', 'Revolutionary smartwatch technology', 'Mid'),
-    ('TISSOT', 'Tissot', 'Switzerland', 1853, 'https://www.tissotwatches.com', 'Swiss tradition since 1853', 'Mid'),
-    ('HAMILTON', 'Hamilton', 'USA', 1892, 'https://www.hamiltonwatch.com', 'American spirit with Swiss precision', 'Mid'),
-    ('BREITLING', 'Breitling', 'Switzerland', 1884, 'https://www.breitling.com', 'Instruments for professionals', 'Luxury')
-AS t(brand_id, brand_name, country_origin, founded_year, website_url, brand_description, luxury_tier);
+INSERT INTO watch_brands (brand_id, brand_name, country_origin, founded_year, website_url, brand_description, luxury_tier)
+SELECT 'ROLEX', 'Rolex', 'Switzerland', 1905, 'https://www.rolex.com', 'Crown jewel of Swiss luxury watchmaking, known for precision and prestige', 'Ultra-Luxury'
+UNION ALL
+SELECT 'OMEGA', 'Omega', 'Switzerland', 1848, 'https://www.omegawatches.com', 'Official Olympic timekeeper with moon landing heritage', 'Luxury'
+UNION ALL
+SELECT 'TAG_HEUER', 'TAG Heuer', 'Switzerland', 1860, 'https://www.tagheuer.com', 'Swiss avant-garde watchmaking with motorsport DNA', 'Luxury'
+UNION ALL
+SELECT 'SEIKO', 'Seiko', 'Japan', 1881, 'https://www.seiko.com', 'Japanese innovation leader in watch technology', 'Mid'
+UNION ALL
+SELECT 'CITIZEN', 'Citizen', 'Japan', 1918, 'https://www.citizen.com', 'Eco-Drive solar technology pioneer', 'Mid'
+UNION ALL
+SELECT 'CASIO', 'Casio', 'Japan', 1946, 'https://www.casio.com', 'Durable digital and analog sport watches', 'Entry'
+UNION ALL
+SELECT 'APPLE', 'Apple', 'USA', 1976, 'https://www.apple.com', 'Revolutionary smartwatch technology', 'Mid'
+UNION ALL
+SELECT 'TISSOT', 'Tissot', 'Switzerland', 1853, 'https://www.tissotwatches.com', 'Swiss tradition since 1853', 'Mid'
+UNION ALL
+SELECT 'HAMILTON', 'Hamilton', 'USA', 1892, 'https://www.hamiltonwatch.com', 'American spirit with Swiss precision', 'Mid'
+UNION ALL
+SELECT 'BREITLING', 'Breitling', 'Switzerland', 1884, 'https://www.breitling.com', 'Instruments for professionals', 'Luxury';
 
 -- Watch Categories
-INSERT INTO watch_categories 
-SELECT * FROM VALUES
-    ('DIVE', 'Dive Watches', 'Professional diving timepieces with water resistance', 500.00, 15000.00),
-    ('CHRONO', 'Chronographs', 'Stopwatch functionality for timing events', 800.00, 25000.00),
-    ('DRESS', 'Dress Watches', 'Elegant timepieces for formal occasions', 300.00, 20000.00),
-    ('SPORT', 'Sport Watches', 'Active lifestyle and outdoor adventure watches', 200.00, 8000.00),
-    ('SMARTWATCH', 'Smart Watches', 'Digital connectivity and health tracking', 200.00, 1500.00),
-    ('AVIATION', 'Aviation Watches', 'Pilot and aviation-inspired timepieces', 600.00, 12000.00),
-    ('RACING', 'Racing Watches', 'Motorsport-inspired chronographs', 1000.00, 18000.00)
-AS t(category_id, category_name, category_description, typical_price_range_min, typical_price_range_max);
+INSERT INTO watch_categories (category_id, category_name, category_description, typical_price_range_min, typical_price_range_max)
+SELECT 'DIVE', 'Dive Watches', 'Professional diving timepieces with water resistance', 500.00, 15000.00
+UNION ALL
+SELECT 'CHRONO', 'Chronographs', 'Stopwatch functionality for timing events', 800.00, 25000.00
+UNION ALL
+SELECT 'DRESS', 'Dress Watches', 'Elegant timepieces for formal occasions', 300.00, 20000.00
+UNION ALL
+SELECT 'SPORT', 'Sport Watches', 'Active lifestyle and outdoor adventure watches', 200.00, 8000.00
+UNION ALL
+SELECT 'SMARTWATCH', 'Smart Watches', 'Digital connectivity and health tracking', 200.00, 1500.00
+UNION ALL
+SELECT 'AVIATION', 'Aviation Watches', 'Pilot and aviation-inspired timepieces', 600.00, 12000.00
+UNION ALL
+SELECT 'RACING', 'Racing Watches', 'Motorsport-inspired chronographs', 1000.00, 18000.00;
 
 -- Customers with realistic profiles
-INSERT INTO customers 
-SELECT * FROM VALUES
-    ('CUST_001', 'James', 'Chen', 'james.chen@email.com', '+1-555-0101', '1985-03-15', 'Gold', 12850.00, '2020-01-15', 0.25, 'email', PARSE_JSON('{"preferred_brands": ["Rolex", "Omega"], "style": "luxury", "budget_range": "10000-20000"}'), PARSE_JSON('{"street": "123 Main St", "city": "San Francisco", "state": "CA", "zip": "94102"}'), PARSE_JSON('{"street": "123 Main St", "city": "San Francisco", "state": "CA", "zip": "94102"}')),
-    ('CUST_002', 'Sarah', 'Williams', 'sarah.williams@email.com', '+1-555-0102', '1992-07-22', 'Silver', 6750.00, '2021-06-10', 0.15, 'phone', PARSE_JSON('{"preferred_brands": ["Apple", "Citizen"], "style": "modern", "budget_range": "300-1000"}'), PARSE_JSON('{"street": "456 Oak Ave", "city": "New York", "state": "NY", "zip": "10001"}'), PARSE_JSON('{"street": "456 Oak Ave", "city": "New York", "state": "NY", "zip": "10001"}')),
-    ('CUST_003', 'Michael', 'Rodriguez', 'michael.rodriguez@email.com', '+1-555-0103', '1978-11-08', 'Platinum', 28500.00, '2019-03-22', 0.05, 'email', PARSE_JSON('{"preferred_brands": ["Rolex", "TAG Heuer"], "style": "sport", "budget_range": "5000-15000"}'), PARSE_JSON('{"street": "789 Pine Rd", "city": "Los Angeles", "state": "CA", "zip": "90210"}'), PARSE_JSON('{"street": "789 Pine Rd", "city": "Los Angeles", "state": "CA", "zip": "90210"}')),
-    ('CUST_004', 'Emily', 'Johnson', 'emily.johnson@email.com', '+1-555-0104', '1990-05-18', 'Bronze', 1850.00, '2022-08-05', 0.45, 'email', PARSE_JSON('{"preferred_brands": ["Casio", "Seiko"], "style": "casual", "budget_range": "100-500"}'), PARSE_JSON('{"street": "321 Elm St", "city": "Chicago", "state": "IL", "zip": "60601"}'), PARSE_JSON('{"street": "321 Elm St", "city": "Chicago", "state": "IL", "zip": "60601"}')),
-    ('CUST_005', 'David', 'Thompson', 'david.thompson@email.com', '+1-555-0105', '1983-09-30', 'Diamond', 45200.00, '2018-11-12', 0.10, 'phone', PARSE_JSON('{"preferred_brands": ["Rolex", "Omega", "Breitling"], "style": "luxury", "budget_range": "15000-50000"}'), PARSE_JSON('{"street": "654 Maple Dr", "city": "Miami", "state": "FL", "zip": "33101"}'), PARSE_JSON('{"street": "654 Maple Dr", "city": "Miami", "state": "FL", "zip": "33101"}'))
-AS t(customer_id, first_name, last_name, email, phone, date_of_birth, customer_tier, total_spent, account_created_date, churn_risk_score, preferred_contact_method, customer_preferences, billing_address, shipping_address);
+INSERT INTO customers (customer_id, first_name, last_name, email, phone, date_of_birth, customer_tier, total_spent, account_created_date, churn_risk_score, preferred_contact_method, customer_preferences, billing_address, shipping_address)
+SELECT 'CUST_001', 'James', 'Chen', 'james.chen@email.com', '+1-555-0101', '1985-03-15', 'Gold', 12850.00, '2020-01-15', 0.25, 'email', PARSE_JSON('{"preferred_brands": ["Rolex", "Omega"], "style": "luxury", "budget_range": "10000-20000"}'), PARSE_JSON('{"street": "123 Main St", "city": "San Francisco", "state": "CA", "zip": "94102"}'), PARSE_JSON('{"street": "123 Main St", "city": "San Francisco", "state": "CA", "zip": "94102"}')
+UNION ALL
+SELECT 'CUST_002', 'Sarah', 'Williams', 'sarah.williams@email.com', '+1-555-0102', '1992-07-22', 'Silver', 6750.00, '2021-06-10', 0.15, 'phone', PARSE_JSON('{"preferred_brands": ["Apple", "Citizen"], "style": "modern", "budget_range": "300-1000"}'), PARSE_JSON('{"street": "456 Oak Ave", "city": "New York", "state": "NY", "zip": "10001"}'), PARSE_JSON('{"street": "456 Oak Ave", "city": "New York", "state": "NY", "zip": "10001"}')
+UNION ALL
+SELECT 'CUST_003', 'Michael', 'Rodriguez', 'michael.rodriguez@email.com', '+1-555-0103', '1978-11-08', 'Platinum', 28500.00, '2019-03-22', 0.05, 'email', PARSE_JSON('{"preferred_brands": ["Rolex", "TAG Heuer"], "style": "sport", "budget_range": "5000-15000"}'), PARSE_JSON('{"street": "789 Pine Rd", "city": "Los Angeles", "state": "CA", "zip": "90210"}'), PARSE_JSON('{"street": "789 Pine Rd", "city": "Los Angeles", "state": "CA", "zip": "90210"}')
+UNION ALL
+SELECT 'CUST_004', 'Emily', 'Johnson', 'emily.johnson@email.com', '+1-555-0104', '1990-05-18', 'Bronze', 1850.00, '2022-08-05', 0.45, 'email', PARSE_JSON('{"preferred_brands": ["Casio", "Seiko"], "style": "casual", "budget_range": "100-500"}'), PARSE_JSON('{"street": "321 Elm St", "city": "Chicago", "state": "IL", "zip": "60601"}'), PARSE_JSON('{"street": "321 Elm St", "city": "Chicago", "state": "IL", "zip": "60601"}')
+UNION ALL
+SELECT 'CUST_005', 'David', 'Thompson', 'david.thompson@email.com', '+1-555-0105', '1983-09-30', 'Diamond', 45200.00, '2018-11-12', 0.10, 'phone', PARSE_JSON('{"preferred_brands": ["Rolex", "Omega", "Breitling"], "style": "luxury", "budget_range": "15000-50000"}'), PARSE_JSON('{"street": "654 Maple Dr", "city": "Miami", "state": "FL", "zip": "33101"}'), PARSE_JSON('{"street": "654 Maple Dr", "city": "Miami", "state": "FL", "zip": "33101"}');
 
 -- Products with accurate WatchBase.com specifications and working image URLs
-INSERT INTO products 
-SELECT * FROM VALUES
-    ('ROLEX_SUB_001', 'ROLEX', 'DIVE', 'Submariner Date 41', '126610LN-0001', 'The iconic Rolex Submariner Date in Oystersteel with black Cerachrom bezel and black dial. Waterproof to 300 metres.', 13150.00, 13150.00, 8500.00, 5, 'active', '2020-09-01', NULL, 'Oystersteel', 41.0, 'Automatic', 300, 5, PARSE_JSON('["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "Calibre 3235", "power_reserve": "70 hours", "bracelet": "Oyster", "bezel": "Unidirectional rotating, Cerachrom"}'), PARSE_JSON('["luxury", "diving", "professional", "iconic"]')),
-    ('ROLEX_GMT_001', 'ROLEX', 'AVIATION', 'GMT-Master II', '126710BLNR-0002', 'The GMT-Master II Batman with blue and black Cerachrom bezel. Dual time zone functionality for world travelers.', 10550.00, 10550.00, 7200.00, 3, 'active', '2019-04-15', NULL, 'Oystersteel', 40.0, 'Automatic', 100, 5, PARSE_JSON('["https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "Calibre 3285", "power_reserve": "70 hours", "functions": "GMT, date"}'), PARSE_JSON('["travel", "pilot", "luxury", "gmt"]')),
-    ('OMEGA_SPEED_001', 'OMEGA', 'CHRONO', 'Speedmaster Professional Moonwatch', '310.30.42.50.01.001', 'The legendary Moonwatch worn on all six lunar missions. Manual-wind chronograph with hesalite crystal.', 6350.00, 6350.00, 4200.00, 8, 'active', '2021-01-20', NULL, 'Stainless Steel', 42.0, 'Manual', 50, 2, PARSE_JSON('["https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "Calibre 3861", "power_reserve": "50 hours", "functions": "Chronograph", "crystal": "Hesalite"}'), PARSE_JSON('["space", "chronograph", "manual", "heritage"]')),
-    ('OMEGA_SEAMASTER_001', 'OMEGA', 'DIVE', 'Seamaster Diver 300M', '210.30.42.20.01.001', 'Professional diving watch with Co-Axial Master Chronometer movement. Helium escape valve included.', 4400.00, 4400.00, 2900.00, 6, 'active', '2018-07-10', NULL, 'Stainless Steel', 42.0, 'Automatic', 300, 4, PARSE_JSON('["https://images.unsplash.com/photo-1533139502658-0198f920d8e8?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "Co-Axial Master Chronometer 8800", "power_reserve": "55 hours", "antimagnetic": "15000 gauss"}'), PARSE_JSON('["diving", "professional", "omega", "seamaster"]')),
-    ('TAG_CARRERA_001', 'TAG_HEUER', 'RACING', 'Carrera Chronograph', 'CBN2A1A.BA0643', 'Motorsport-inspired chronograph with Calibre Heuer 02 manufacture movement. Racing DNA in every detail.', 4150.00, 4150.00, 2800.00, 4, 'active', '2022-03-08', NULL, 'Stainless Steel', 44.0, 'Automatic', 100, 2, PARSE_JSON('["https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "Calibre Heuer 02", "power_reserve": "80 hours", "functions": "Chronograph, date"}'), PARSE_JSON('["racing", "motorsport", "chronograph", "carrera"]')),
-    ('SEIKO_PROSPEX_001', 'SEIKO', 'DIVE', 'Prospex Solar Diver', 'SNE497', 'Solar-powered dive watch with 200m water resistance. Eco-friendly timekeeping with no battery changes needed.', 195.00, 195.00, 95.00, 15, 'active', '2021-09-15', NULL, 'Stainless Steel', 43.5, 'Solar Quartz', 200, 3, PARSE_JSON('["https://images.unsplash.com/photo-1434056886845-dac89ffe9b56?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "Solar V157", "power_reserve": "10 months", "features": "Date, unidirectional bezel"}'), PARSE_JSON('["solar", "diving", "eco", "affordable"]')),
-    ('SEIKO_PRESAGE_001', 'SEIKO', 'DRESS', 'Presage Cocktail Time', 'SRPB41', 'Elegant dress watch inspired by Japanese cocktail culture. Automatic movement with power reserve display.', 350.00, 350.00, 180.00, 12, 'active', '2020-05-22', NULL, 'Stainless Steel', 40.5, 'Automatic', 30, 1, PARSE_JSON('["https://images.unsplash.com/photo-1548171915-e79a380a2a4b?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "4R35", "power_reserve": "41 hours", "features": "Power reserve indicator"}'), PARSE_JSON('["dress", "cocktail", "automatic", "japanese"]')),
-    ('CITIZEN_ECODRIVE_001', 'CITIZEN', 'SPORT', 'Eco-Drive Titanium', 'AW1490-50A', 'Lightweight titanium sport watch powered by any light source. Never needs a battery replacement.', 275.00, 275.00, 140.00, 20, 'active', '2021-11-30', NULL, 'Titanium', 42.0, 'Solar Quartz', 100, 5, PARSE_JSON('["https://images.unsplash.com/photo-1542496658-e33a6d0d50b6?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "Eco-Drive B023", "power_reserve": "6 months", "material_benefits": "Super lightweight"}'), PARSE_JSON('["eco-drive", "titanium", "sport", "solar"]')),
-    ('CASIO_GSHOCK_001', 'CASIO', 'SPORT', 'G-Shock GA-2100', 'GA-2100-1A1', 'The octagonal CasiOak design meets G-Shock toughness. Shock resistant with 200m water resistance.', 110.00, 110.00, 55.00, 30, 'active', '2019-08-20', NULL, 'Resin', 45.4, 'Quartz', 200, 1, PARSE_JSON('["https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"shock_resistant": true, "features": "World time, stopwatch, alarm", "led_light": "Super Illuminator"}'), PARSE_JSON('["g-shock", "tough", "sport", "casioak"]')),
-    ('APPLE_WATCH_001', 'APPLE', 'SMARTWATCH', 'Apple Watch Series 8', 'MNP13LL/A', 'Advanced health monitoring with ECG, blood oxygen, and temperature sensors. Cellular connectivity available.', 399.00, 399.00, 250.00, 25, 'active', '2022-09-16', NULL, 'Aluminum', 45.0, 'Digital', 50, 1, PARSE_JSON('["https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"os": "watchOS 9", "connectivity": "WiFi + Cellular", "sensors": "ECG, Blood Oxygen, Temperature", "battery": "18 hours"}'), PARSE_JSON('["smartwatch", "health", "fitness", "connected"]'))
-AS t(product_id, brand_id, category_id, product_name, model_reference, description, current_price, msrp, cost_price, stock_quantity, product_status, release_date, discontinued_date, case_material, case_diameter_mm, movement_type, water_resistance_m, warranty_years, product_images, technical_specs, tags);
+INSERT INTO products (product_id, brand_id, category_id, product_name, model_reference, description, current_price, msrp, cost_price, stock_quantity, product_status, release_date, discontinued_date, case_material, case_diameter_mm, movement_type, water_resistance_m, warranty_years, product_images, technical_specs, tags)
+SELECT 'ROLEX_SUB_001', 'ROLEX', 'DIVE', 'Submariner Date 41', '126610LN-0001', 'The iconic Rolex Submariner Date in Oystersteel with black Cerachrom bezel and black dial. Waterproof to 300 metres.', 13150.00, 13150.00, 8500.00, 5, 'active', '2020-09-01', NULL, 'Oystersteel', 41.0, 'Automatic', 300, 5, PARSE_JSON('["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "Calibre 3235", "power_reserve": "70 hours", "bracelet": "Oyster", "bezel": "Unidirectional rotating, Cerachrom"}'), PARSE_JSON('["luxury", "diving", "professional", "iconic"]')
+UNION ALL
+SELECT 'ROLEX_GMT_001', 'ROLEX', 'AVIATION', 'GMT-Master II', '126710BLNR-0002', 'The GMT-Master II Batman with blue and black Cerachrom bezel. Dual time zone functionality for world travelers.', 10550.00, 10550.00, 7200.00, 3, 'active', '2019-04-15', NULL, 'Oystersteel', 40.0, 'Automatic', 100, 5, PARSE_JSON('["https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "Calibre 3285", "power_reserve": "70 hours", "functions": "GMT, date"}'), PARSE_JSON('["travel", "pilot", "luxury", "gmt"]')
+UNION ALL
+SELECT 'OMEGA_SPEED_001', 'OMEGA', 'CHRONO', 'Speedmaster Professional Moonwatch', '310.30.42.50.01.001', 'The legendary Moonwatch worn on all six lunar missions. Manual-wind chronograph with hesalite crystal.', 6350.00, 6350.00, 4200.00, 8, 'active', '2021-01-20', NULL, 'Stainless Steel', 42.0, 'Manual', 50, 2, PARSE_JSON('["https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "Calibre 3861", "power_reserve": "50 hours", "functions": "Chronograph", "crystal": "Hesalite"}'), PARSE_JSON('["space", "chronograph", "manual", "heritage"]')
+UNION ALL
+SELECT 'OMEGA_SEAMASTER_001', 'OMEGA', 'DIVE', 'Seamaster Diver 300M', '210.30.42.20.01.001', 'Professional diving watch with Co-Axial Master Chronometer movement. Helium escape valve included.', 4400.00, 4400.00, 2900.00, 6, 'active', '2018-07-10', NULL, 'Stainless Steel', 42.0, 'Automatic', 300, 4, PARSE_JSON('["https://images.unsplash.com/photo-1533139502658-0198f920d8e8?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "Co-Axial Master Chronometer 8800", "power_reserve": "55 hours", "antimagnetic": "15000 gauss"}'), PARSE_JSON('["diving", "professional", "omega", "seamaster"]')
+UNION ALL
+SELECT 'TAG_CARRERA_001', 'TAG_HEUER', 'RACING', 'Carrera Chronograph', 'CBN2A1A.BA0643', 'Motorsport-inspired chronograph with Calibre Heuer 02 manufacture movement. Racing DNA in every detail.', 4150.00, 4150.00, 2800.00, 4, 'active', '2022-03-08', NULL, 'Stainless Steel', 44.0, 'Automatic', 100, 2, PARSE_JSON('["https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "Calibre Heuer 02", "power_reserve": "80 hours", "functions": "Chronograph, date"}'), PARSE_JSON('["racing", "motorsport", "chronograph", "carrera"]')
+UNION ALL
+SELECT 'SEIKO_PROSPEX_001', 'SEIKO', 'DIVE', 'Prospex Solar Diver', 'SNE497', 'Solar-powered dive watch with 200m water resistance. Eco-friendly timekeeping with no battery changes needed.', 195.00, 195.00, 95.00, 15, 'active', '2021-09-15', NULL, 'Stainless Steel', 43.5, 'Solar Quartz', 200, 3, PARSE_JSON('["https://images.unsplash.com/photo-1434056886845-dac89ffe9b56?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "Solar V157", "power_reserve": "10 months", "features": "Date, unidirectional bezel"}'), PARSE_JSON('["solar", "diving", "eco", "affordable"]')
+UNION ALL
+SELECT 'SEIKO_PRESAGE_001', 'SEIKO', 'DRESS', 'Presage Cocktail Time', 'SRPB41', 'Elegant dress watch inspired by Japanese cocktail culture. Automatic movement with power reserve display.', 350.00, 350.00, 180.00, 12, 'active', '2020-05-22', NULL, 'Stainless Steel', 40.5, 'Automatic', 30, 1, PARSE_JSON('["https://images.unsplash.com/photo-1548171915-e79a380a2a4b?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "4R35", "power_reserve": "41 hours", "features": "Power reserve indicator"}'), PARSE_JSON('["dress", "cocktail", "automatic", "japanese"]')
+UNION ALL
+SELECT 'CITIZEN_ECODRIVE_001', 'CITIZEN', 'SPORT', 'Eco-Drive Titanium', 'AW1490-50A', 'Lightweight titanium sport watch powered by any light source. Never needs a battery replacement.', 275.00, 275.00, 140.00, 20, 'active', '2021-11-30', NULL, 'Titanium', 42.0, 'Solar Quartz', 100, 5, PARSE_JSON('["https://images.unsplash.com/photo-1542496658-e33a6d0d50b6?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"movement": "Eco-Drive B023", "power_reserve": "6 months", "material_benefits": "Super lightweight"}'), PARSE_JSON('["eco-drive", "titanium", "sport", "solar"]')
+UNION ALL
+SELECT 'CASIO_GSHOCK_001', 'CASIO', 'SPORT', 'G-Shock GA-2100', 'GA-2100-1A1', 'The octagonal CasiOak design meets G-Shock toughness. Shock resistant with 200m water resistance.', 110.00, 110.00, 55.00, 30, 'active', '2019-08-20', NULL, 'Resin', 45.4, 'Quartz', 200, 1, PARSE_JSON('["https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"shock_resistant": true, "features": "World time, stopwatch, alarm", "led_light": "Super Illuminator"}'), PARSE_JSON('["g-shock", "tough", "sport", "casioak"]')
+UNION ALL
+SELECT 'APPLE_WATCH_001', 'APPLE', 'SMARTWATCH', 'Apple Watch Series 8', 'MNP13LL/A', 'Advanced health monitoring with ECG, blood oxygen, and temperature sensors. Cellular connectivity available.', 399.00, 399.00, 250.00, 25, 'active', '2022-09-16', NULL, 'Aluminum', 45.0, 'Digital', 50, 1, PARSE_JSON('["https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=400&h=400&fit=crop&crop=center"]'), PARSE_JSON('{"os": "watchOS 9", "connectivity": "WiFi + Cellular", "sensors": "ECG, Blood Oxygen, Temperature", "battery": "18 hours"}'), PARSE_JSON('["smartwatch", "health", "fitness", "connected"]');
 
 -- Sample orders and related data
-INSERT INTO orders 
-SELECT * FROM VALUES
-    ('ORD_001', 'CUST_001', '2023-01-15', 6350.00, 'completed', 'Credit Card', PARSE_JSON('{"street": "123 Main St", "city": "San Francisco", "state": "CA", "zip": "94102"}'), PARSE_JSON('{"street": "123 Main St", "city": "San Francisco", "state": "CA", "zip": "94102"}'), 'Birthday gift to myself'),
-    ('ORD_002', 'CUST_002', '2023-02-20', 399.00, 'completed', 'PayPal', PARSE_JSON('{"street": "456 Oak Ave", "city": "New York", "state": "NY", "zip": "10001"}'), PARSE_JSON('{"street": "456 Oak Ave", "city": "New York", "state": "NY", "zip": "10001"}'), 'First smartwatch'),
-    ('ORD_003', 'CUST_003', '2023-03-10', 4150.00, 'completed', 'Bank Transfer', PARSE_JSON('{"street": "789 Pine Rd", "city": "Los Angeles", "state": "CA", "zip": "90210"}'), PARSE_JSON('{"street": "789 Pine Rd", "city": "Los Angeles", "state": "CA", "zip": "90210"}'), 'Racing watch for track days'),
-    ('ORD_004', 'CUST_004', '2023-04-05', 110.00, 'completed', 'Credit Card', PARSE_JSON('{"street": "321 Elm St", "city": "Chicago", "state": "IL", "zip": "60601"}'), PARSE_JSON('{"street": "321 Elm St", "city": "Chicago", "state": "IL", "zip": "60601"}'), 'Gym watch'),
-    ('ORD_005', 'CUST_005', '2023-05-12', 13150.00, 'completed', 'Wire Transfer', PARSE_JSON('{"street": "654 Maple Dr", "city": "Miami", "state": "FL", "zip": "33101"}'), PARSE_JSON('{"street": "654 Maple Dr", "city": "Miami", "state": "FL", "zip": "33101"}'), 'Investment piece')
-AS t(order_id, customer_id, order_date, total_amount, order_status, payment_method, billing_address, shipping_address, notes);
+INSERT INTO orders (order_id, customer_id, order_date, total_amount, order_status, payment_method, billing_address, shipping_address, notes)
+SELECT 'ORD_001', 'CUST_001', '2023-01-15', 6350.00, 'completed', 'Credit Card', PARSE_JSON('{"street": "123 Main St", "city": "San Francisco", "state": "CA", "zip": "94102"}'), PARSE_JSON('{"street": "123 Main St", "city": "San Francisco", "state": "CA", "zip": "94102"}'), 'Birthday gift to myself'
+UNION ALL
+SELECT 'ORD_002', 'CUST_002', '2023-02-20', 399.00, 'completed', 'PayPal', PARSE_JSON('{"street": "456 Oak Ave", "city": "New York", "state": "NY", "zip": "10001"}'), PARSE_JSON('{"street": "456 Oak Ave", "city": "New York", "state": "NY", "zip": "10001"}'), 'First smartwatch'
+UNION ALL
+SELECT 'ORD_003', 'CUST_003', '2023-03-10', 4150.00, 'completed', 'Bank Transfer', PARSE_JSON('{"street": "789 Pine Rd", "city": "Los Angeles", "state": "CA", "zip": "90210"}'), PARSE_JSON('{"street": "789 Pine Rd", "city": "Los Angeles", "state": "CA", "zip": "90210"}'), 'Racing watch for track days'
+UNION ALL
+SELECT 'ORD_004', 'CUST_004', '2023-04-05', 110.00, 'completed', 'Credit Card', PARSE_JSON('{"street": "321 Elm St", "city": "Chicago", "state": "IL", "zip": "60601"}'), PARSE_JSON('{"street": "321 Elm St", "city": "Chicago", "state": "IL", "zip": "60601"}'), 'Gym watch'
+UNION ALL
+SELECT 'ORD_005', 'CUST_005', '2023-05-12', 13150.00, 'completed', 'Wire Transfer', PARSE_JSON('{"street": "654 Maple Dr", "city": "Miami", "state": "FL", "zip": "33101"}'), PARSE_JSON('{"street": "654 Maple Dr", "city": "Miami", "state": "FL", "zip": "33101"}'), 'Investment piece';
 
-INSERT INTO order_items 
-SELECT * FROM VALUES
-    ('ITEM_001', 'ORD_001', 'OMEGA_SPEED_001', 1, 6350.00, 6350.00, PARSE_JSON('{"product_name": "Speedmaster Professional Moonwatch", "brand": "Omega", "price_at_time": 6350.00}')),
-    ('ITEM_002', 'ORD_002', 'APPLE_WATCH_001', 1, 399.00, 399.00, PARSE_JSON('{"product_name": "Apple Watch Series 8", "brand": "Apple", "price_at_time": 399.00}')),
-    ('ITEM_003', 'ORD_003', 'TAG_CARRERA_001', 1, 4150.00, 4150.00, PARSE_JSON('{"product_name": "Carrera Chronograph", "brand": "TAG Heuer", "price_at_time": 4150.00}')),
-    ('ITEM_004', 'ORD_004', 'CASIO_GSHOCK_001', 1, 110.00, 110.00, PARSE_JSON('{"product_name": "G-Shock GA-2100", "brand": "Casio", "price_at_time": 110.00}')),
-    ('ITEM_005', 'ORD_005', 'ROLEX_SUB_001', 1, 13150.00, 13150.00, PARSE_JSON('{"product_name": "Submariner Date 41", "brand": "Rolex", "price_at_time": 13150.00}'))
-AS t(item_id, order_id, product_id, quantity, unit_price, total_price, product_snapshot);
+INSERT INTO order_items (item_id, order_id, product_id, quantity, unit_price, total_price, product_snapshot)
+SELECT 'ITEM_001', 'ORD_001', 'OMEGA_SPEED_001', 1, 6350.00, 6350.00, PARSE_JSON('{"product_name": "Speedmaster Professional Moonwatch", "brand": "Omega", "price_at_time": 6350.00}')
+UNION ALL
+SELECT 'ITEM_002', 'ORD_002', 'APPLE_WATCH_001', 1, 399.00, 399.00, PARSE_JSON('{"product_name": "Apple Watch Series 8", "brand": "Apple", "price_at_time": 399.00}')
+UNION ALL
+SELECT 'ITEM_003', 'ORD_003', 'TAG_CARRERA_001', 1, 4150.00, 4150.00, PARSE_JSON('{"product_name": "Carrera Chronograph", "brand": "TAG Heuer", "price_at_time": 4150.00}')
+UNION ALL
+SELECT 'ITEM_004', 'ORD_004', 'CASIO_GSHOCK_001', 1, 110.00, 110.00, PARSE_JSON('{"product_name": "G-Shock GA-2100", "brand": "Casio", "price_at_time": 110.00}')
+UNION ALL
+SELECT 'ITEM_005', 'ORD_005', 'ROLEX_SUB_001', 1, 13150.00, 13150.00, PARSE_JSON('{"product_name": "Submariner Date 41", "brand": "Rolex", "price_at_time": 13150.00}');
 
 -- Customer events
-INSERT INTO customer_events 
-SELECT * FROM VALUES
-    ('EVT_001', 'CUST_001', 'product_view', '2023-01-10 10:30:00', PARSE_JSON('{"product_id": "OMEGA_SPEED_001", "view_duration": 120, "source": "search"}'), 'sess_001'),
-    ('EVT_002', 'CUST_001', 'add_to_cart', '2023-01-12 14:15:00', PARSE_JSON('{"product_id": "OMEGA_SPEED_001", "quantity": 1}'), 'sess_002'),
-    ('EVT_003', 'CUST_002', 'product_compare', '2023-02-15 16:20:00', PARSE_JSON('{"products": ["APPLE_WATCH_001", "CASIO_GSHOCK_001"], "duration": 300}'), 'sess_003'),
-    ('EVT_004', 'CUST_003', 'wishlist_add', '2023-03-05 11:45:00', PARSE_JSON('{"product_id": "TAG_CARRERA_001", "list_name": "racing_watches"}'), 'sess_004'),
-    ('EVT_005', 'CUST_004', 'price_alert_set', '2023-04-01 09:10:00', PARSE_JSON('{"product_id": "CASIO_GSHOCK_001", "target_price": 95.00}'), 'sess_005')
-AS t(event_id, customer_id, event_type, event_date, event_properties, session_id);
+INSERT INTO customer_events (event_id, customer_id, event_type, event_date, event_properties, session_id)
+SELECT 'EVT_001', 'CUST_001', 'product_view', '2023-01-10 10:30:00', PARSE_JSON('{"product_id": "OMEGA_SPEED_001", "view_duration": 120, "source": "search"}'), 'sess_001'
+UNION ALL
+SELECT 'EVT_002', 'CUST_001', 'add_to_cart', '2023-01-12 14:15:00', PARSE_JSON('{"product_id": "OMEGA_SPEED_001", "quantity": 1}'), 'sess_002'
+UNION ALL
+SELECT 'EVT_003', 'CUST_002', 'product_compare', '2023-02-15 16:20:00', PARSE_JSON('{"products": ["APPLE_WATCH_001", "CASIO_GSHOCK_001"], "duration": 300}'), 'sess_003'
+UNION ALL
+SELECT 'EVT_004', 'CUST_003', 'wishlist_add', '2023-03-05 11:45:00', PARSE_JSON('{"product_id": "TAG_CARRERA_001", "list_name": "racing_watches"}'), 'sess_004'
+UNION ALL
+SELECT 'EVT_005', 'CUST_004', 'price_alert_set', '2023-04-01 09:10:00', PARSE_JSON('{"product_id": "CASIO_GSHOCK_001", "target_price": 95.00}'), 'sess_005';
 
 -- Product reviews
-INSERT INTO product_reviews 
-SELECT * FROM VALUES
-    ('REV_001', 'OMEGA_SPEED_001', 'CUST_001', 5, 'Absolutely love this watch! The history and craftsmanship are incredible. Worth every penny.', '2023-01-20', 15, TRUE, 0.95, PARSE_JSON('{"verified_purchase": true, "helpful_count": 15}')),
-    ('REV_002', 'APPLE_WATCH_001', 'CUST_002', 4, 'Great smartwatch with excellent health features. Battery life could be better but overall very satisfied.', '2023-02-25', 8, TRUE, 0.75, PARSE_JSON('{"verified_purchase": true, "helpful_count": 8}')),
-    ('REV_003', 'TAG_CARRERA_001', 'CUST_003', 5, 'Perfect racing chronograph! The build quality is exceptional and it looks fantastic on the wrist.', '2023-03-15', 12, TRUE, 0.90, PARSE_JSON('{"verified_purchase": true, "helpful_count": 12}')),
-    ('REV_004', 'CASIO_GSHOCK_001', 'CUST_004', 4, 'Tough as nails and looks great. Good value for money. The CasiOak design is very cool.', '2023-04-10', 6, TRUE, 0.80, PARSE_JSON('{"verified_purchase": true, "helpful_count": 6}')),
-    ('REV_005', 'ROLEX_SUB_001', 'CUST_005', 5, 'The ultimate luxury dive watch. Impeccable quality and the resale value makes it a smart investment.', '2023-05-18', 20, TRUE, 0.98, PARSE_JSON('{"verified_purchase": true, "helpful_count": 20}'))
-AS t(review_id, product_id, customer_id, rating, review_text, review_date, helpful_votes, verified_purchase, sentiment_score, review_metadata);
+INSERT INTO product_reviews (review_id, product_id, customer_id, rating, review_text, review_date, helpful_votes, verified_purchase, sentiment_score, review_metadata)
+SELECT 'REV_001', 'OMEGA_SPEED_001', 'CUST_001', 5, 'Absolutely love this watch! The history and craftsmanship are incredible. Worth every penny.', '2023-01-20', 15, TRUE, 0.95, PARSE_JSON('{"verified_purchase": true, "helpful_count": 15}')
+UNION ALL
+SELECT 'REV_002', 'APPLE_WATCH_001', 'CUST_002', 4, 'Great smartwatch with excellent health features. Battery life could be better but overall very satisfied.', '2023-02-25', 8, TRUE, 0.75, PARSE_JSON('{"verified_purchase": true, "helpful_count": 8}')
+UNION ALL
+SELECT 'REV_003', 'TAG_CARRERA_001', 'CUST_003', 5, 'Perfect racing chronograph! The build quality is exceptional and it looks fantastic on the wrist.', '2023-03-15', 12, TRUE, 0.90, PARSE_JSON('{"verified_purchase": true, "helpful_count": 12}')
+UNION ALL
+SELECT 'REV_004', 'CASIO_GSHOCK_001', 'CUST_004', 4, 'Tough as nails and looks great. Good value for money. The CasiOak design is very cool.', '2023-04-10', 6, TRUE, 0.80, PARSE_JSON('{"verified_purchase": true, "helpful_count": 6}')
+UNION ALL
+SELECT 'REV_005', 'ROLEX_SUB_001', 'CUST_005', 5, 'The ultimate luxury dive watch. Impeccable quality and the resale value makes it a smart investment.', '2023-05-18', 20, TRUE, 0.98, PARSE_JSON('{"verified_purchase": true, "helpful_count": 20}');
 
 -- Customer interactions
-INSERT INTO customer_interactions 
-SELECT * FROM VALUES
-    ('INT_001', 'CUST_001', 'phone_inquiry', '2023-01-08 14:30:00', 'phone', 15, 'question_answered', 'AGENT_001', PARSE_JSON('{"topic": "omega_availability", "resolution": "product_located"}'), 5),
-    ('INT_002', 'CUST_002', 'live_chat', '2023-02-18 11:20:00', 'website', 8, 'purchase_completed', 'AGENT_002', PARSE_JSON('{"topic": "apple_watch_features", "resolution": "sale_completed"}'), 4),
-    ('INT_003', 'CUST_003', 'email_support', '2023-03-07 16:45:00', 'email', 25, 'technical_support', 'AGENT_001', PARSE_JSON('{"topic": "warranty_question", "resolution": "warranty_explained"}'), 5),
-    ('INT_004', 'CUST_004', 'store_visit', '2023-04-03 13:15:00', 'in_store', 45, 'try_on_session', 'AGENT_003', PARSE_JSON('{"topic": "g_shock_models", "resolution": "purchase_decision"}'), 4),
-    ('INT_005', 'CUST_005', 'phone_inquiry', '2023-05-10 10:00:00', 'phone', 20, 'customization_request', 'AGENT_001', PARSE_JSON('{"topic": "rolex_customization", "resolution": "custom_order_placed"}'), 5)
-AS t(interaction_id, customer_id, interaction_type, interaction_date, channel, duration_minutes, outcome, agent_id, interaction_data, satisfaction_score);
+INSERT INTO customer_interactions (interaction_id, customer_id, interaction_type, interaction_date, channel, duration_minutes, outcome, agent_id, interaction_data, satisfaction_score)
+SELECT 'INT_001', 'CUST_001', 'phone_inquiry', '2023-01-08 14:30:00', 'phone', 15, 'question_answered', 'AGENT_001', PARSE_JSON('{"topic": "omega_availability", "resolution": "product_located"}'), 5
+UNION ALL
+SELECT 'INT_002', 'CUST_002', 'live_chat', '2023-02-18 11:20:00', 'website', 8, 'purchase_completed', 'AGENT_002', PARSE_JSON('{"topic": "apple_watch_features", "resolution": "sale_completed"}'), 4
+UNION ALL
+SELECT 'INT_003', 'CUST_003', 'email_support', '2023-03-07 16:45:00', 'email', 25, 'technical_support', 'AGENT_001', PARSE_JSON('{"topic": "warranty_question", "resolution": "warranty_explained"}'), 5
+UNION ALL
+SELECT 'INT_004', 'CUST_004', 'store_visit', '2023-04-03 13:15:00', 'in_store', 45, 'try_on_session', 'AGENT_003', PARSE_JSON('{"topic": "g_shock_models", "resolution": "purchase_decision"}'), 4
+UNION ALL
+SELECT 'INT_005', 'CUST_005', 'phone_inquiry', '2023-05-10 10:00:00', 'phone', 20, 'customization_request', 'AGENT_001', PARSE_JSON('{"topic": "rolex_customization", "resolution": "custom_order_placed"}'), 5;
 
 -- Product variants
-INSERT INTO product_variants 
-SELECT * FROM VALUES
-    ('VAR_001', 'ROLEX_SUB_001', 'Black Dial', 'ROLEX-SUB-BLK', 0.00, 5, PARSE_JSON('{"dial_color": "black", "bezel_color": "black"}'), PARSE_JSON('["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop&crop=center"]')),
-    ('VAR_002', 'APPLE_WATCH_001', '45mm GPS', 'APPLE-W8-45-GPS', 0.00, 15, PARSE_JSON('{"size": "45mm", "connectivity": "GPS"}'), PARSE_JSON('["https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=400&h=400&fit=crop&crop=center"]')),
-    ('VAR_003', 'APPLE_WATCH_001', '45mm GPS + Cellular', 'APPLE-W8-45-CELL', 100.00, 10, PARSE_JSON('{"size": "45mm", "connectivity": "GPS + Cellular"}'), PARSE_JSON('["https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=400&h=400&fit=crop&crop=center"]')),
-    ('VAR_004', 'CASIO_GSHOCK_001', 'Black Resin', 'CASIO-GA2100-BLK', 0.00, 20, PARSE_JSON('{"color": "black", "material": "resin"}'), PARSE_JSON('["https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop&crop=center"]')),
-    ('VAR_005', 'CASIO_GSHOCK_001', 'Olive Green', 'CASIO-GA2100-OLV', 10.00, 10, PARSE_JSON('{"color": "olive_green", "material": "resin"}'), PARSE_JSON('["https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop&crop=center"]'))
-AS t(variant_id, product_id, variant_name, sku, price_adjustment, stock_quantity, variant_attributes, variant_images);
+INSERT INTO product_variants (variant_id, product_id, variant_name, sku, price_adjustment, stock_quantity, variant_attributes, variant_images)
+SELECT 'VAR_001', 'ROLEX_SUB_001', 'Black Dial', 'ROLEX-SUB-BLK', 0.00, 5, PARSE_JSON('{"dial_color": "black", "bezel_color": "black"}'), PARSE_JSON('["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop&crop=center"]')
+UNION ALL
+SELECT 'VAR_002', 'APPLE_WATCH_001', '45mm GPS', 'APPLE-W8-45-GPS', 0.00, 15, PARSE_JSON('{"size": "45mm", "connectivity": "GPS"}'), PARSE_JSON('["https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=400&h=400&fit=crop&crop=center"]')
+UNION ALL
+SELECT 'VAR_003', 'APPLE_WATCH_001', '45mm GPS + Cellular', 'APPLE-W8-45-CELL', 100.00, 10, PARSE_JSON('{"size": "45mm", "connectivity": "GPS + Cellular"}'), PARSE_JSON('["https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=400&h=400&fit=crop&crop=center"]')
+UNION ALL
+SELECT 'VAR_004', 'CASIO_GSHOCK_001', 'Black Resin', 'CASIO-GA2100-BLK', 0.00, 20, PARSE_JSON('{"color": "black", "material": "resin"}'), PARSE_JSON('["https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop&crop=center"]')
+UNION ALL
+SELECT 'VAR_005', 'CASIO_GSHOCK_001', 'Olive Green', 'CASIO-GA2100-OLV', 10.00, 10, PARSE_JSON('{"color": "olive_green", "material": "resin"}'), PARSE_JSON('["https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop&crop=center"]');
 
 -- Step 5: Create all AI functions with bulletproof error handling
 
