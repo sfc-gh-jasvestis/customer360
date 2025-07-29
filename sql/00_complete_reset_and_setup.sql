@@ -22,7 +22,7 @@ CREATE OR REPLACE TABLE watch_brands (
     founded_year INTEGER,
     website_url VARCHAR(200),
     brand_description TEXT,
-    luxury_tier VARCHAR(20) CHECK (luxury_tier IN ('Entry', 'Mid', 'Luxury', 'Ultra-Luxury'))
+    luxury_tier VARCHAR(20)
 );
 
 CREATE OR REPLACE TABLE watch_categories (
@@ -40,7 +40,7 @@ CREATE OR REPLACE TABLE customers (
     email VARCHAR(100) UNIQUE NOT NULL,
     phone VARCHAR(20),
     date_of_birth DATE,
-    customer_tier VARCHAR(20) CHECK (customer_tier IN ('Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond')),
+    customer_tier VARCHAR(20),
     total_spent DECIMAL(12,2) DEFAULT 0,
     account_created_date DATE DEFAULT CURRENT_DATE(),
     churn_risk_score FLOAT DEFAULT 0.0,
@@ -109,7 +109,7 @@ CREATE OR REPLACE TABLE product_reviews (
     review_id VARCHAR(30) PRIMARY KEY,
     product_id VARCHAR(30) REFERENCES products(product_id),
     customer_id VARCHAR(20) REFERENCES customers(customer_id),
-    rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+    rating INTEGER,
     review_text TEXT,
     review_date DATE DEFAULT CURRENT_DATE(),
     helpful_votes INTEGER DEFAULT 0,
@@ -128,7 +128,7 @@ CREATE OR REPLACE TABLE customer_interactions (
     outcome VARCHAR(100),
     agent_id VARCHAR(20),
     interaction_data VARIANT,
-    satisfaction_score INTEGER CHECK (satisfaction_score BETWEEN 1 AND 5)
+    satisfaction_score INTEGER
 );
 
 CREATE OR REPLACE TABLE product_variants (
