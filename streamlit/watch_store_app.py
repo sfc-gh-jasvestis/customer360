@@ -293,10 +293,15 @@ def display_personal_recommendations(customer_id):
             col1, col2 = st.columns([1, 3])
             
             with col1:
-                # Get accurate image using WatchBase.com specifications
-                product_id = rec.get('product_id', '')
-                product_name = rec.get('product_name', '')
-                image_url = get_product_image(product_id, product_name, width=200)
+                # Use image URLs directly from AI function recommendations
+                images_from_ai = rec.get('images', [])
+                if images_from_ai and len(images_from_ai) > 0:
+                    image_url = images_from_ai[0]  # Get first image from AI function
+                else:
+                    # Fallback to hardcoded images if AI function doesn't provide images
+                    product_id = rec.get('product_id', '')
+                    product_name = rec.get('product_name', '')
+                    image_url = get_product_image(product_id, product_name, width=200)
                 
                 st.image(image_url, width=200, caption=rec['product_name'])
             
