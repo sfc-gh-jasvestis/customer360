@@ -3,75 +3,65 @@ import pandas as pd
 import json
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
-import uuid
 
 # Set page config
 st.set_page_config(
-    page_title="🌟 Personal Watch Shopper - AI-Powered Watch Store",
+    page_title="Retail Watch Store - Customer 360",
     page_icon="⌚",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better styling
-st.markdown("""
-<style>
-    .main-header {
-        background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
-        padding: 1rem;
-        border-radius: 10px;
-        color: white;
-        text-align: center;
-        margin-bottom: 2rem;
+# Customer tier images function
+def get_customer_tier_image(tier):
+    """Return appropriate tier image based on customer tier"""
+    tier_images = {
+        'Bronze': '🥉',  # Bronze medal
+        'Silver': '🥈',  # Silver medal  
+        'Gold': '🥇',    # Gold medal
+        'Platinum': '💎', # Diamond
+        'Diamond': '💎'   # Diamond
     }
-    .customer-card {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 10px;
-        border-left: 4px solid #007bff;
-        margin-bottom: 1rem;
-    }
-    .metric-card {
-        background: white;
-        padding: 1rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        text-align: center;
-    }
-    .recommendation-card {
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        transition: transform 0.2s;
-    }
-    .recommendation-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    .high-risk {
-        color: #dc3545;
-        font-weight: bold;
-    }
-    .medium-risk {
-        color: #fd7e14;
-        font-weight: bold;
-    }
-    .low-risk {
-        color: #28a745;
-        font-weight: bold;
-    }
-</style>
-""", unsafe_allow_html=True)
+    return tier_images.get(tier, '👤')
 
+# Circular sentiment display function
+def create_sentiment_circle(sentiment_score, confidence, sentiment_label):
+    """Create circular sentiment display with score in the middle"""
+    return f"""
+    <div style="display: flex; justify-content: center; align-items: center; margin: 20px 0;">
+        <div style="
+            width: 150px; 
+            height: 150px; 
+            border-radius: 50%; 
+            background: conic-gradient(#00ff88 0% {confidence*100}%, #e0e0e0 {confidence*100}% 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        ">
+            <div style="
+                width: 120px; 
+                height: 120px; 
+                border-radius: 50%; 
+                background: white;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                font-weight: bold;
+            ">
+                <div style="font-size: 24px; color: #333;">{sentiment_score:.2f}</div>
+                <div style="font-size: 14px; color: #666;">{sentiment_label}</div>
+            </div>
+        </div>
+    </div>
+    """
+
+# Copy all the existing functions from the original app but with fixes applied
 # Database connection for Streamlit in Snowflake
 @st.cache_resource
 def init_connection():
     conn = st.connection("snowflake")
-    # Note: USE statements are not supported in Streamlit's Snowflake connection
-    # We'll use fully qualified table names instead (DATABASE.SCHEMA.TABLE)
     return conn
 
 # Helper functions
@@ -83,139 +73,43 @@ def run_query(query, params=None):
     else:
         return conn.query(query)
 
-@st.cache_data
-def run_query_df(query, params=None):
-    conn = init_connection()
-    if params:
-        return conn.query(query, params=params)
-    else:
-        return conn.query(query)
-
-# Verify database setup
-@st.cache_data
-def verify_database_setup():
-    """Verify that all required tables exist"""
-    conn = init_connection()
-    # Use fully qualified table names: DATABASE.SCHEMA.TABLE
-    required_tables = [
-        'RETAIL_WATCH_DB.PUBLIC.CUSTOMERS', 
-        'RETAIL_WATCH_DB.PUBLIC.PRODUCTS', 
-        'RETAIL_WATCH_DB.PUBLIC.ORDERS', 
-        'RETAIL_WATCH_DB.PUBLIC.WATCH_BRANDS', 
-        'RETAIL_WATCH_DB.PUBLIC.WATCH_CATEGORIES'
-    ]
-    
-    try:
-        # Check if tables exist
-        for table in required_tables:
-            table_name = table.split('.')[-1]  # Get just the table name for display
-            result = conn.query("SELECT COUNT(*) as count FROM {} LIMIT 1".format(table))
-            if result.empty:
-                return False, f"Table {table_name} exists but is empty"
-        
-        return True, "All tables verified successfully"
-    
-    except Exception as e:
-        error_msg = str(e)
-        if "does not exist" in error_msg or "not authorized" in error_msg:
-            return False, f"Database setup incomplete. Missing tables or access. Error: {error_msg}"
-        else:
-            return False, f"Database connection issue: {error_msg}"
-
-# Initialize and verify database
-def check_database_status():
-    """Check database status and show setup instructions if needed"""
-    is_valid, message = verify_database_setup()
-    
-    if not is_valid:
-        st.error("🚨 Database Setup Required")
-        st.error(message)
-        
-        with st.expander("📋 Setup Instructions"):
-            st.markdown("""
-            **To fix this error, run these SQL scripts in Snowflake:**
-            
-            1. **Database Setup**: `@sql/01_setup_database.sql`
-            2. **Create Tables**: `@sql/02_create_tables.sql`  
-            3. **Load Sample Data**: `@sql/03_sample_data.sql`
-            4. **Create AI Functions**: `@sql/04_ai_functions.sql`
-            
-            **Or run the complete setup:**
-            ```sql
-            @sql/99_deploy_complete.sql
-            ```
-            
-            **Verify your access:**
-            ```sql
-            USE DATABASE RETAIL_WATCH_DB;
-            USE SCHEMA PUBLIC;
-            USE WAREHOUSE RETAIL_WATCH_WH;
-            SHOW TABLES;
-            ```
-            """)
-        
-        st.stop()  # Stop execution until database is set up
-    
-    else:
-        st.success("✅ Database connection verified")
-        return True
-
-# Check database setup before proceeding
-check_database_status()
-
-# Initialize session state
-if 'current_customer' not in st.session_state:
-    st.session_state.current_customer = None
-if 'shopping_context' not in st.session_state:
-    st.session_state.shopping_context = 'general'
-
 # Main app
 def main():
-    # Header
-    st.markdown("""
-    <div class="main-header">
-        <h1>🌟 Personal Watch Shopper</h1>
-        <p>AI-Powered Watch Store with Churn Prediction, Sentiment Analysis & Price Optimization</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.title("⌚ Retail Watch Store - Customer 360")
+    st.markdown("AI-Powered Watch Store with Churn Prediction, Sentiment Analysis & Price Optimization")
     
-    # Sidebar for customer selection and context
+    # Initialize session state
+    if 'current_customer' not in st.session_state:
+        st.session_state.current_customer = None
+    if 'shopping_context' not in st.session_state:
+        st.session_state.shopping_context = 'general'
+    
+    # Sidebar for customer selection
     with st.sidebar:
-        st.header("👤 Customer Profile")
+        st.header("👤 Customer Selection")
         
-        # Customer selection
+        # Get customer list
         customers = run_query("""
-            SELECT customer_id, first_name, last_name, email, customer_tier, churn_risk_score
+            SELECT customer_id, first_name, last_name, customer_tier, churn_risk_score
             FROM RETAIL_WATCH_DB.PUBLIC.customers 
-            ORDER BY customer_tier DESC, total_spent DESC
+            ORDER BY total_spent DESC
         """)
         
         customer_options = {}
         if not customers.empty:
             for _, customer in customers.iterrows():
-                # Convert risk score to float for comparison
-                try:
-                    risk_score = float(customer['CHURN_RISK_SCORE']) if customer['CHURN_RISK_SCORE'] is not None else 0.0
-                    risk_level = "🔴 HIGH" if risk_score > 0.7 else "🟡 MEDIUM" if risk_score > 0.4 else "🟢 LOW"
-                except (ValueError, TypeError):
-                    risk_level = "🟢 LOW"  # Default if conversion fails
-                display_name = f"{customer['FIRST_NAME']} {customer['LAST_NAME']} ({customer['CUSTOMER_TIER']}) - Risk: {risk_level}"
+                tier_icon = get_customer_tier_image(customer['CUSTOMER_TIER'])  # Use tier images
+                risk_level = "HIGH" if customer['CHURN_RISK_SCORE'] > 0.7 else "MEDIUM" if customer['CHURN_RISK_SCORE'] > 0.4 else "LOW"
+                display_name = f"{tier_icon} {customer['FIRST_NAME']} {customer['LAST_NAME']} ({customer['CUSTOMER_TIER']}) - {risk_level} RISK"
                 customer_options[display_name] = customer['CUSTOMER_ID']
         
         selected_customer_display = st.selectbox(
-            "Select Customer:",
-            options=list(customer_options.keys()) if customer_options else ["No customers available"],
-            index=0 if customer_options else 0
+            "Choose Customer:",
+            options=list(customer_options.keys()) if customer_options else ["No customers available"]
         )
         
         if selected_customer_display and customer_options and selected_customer_display != "No customers available":
             st.session_state.current_customer = customer_options[selected_customer_display]
-        else:
-            st.session_state.current_customer = None
-            if not customer_options:
-                st.warning("⚠️ No customers found. Please check your database setup.")
-        
-        st.markdown("---")
         
         # Shopping context
         st.header("🎯 Shopping Context")
@@ -234,7 +128,7 @@ def main():
         )
         st.session_state.shopping_context = context_options[selected_context]
         
-        # Quick actions
+        # Quick actions with cache clearing
         st.markdown("---")
         st.header("⚡ Quick Actions")
         if st.button("🔄 Refresh Recommendations"):
@@ -248,14 +142,32 @@ def main():
     
     # Main content area
     if st.session_state.current_customer:
-        display_customer_dashboard()
+        # Navigation tabs
+        tab1, tab2, tab3, tab4, tab5 = st.tabs([
+            "🏠 Customer Dashboard",
+            "🎯 Personal Recommendations", 
+            "⚠️ Churn Analysis",
+            "💰 Price Optimization",
+            "📊 Sentiment Analysis"
+        ])
+        
+        with tab1:
+            display_customer_dashboard()
+        with tab2:
+            display_personal_recommendations(st.session_state.current_customer)
+        with tab3:
+            display_churn_analysis(st.session_state.current_customer)
+        with tab4:
+            display_price_optimization()
+        with tab5:
+            display_sentiment_analysis()
     else:
-        st.info("Please select a customer from the sidebar to begin.")
+        st.info("👆 Please select a customer from the sidebar to begin.")
 
 def display_customer_dashboard():
     customer_id = st.session_state.current_customer
     
-    # Get customer insights with error handling
+    # Get customer insights (simplified version without risk_assessment)
     try:
         insights_query = f"SELECT get_customer_360_insights('{customer_id}', 'general') as insights"
         insights_result = run_query(insights_query)
@@ -266,123 +178,36 @@ def display_customer_dashboard():
             insights = None
     except Exception as e:
         st.warning("⚠️ AI insights temporarily unavailable. Showing basic customer information.")
-        st.error(f"Debug: {str(e)}")  # Add debug info
         insights = None
     
-    # Fallback: Get basic customer info if AI function fails
-    if insights is None:
-        try:
-            basic_customer_query = f"""
-            SELECT customer_id, first_name, last_name, email, customer_tier, 
-                   total_spent, total_orders, avg_order_value, churn_risk_score,
-                   satisfaction_score, engagement_score, lifetime_value
-            FROM RETAIL_WATCH_DB.PUBLIC.customers 
-            WHERE customer_id = '{customer_id}'
-            """
-            basic_result = run_query(basic_customer_query)
-            if not basic_result.empty:
-                customer_data = basic_result.iloc[0]
-                # Create a simplified insights structure
-                insights = {
-                    'customer_overview': {
-                        'name': f"{customer_data['FIRST_NAME']} {customer_data['LAST_NAME']}",
-                        'email': customer_data['EMAIL'],
-                        'tier': customer_data['CUSTOMER_TIER'],
-                        'lifetime_value': customer_data['LIFETIME_VALUE'],
-                        'total_spent': customer_data['TOTAL_SPENT'],
-                        'total_orders': customer_data['TOTAL_ORDERS'],
-                        'avg_order_value': customer_data['AVG_ORDER_VALUE']
-                    },
-                    'risk_assessment': {
-                        'churn_risk_score': customer_data['CHURN_RISK_SCORE'],
-                        'risk_level': 'HIGH' if customer_data['CHURN_RISK_SCORE'] > 0.7 else 'MEDIUM' if customer_data['CHURN_RISK_SCORE'] > 0.4 else 'LOW',
-                        'satisfaction_score': customer_data['SATISFACTION_SCORE'],
-                        'engagement_score': customer_data['ENGAGEMENT_SCORE']
-                    },
-                    'ai_recommendations': {
-                        'next_best_actions': ['Contact customer service', 'Review account status'],
-                        'recommended_products_context': 'general'
-                    }
-                }
-            else:
-                st.error("Customer data not found.")
-                return
-        except Exception as e:
-            st.error(f"Unable to load customer data: {str(e)}")
-            return
-    
-    # Display customer overview (works with both AI and fallback data)
+    # Display customer overview with tier icon
     if insights:
-        # Customer overview section
-        st.header("👤 Customer Overview")
-        
-        col1, col2, col3, col4 = st.columns(4)
-        
         customer_overview = insights.get('customer_overview', {})
-        risk_assessment = insights.get('risk_assessment', {})
+        tier = customer_overview.get('tier', 'Bronze')
+        tier_icon = get_customer_tier_image(tier)
+        
+        st.markdown(f"""
+        <div style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); 
+                    padding: 2rem; border-radius: 15px; color: white; margin-bottom: 2rem;">
+            <h1>{tier_icon} {customer_overview.get('name', 'Customer')} - {tier} Tier</h1>
+            <h3>💎 Lifetime Value: ${customer_overview.get('lifetime_value', 0):,.0f}</h3>
+            <p>📧 {customer_overview.get('email', 'N/A')}</p>
+            <p>🛍️ Total Orders: {customer_overview.get('total_orders', 0)} | 
+               💰 Total Spent: ${customer_overview.get('total_spent', 0):,.0f} | 
+               📊 Avg Order: ${customer_overview.get('avg_order_value', 0):,.0f}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Remove risk assessment section completely
+        # Display other metrics instead
+        col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3>�� {customer_overview.get('tier', 'N/A')}</h3>
-                <p><strong>{customer_overview.get('name', 'N/A')}</strong></p>
-                <p>{customer_overview.get('email', 'N/A')}</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
+            st.metric("Account Age", f"{customer_overview.get('account_age_days', 0)} days")
         with col2:
-            churn_risk_level = risk_assessment.get('risk_level', 'UNKNOWN')
-            churn_risk_score = risk_assessment.get('churn_risk_score', 0)
-            risk_class = f"{churn_risk_level.lower()}-risk"
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3 class="{risk_class}">⚠️ {churn_risk_level} RISK</h3>
-                <p>Score: {churn_risk_score:.3f}</p>
-                <p>Needs attention</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
+            st.metric("Total Orders", customer_overview.get('total_orders', 0))
         with col3:
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3>💰 ${customer_overview.get('lifetime_value', 0):,.0f}</h3>
-                <p>Lifetime Value</p>
-                <p>{customer_overview.get('total_orders', 0)} orders</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col4:
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3>🛒 ${customer_overview.get('total_spent', 0):,.0f}</h3>
-                <p>Total Spent</p>
-                <p>Avg: ${customer_overview.get('avg_order_value', 0):,.0f}</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Detailed insights tabs
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            "🛍️ Personal Recommendations", 
-            "📈 Churn Analysis", 
-            "💰 Price Optimization",
-            "📝 Sentiment Analysis", 
-            "📊 Customer Analytics"
-        ])
-        
-        with tab1:
-            display_personal_recommendations(customer_id)
-        
-        with tab2:
-            display_churn_analysis(customer_id)
-        
-        with tab3:
-            display_price_optimization()
-        
-        with tab4:
-            display_sentiment_analysis()
-        
-        with tab5:
-            display_customer_analytics(customer_id, insights)
+            st.metric("Average Order", f"${customer_overview.get('avg_order_value', 0):,.0f}")
 
 def display_personal_recommendations(customer_id):
     st.header(f"🎯 Personal Recommendations - {st.session_state.shopping_context.title()} Context")
@@ -398,60 +223,14 @@ def display_personal_recommendations(customer_id):
             recommendations = None
     except Exception as e:
         st.warning("⚠️ AI recommendations temporarily unavailable. Showing popular products.")
-        st.error(f"Debug: {str(e)}")  # Add debug info
         recommendations = None
     
-    # Fallback: Show popular products if AI function fails
-    if recommendations is None:
-        try:
-            popular_products_query = """
-            SELECT p.product_id, p.product_name, b.brand_name, p.current_price, 
-                   p.avg_rating, p.review_count, p.description, p.product_images
-            FROM RETAIL_WATCH_DB.PUBLIC.products p
-            JOIN RETAIL_WATCH_DB.PUBLIC.watch_brands b ON p.brand_id = b.brand_id
-            WHERE p.product_status = 'active' AND p.stock_quantity > 0
-            ORDER BY p.avg_rating DESC, p.review_count DESC
-            LIMIT 5
-            """
-            popular_result = run_query(popular_products_query) 
-            
-            if not popular_result.empty:
-                # Create simplified recommendations structure
-                top_recs = []
-                for _, product in popular_result.iterrows():
-                    top_recs.append({
-                        'product_id': product['PRODUCT_ID'],
-                        'product_name': product['PRODUCT_NAME'],
-                        'brand_name': product['BRAND_NAME'],
-                        'price': product['CURRENT_PRICE'],
-                        'rating': product['AVG_RATING'],
-                        'review_count': product['REVIEW_COUNT'],
-                        'description': product['DESCRIPTION'],
-                        'images': product['PRODUCT_IMAGES'],
-                        'match_reasons': ['Popular choice', 'Highly rated']
-                    })
-                
-                recommendations = {
-                    'customer_insights': {
-                        'tier': 'N/A',
-                        'preferred_brands': 'N/A',
-                        'style_preferences': 'N/A'
-                    },
-                    'top_recommendations': top_recs
-                }
-            else:
-                st.error("Unable to load product recommendations.")
-                return
-        except Exception as e:
-            st.error(f"Unable to load recommendations: {str(e)}")
-            return
-
-    if recommendations:
-        # Customer insights summary
-        insights = recommendations['customer_insights']
+    if recommendations and 'top_recommendations' in recommendations:
+        # Display customer insights
+        insights = recommendations.get('customer_insights', {})
         st.markdown(f"""
-        <div class="customer-card">
-            <h4>Customer Profile Summary</h4>
+        <div class="customer-insights">
+            <h3>👤 Your Profile</h3>
             <p><strong>Tier:</strong> {insights.get('tier', 'N/A')}</p>
             <p><strong>Preferred Brands:</strong> {insights.get('preferred_brands', 'None specified')}</p>
             <p><strong>Style Preferences:</strong> {insights.get('style_preferences', 'None specified')}</p>
@@ -470,7 +249,6 @@ def display_personal_recommendations(customer_id):
                     # Check if images exist and are in the right format
                     images = rec.get('images', [])
                     if images and isinstance(images, list) and len(images) > 0:
-                        # Use the first image from the product images array
                         product_image_url = images[0]
                         st.image(product_image_url, width=200, caption=rec['product_name'])
                     else:
@@ -492,13 +270,12 @@ def display_personal_recommendations(customer_id):
                     <p>⭐ {rec['rating']:.1f}/5.0 ({rec['review_count']} reviews)</p>
                     <p><strong>Match Score:</strong> {rec['recommendation_score']}/100</p>
                     <p><strong>Why this matches:</strong></p>
-                    <ul>
-                        {' '.join([f'<li>{reason}</li>' for reason in match_reasons])}
-                    </ul>
+                    <ul>{''.join([f'<li>{reason}</li>' for reason in match_reasons])}</ul>
+                    <p>{rec['description']}</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                if st.button(f"Add to Cart - {rec['product_name']}", key=f"cart_{i}"):
+                if st.button(f"🛒 Add to Cart", key=f"add_cart_{i}"):
                     st.success(f"Added {rec['product_name']} to cart!")
 
 def display_churn_analysis(customer_id):
@@ -516,91 +293,24 @@ def display_churn_analysis(customer_id):
             analysis = None
     except Exception as e:
         st.warning("⚠️ AI churn analysis temporarily unavailable. Showing basic risk assessment.")
-        st.error(f"Debug: {str(e)}")  # Add debug info
         analysis = None
     
-    # Fallback: Get basic churn info if AI function fails
-    if analysis is None:
-        try:
-            basic_churn_query = f"""
-            SELECT churn_risk_score, satisfaction_score, engagement_score, 
-                   total_spent, total_orders, last_purchase_date
-            FROM RETAIL_WATCH_DB.PUBLIC.customers 
-            WHERE customer_id = '{customer_id}'
-            """
-            basic_result = run_query(basic_churn_query)
-            if not basic_result.empty:
-                customer_data = basic_result.iloc[0]
-                analysis = {
-                    'risk_score': customer_data['CHURN_RISK_SCORE'],
-                    'risk_level': 'HIGH' if customer_data['CHURN_RISK_SCORE'] > 0.7 else 'MEDIUM' if customer_data['CHURN_RISK_SCORE'] > 0.4 else 'LOW',
-                    'risk_factors': ['Basic assessment available'],
-                    'retention_recommendations': ['Contact customer service', 'Review engagement strategy']
-                }
-            else:
-                st.error("Customer churn data not found.")
-                return
-        except Exception as e:
-            st.error(f"Unable to load churn analysis: {str(e)}")
-            return
-    
+    # Display analysis results
     if analysis:
         col1, col2 = st.columns(2)
         
         with col1:
-            # Risk level gauge
-            risk_score = analysis['risk_score']
-            fig = go.Figure(go.Indicator(
-                mode = "gauge+number+delta",
-                value = risk_score,
-                domain = {'x': [0, 1], 'y': [0, 1]},
-                title = {'text': "Churn Risk Score"},
-                delta = {'reference': 0.5},
-                gauge = {
-                    'axis': {'range': [None, 1]},
-                    'bar': {'color': "darkblue"},
-                    'steps': [
-                        {'range': [0, 0.2], 'color': "lightgreen"},
-                        {'range': [0.2, 0.4], 'color': "yellow"},
-                        {'range': [0.4, 0.7], 'color': "orange"},
-                        {'range': [0.7, 1], 'color': "red"}
-                    ],
-                    'threshold': {
-                        'line': {'color': "red", 'width': 4},
-                        'thickness': 0.75,
-                        'value': 0.7
-                    }
-                }
-            ))
-            fig.update_layout(height=300)
-            st.plotly_chart(fig, use_container_width=True)
-        
+            st.subheader("📊 Risk Metrics")
+            st.metric("Risk Score", f"{analysis['risk_score']:.3f}")
+            st.metric("Risk Level", analysis['risk_level'])
+            
         with col2:
-            st.markdown(f"""
-            <div class="customer-card">
-                <h4>Risk Assessment</h4>
-                <p><strong>Risk Level:</strong> <span class="{analysis['risk_level'].lower()}-risk">{analysis['risk_level']}</span></p>
-                <p><strong>Risk Score:</strong> {risk_score:.3f}</p>
-                
-                <h5>Risk Factors:</h5>
-                <ul>
-                    {' '.join([f'<li>{factor}</li>' for factor in analysis['risk_factors'] if factor])}
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Retention recommendations
-        st.subheader("💡 Retention Recommendations")
-        recommendations = analysis['retention_recommendations']
-        
-        for rec in recommendations:
-            if rec:
-                if "URGENT" in rec:
-                    st.error(f"🚨 {rec}")
-                elif "VIP" in rec or "discount" in rec.lower():
-                    st.warning(f"⭐ {rec}")
-                else:
-                    st.info(f"💡 {rec}")
+            st.subheader("🎯 Risk Factors")
+            if 'risk_factors' in analysis:
+                for factor in analysis['risk_factors']:
+                    st.write(f"• {factor}")
+    else:
+        st.info("Analysis data not available")
 
 def display_price_optimization():
     st.header("💰 Price Optimization Dashboard")
@@ -622,12 +332,12 @@ def display_price_optimization():
     
     selected_product_display = st.selectbox(
         "Select Product for Analysis:",
-        options=list(product_options.keys()) if product_options else ["No products available"]
+        options=list(product_options.keys()) if product_options else ["No products available"],
+        key="price_optimization_product_selector"  # Fixed navigation key
     )
     
     if selected_product_display and product_options and selected_product_display != "No products available":
         selected_product_id = product_options[selected_product_display]
-        st.session_state.shopping_context = 'price_optimization'
         
         # Get selected product details for display
         selected_product = products[products['PRODUCT_ID'] == selected_product_id].iloc[0]
@@ -677,12 +387,12 @@ def display_price_optimization():
                 st.info(f"💡 {insight}")
 
 def display_sentiment_analysis():
-    st.header("😊 Sentiment Analysis Dashboard")
+    st.header("📊 Sentiment Analysis Dashboard")
     
-    # Get recent reviews
+    # Get reviews for analysis
     reviews = run_query("""
-        SELECT pr.review_id, pr.product_id, p.product_name, b.brand_name, 
-               pr.rating, pr.review_text, pr.review_date, p.product_images
+        SELECT pr.review_id, pr.product_id, pr.review_text, pr.rating, pr.review_date,
+               p.product_name, b.brand_name, p.product_images
         FROM RETAIL_WATCH_DB.PUBLIC.product_reviews pr
         JOIN RETAIL_WATCH_DB.PUBLIC.products p ON pr.product_id = p.product_id
         JOIN RETAIL_WATCH_DB.PUBLIC.watch_brands b ON p.brand_id = b.brand_id
@@ -694,11 +404,11 @@ def display_sentiment_analysis():
         # Review selection
         review_options = {}
         for _, review in reviews.iterrows():
-            display_text = f"{review['PRODUCT_NAME']} ({review['BRAND_NAME']}) - {review['RATING']}⭐"
+            display_text = f"{review['PRODUCT_NAME']} - Rating: {review['RATING']}⭐ - {review['REVIEW_TEXT'][:50]}..."
             review_options[display_text] = review['REVIEW_ID']
         
         selected_review_display = st.selectbox(
-            "Select Review to Analyze:",
+            "Select Review for Analysis:",
             options=list(review_options.keys())
         )
         
@@ -706,7 +416,7 @@ def display_sentiment_analysis():
             selected_review_id = review_options[selected_review_display]
             selected_review = reviews[reviews['REVIEW_ID'] == selected_review_id].iloc[0]
             
-            # Display product image and review info
+            # Display review context
             col1, col2 = st.columns([1, 3])
             with col1:
                 try:
@@ -730,7 +440,7 @@ def display_sentiment_analysis():
             st.subheader("📝 Review Text")
             st.text_area("Review Content:", selected_review['REVIEW_TEXT'], height=100, disabled=True)
             
-            # Sentiment analysis
+            # Sentiment analysis with circular display
             st.subheader("📊 Sentiment Analysis")
             sentiment_result = run_query(
                 f"SELECT analyze_review_sentiment('{selected_review_id}') as result"
@@ -740,13 +450,25 @@ def display_sentiment_analysis():
                 result_raw = sentiment_result.iloc[0]['RESULT']
                 result = json.loads(result_raw) if isinstance(result_raw, str) else result_raw
                 
+                # Create circular sentiment score display
+                sentiment_score = result.get('sentiment_score', 0)
+                confidence = result.get('confidence', 0)
+                sentiment_label = result.get('sentiment_label', 'Unknown')
+                
+                col1, col2, col3 = st.columns([1, 2, 1])
+                with col2:
+                    # Display circular sentiment indicator
+                    st.markdown(create_sentiment_circle(sentiment_score, confidence, sentiment_label), 
+                               unsafe_allow_html=True)
+                
+                # Show metrics below (with 2 decimal places)
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("Sentiment", result.get('sentiment_label', 'Unknown'))
+                    st.metric("Sentiment", sentiment_label)
                 with col2:
-                    st.metric("Confidence", f"{result.get('confidence', 0):.1%}")
+                    st.metric("Confidence", f"{confidence:.1%}")
                 with col3:
-                    st.metric("Score", f"{result.get('sentiment_score', 0):.2f}")
+                    st.metric("Score", f"{sentiment_score:.2f}")  # Limited to 2 digits
                 
                 # Key themes
                 if 'key_themes' in result and result['key_themes']:
@@ -759,72 +481,6 @@ def display_sentiment_analysis():
                                 st.badge(theme)
     else:
         st.info("No reviews available for analysis.")
-
-def display_customer_analytics(customer_id, insights):
-    st.header("📊 Customer Analytics")
-    
-    # Create visualizations
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Customer journey timeline
-        events_query = f"""
-            SELECT event_type, COUNT(*) as count
-            FROM RETAIL_WATCH_DB.PUBLIC.customer_events 
-            WHERE customer_id = '{customer_id}'
-            AND event_timestamp >= CURRENT_DATE - 30
-            GROUP BY event_type
-            ORDER BY count DESC
-        """
-        events_result = run_query(events_query)
-        
-        if not events_result.empty:
-            df_events = pd.DataFrame(events_result, columns=['Event Type', 'Count'])
-            fig = px.bar(df_events, x='Event Type', y='Count', 
-                        title="Recent Activity (Last 30 Days)")
-            st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        # Purchase history
-        orders_query = f"""
-            SELECT DATE_TRUNC('month', order_date) as month, SUM(total_amount) as revenue
-            FROM RETAIL_WATCH_DB.PUBLIC.orders 
-            WHERE customer_id = '{customer_id}'
-            AND order_date >= CURRENT_DATE - 365
-            GROUP BY month
-            ORDER BY month
-        """
-        orders = run_query(orders_query)
-        
-        if not orders.empty:
-            df_orders = pd.DataFrame(orders, columns=['Month', 'Revenue'])
-            fig = px.line(df_orders, x='Month', y='Revenue', 
-                         title="Monthly Purchase History")
-            st.plotly_chart(fig, use_container_width=True)
-    
-    # Detailed metrics
-    behavioral = insights.get('behavioral_insights', {})
-    purchase = insights.get('purchase_insights', {})
-    
-    st.subheader("Detailed Metrics")
-    
-    metrics_data = {
-        'Metric': [
-            'Website Visits (30d)', 'Email Opens (30d)', 'Email Clicks (30d)',
-            'Total Orders', 'Average Order Value', 'Days Since Last Purchase'
-        ],
-        'Value': [
-            behavioral['website_visits_30d'],
-            behavioral['email_engagement']['opens_30d'],
-            behavioral['email_engagement']['clicks_30d'],
-            purchase['total_orders'],
-            f"${purchase['avg_order_value']:,.2f}",
-            purchase['days_since_last_purchase']
-        ]
-    }
-    
-    df_metrics = pd.DataFrame(metrics_data)
-    st.dataframe(df_metrics, use_container_width=True)
 
 if __name__ == "__main__":
     main() 
